@@ -2,12 +2,19 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 
 [RequireComponent(typeof(CharacterController))]
+[RequireComponent(typeof(PlayerStamina))]
 public class PlayerMovement : MonoBehaviour
 {
     [Header("Movement Speeds")]
     [SerializeField] private float walkSpeed = 6f;
     [SerializeField] private float sprintSpeed = 10f;
     [SerializeField] private float rotationSmoothTime = 0.08f;
+
+    [Header("Dodge Settings")]
+    [SerializeField] private float dodgeSpeed = 16f;
+    [SerializeField] private float dodgeDuration = 0.25f;
+    [SerializeField] private float dodgeStaminaCost = 25f;
+    [SerializeField] private float dodgeCooldown = 0.4f;
 
     [Header("Gravity Settings")]
     [SerializeField] private float gravity = -20f;
@@ -17,16 +24,30 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private Transform cameraTransform;
 
     private CharacterController controller;
-    private InputSystem_Actions inputActions;
+    private PlayerStamina stamina;
+    private InputSystem_Actions inputActions; // เปลี่ยนมาใช้ InputSystem_Actions
+
     private Vector2 moveInput;
     private bool isSprinting;
+    private bool isDodging;
+    private float dodgeTimer;
+    private float cooldownTimer;
+    private Vector3 dodgeDirection;
 
     private Vector3 verticalVelocity;
     private float currentVelocity;
 
+    // สถานะสำหรับระบบภายนอกตรวจสอบ
+    public bool IsInvincible => isDodging;
+    public bool IsDodging => isDodging;
+    public bool CanMove { get; set; } = true; // ใช้ล็อกตัวละครขณะกำลังฟันดาบ
+
+    public InputSystem_Actions InputActions => inputActions; // ให้ระบบ Combat เข้าถึง Input ได้
+
     private void Awake()
     {
         controller = GetComponent<CharacterController>();
+        stamina = GetComponent<PlayerStamina>();
         inputActions = new InputSystem_Actions();
 
         if (cameraTransform == null && Camera.main != null)
@@ -38,33 +59,43 @@ public class PlayerMovement : MonoBehaviour
     private void OnEnable()
     {
         inputActions.Player.Enable();
-
-        // ดักจับการกดปุ่มวิ่ง (Sprint)
         inputActions.Player.Sprint.performed += OnSprintStarted;
         inputActions.Player.Sprint.canceled += OnSprintCanceled;
+        inputActions.Player.Dodge.performed += OnDodgePerformed;
     }
 
     private void OnDisable()
     {
         inputActions.Player.Sprint.performed -= OnSprintStarted;
         inputActions.Player.Sprint.canceled -= OnSprintCanceled;
-
+        inputActions.Player.Dodge.performed -= OnDodgePerformed;
         inputActions.Player.Disable();
     }
 
     private void Start()
     {
-        // ล็อกเมาส์ไว้กลางจอสำหรับเกมแนว Action 3D
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
     }
 
     private void Update()
     {
-        // อ่านค่า Input Vector2 จาก New Input System
         moveInput = inputActions.Player.Move.ReadValue<Vector2>();
 
-        HandleMovement();
+        if (cooldownTimer > 0f)
+        {
+            cooldownTimer -= Time.deltaTime;
+        }
+
+        if (isDodging)
+        {
+            HandleDodgeMovement();
+        }
+        else if (CanMove)
+        {
+            HandleMovement();
+        }
+
         ApplyGravity();
     }
 
@@ -75,16 +106,23 @@ public class PlayerMovement : MonoBehaviour
 
         if (inputDirection.magnitude >= 0.1f)
         {
-            // คำนวณมุมหันหน้าสัมพันธ์กับทิศทางที่กล้องมอง (Camera-Relative Movement)
             float targetAngle = Mathf.Atan2(inputDirection.x, inputDirection.z) * Mathf.Rad2Deg + cameraTransform.eulerAngles.y;
-
-            // หมุนตัวละครเข้าหาทิศทางอย่างนุ่มนวล
             float smoothedAngle = Mathf.SmoothDampAngle(transform.eulerAngles.y, targetAngle, ref currentVelocity, rotationSmoothTime);
             transform.rotation = Quaternion.Euler(0f, smoothedAngle, 0f);
 
-            // เคลื่อนที่ไปในทิศทางที่หันหน้าไป
             Vector3 moveDirection = Quaternion.Euler(0f, targetAngle, 0f) * Vector3.forward;
             controller.Move(moveDirection.normalized * (currentSpeed * Time.deltaTime));
+        }
+    }
+
+    private void HandleDodgeMovement()
+    {
+        dodgeTimer -= Time.deltaTime;
+        controller.Move(dodgeDirection * (dodgeSpeed * Time.deltaTime));
+
+        if (dodgeTimer <= 0f)
+        {
+            isDodging = false;
         }
     }
 
@@ -92,7 +130,6 @@ public class PlayerMovement : MonoBehaviour
     {
         if (controller.isGrounded)
         {
-            // ค่าแรงกดลงพื้นเล็กน้อยเพื่อให้ติดพื้นผิวอย่างมั่นคง
             if (verticalVelocity.y < 0f)
             {
                 verticalVelocity.y = groundedGravity;
@@ -100,20 +137,38 @@ public class PlayerMovement : MonoBehaviour
         }
         else
         {
-            // คำนวณแรงโน้มถ่วงสะสมตามเวลาเมื่ออยู่กลางอากาศ
             verticalVelocity.y += gravity * Time.deltaTime;
         }
 
         controller.Move(verticalVelocity * Time.deltaTime);
     }
 
-    private void OnSprintStarted(InputAction.CallbackContext context)
+    private void OnDodgePerformed(InputAction.CallbackContext context)
     {
-        isSprinting = true;
+        if (isDodging || cooldownTimer > 0f || !controller.isGrounded)
+            return;
+
+        if (!stamina.TryConsumeStamina(dodgeStaminaCost))
+            return;
+
+        Vector3 inputDirection = new Vector3(moveInput.x, 0f, moveInput.y).normalized;
+
+        if (inputDirection.magnitude >= 0.1f)
+        {
+            float targetAngle = Mathf.Atan2(inputDirection.x, inputDirection.z) * Mathf.Rad2Deg + cameraTransform.eulerAngles.y;
+            transform.rotation = Quaternion.Euler(0f, targetAngle, 0f);
+            dodgeDirection = Quaternion.Euler(0f, targetAngle, 0f) * Vector3.forward;
+        }
+        else
+        {
+            dodgeDirection = transform.forward;
+        }
+
+        isDodging = true;
+        dodgeTimer = dodgeDuration;
+        cooldownTimer = dodgeCooldown;
     }
 
-    private void OnSprintCanceled(InputAction.CallbackContext context)
-    {
-        isSprinting = false;
-    }
+    private void OnSprintStarted(InputAction.CallbackContext context) => isSprinting = true;
+    private void OnSprintCanceled(InputAction.CallbackContext context) => isSprinting = false;
 }

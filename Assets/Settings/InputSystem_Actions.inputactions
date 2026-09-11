@@ -30,7 +30,7 @@
                     "name": "Attack",
                     "type": "Button",
                     "id": "7d1dec97-f7b2-4feb-a075-2e907929c5b2",
-                    "expectedControlType": "Button",
+                    "expectedControlType": "",
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false,
@@ -90,6 +90,16 @@
                     "name": "Sprint",
                     "type": "Button",
                     "id": "478e67cb-6db4-4f64-9d45-a5a54ecdfa6a",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false,
+                    "priority": 0
+                },
+                {
+                    "name": "Dodge",
+                    "type": "Button",
+                    "id": "905545cb-5780-4534-9b67-15cb53118e76",
                     "expectedControlType": "",
                     "processors": "",
                     "interactions": "",
@@ -535,6 +545,28 @@
                     "processors": "",
                     "groups": "Keyboard&Mouse",
                     "action": "Crouch",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "f1bcd30b-9b01-4cb7-a2c9-0d1d68ee7b96",
+                    "path": "<Keyboard>/space",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": ";Keyboard&Mouse",
+                    "action": "Dodge",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "48fb602b-9413-4072-82ff-41a9358e7b91",
+                    "path": "<Gamepad>/buttonEast",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": ";Gamepad",
+                    "action": "Dodge",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }
