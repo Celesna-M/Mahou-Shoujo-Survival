@@ -34,6 +34,7 @@ public class PlayerMovement : MonoBehaviour
     private float cooldownTimer;
     private Vector3 dodgeDirection;
 
+    private PlayerLockOn playerLockOn;
     private Vector3 verticalVelocity;
     private float currentVelocity;
 
@@ -48,6 +49,7 @@ public class PlayerMovement : MonoBehaviour
     {
         controller = GetComponent<CharacterController>();
         stamina = GetComponent<PlayerStamina>();
+        playerLockOn = GetComponent<PlayerLockOn>(); // ดึงคอมโพเนนต์ Lock-On
         inputActions = new InputSystem_Actions();
 
         if (cameraTransform == null && Camera.main != null)
@@ -104,14 +106,47 @@ public class PlayerMovement : MonoBehaviour
         Vector3 inputDirection = new Vector3(moveInput.x, 0f, moveInput.y).normalized;
         float currentSpeed = isSprinting ? sprintSpeed : walkSpeed;
 
-        if (inputDirection.magnitude >= 0.1f)
+        // --- กรณีที่ 1: กำลังล็อกเป้าศัตรู (Strafe Mode) ---
+        if (playerLockOn != null && playerLockOn.IsLockedOn)
         {
-            float targetAngle = Mathf.Atan2(inputDirection.x, inputDirection.z) * Mathf.Rad2Deg + cameraTransform.eulerAngles.y;
-            float smoothedAngle = Mathf.SmoothDampAngle(transform.eulerAngles.y, targetAngle, ref currentVelocity, rotationSmoothTime);
-            transform.rotation = Quaternion.Euler(0f, smoothedAngle, 0f);
+            Transform target = playerLockOn.CurrentTarget;
 
-            Vector3 moveDirection = Quaternion.Euler(0f, targetAngle, 0f) * Vector3.forward;
-            controller.Move(moveDirection.normalized * (currentSpeed * Time.deltaTime));
+            // หันหน้ามองตรงไปที่ศัตรูเสมอ
+            Vector3 directionToTarget = (target.position - transform.position);
+            directionToTarget.y = 0f;
+            if (directionToTarget.sqrMagnitude > 0.001f)
+            {
+                Quaternion targetRotation = Quaternion.LookRotation(directionToTarget);
+                transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.deltaTime * 15f);
+            }
+
+            // เคลื่อนที่ Strafe สัมพันธ์กับมุมมองกล้อง
+            if (inputDirection.magnitude >= 0.1f)
+            {
+                Vector3 cameraForward = cameraTransform.forward;
+                cameraForward.y = 0f;
+                cameraForward.Normalize();
+
+                Vector3 cameraRight = cameraTransform.right;
+                cameraRight.y = 0f;
+                cameraRight.Normalize();
+
+                Vector3 moveDirection = (cameraForward * inputDirection.z + cameraRight * inputDirection.x).normalized;
+                controller.Move(moveDirection * (currentSpeed * Time.deltaTime));
+            }
+        }
+        // --- กรณีที่ 2: โหมดวิ่งอิสระ (Free Roam Mode) ---
+        else
+        {
+            if (inputDirection.magnitude >= 0.1f)
+            {
+                float targetAngle = Mathf.Atan2(inputDirection.x, inputDirection.z) * Mathf.Rad2Deg + cameraTransform.eulerAngles.y;
+                float smoothedAngle = Mathf.SmoothDampAngle(transform.eulerAngles.y, targetAngle, ref currentVelocity, rotationSmoothTime);
+                transform.rotation = Quaternion.Euler(0f, smoothedAngle, 0f);
+
+                Vector3 moveDirection = Quaternion.Euler(0f, targetAngle, 0f) * Vector3.forward;
+                controller.Move(moveDirection.normalized * (currentSpeed * Time.deltaTime));
+            }
         }
     }
 
