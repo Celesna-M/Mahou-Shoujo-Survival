@@ -8,10 +8,9 @@ using UnityEngine.InputSystem;
 [RequireComponent(typeof(CinemachineImpulseSource))]
 public class PlayerExecution : MonoBehaviour
 {
-    [Header("Execution Settings")]
-    [SerializeField] private float executeRange = 2.5f;     // ระยะห่างที่สามารถกดประหารได้
-    [SerializeField] private float executionDuration = 1.2f; // ความยาวคัตซีนสังหาร
-    [SerializeField] private float healReward = 35f;        // เลือดที่ได้รับเมื่อประหาร
+    [Header("Execution Settings (MVP Spec)")]
+    [SerializeField] private float executeRange = 2.5f;
+    [SerializeField] private float executionDuration = 2.0f; // อมตะและคัตซีน 2 วินาที
     [SerializeField] private LayerMask enemyLayers;
 
     [Header("Cameras")]
@@ -19,7 +18,6 @@ public class PlayerExecution : MonoBehaviour
 
     private PlayerMovement playerMovement;
     private PlayerHealth playerHealth;
-    private PlayerLockOn playerLockOn;
     private CinemachineImpulseSource impulseSource;
 
     private bool isExecuting = false;
@@ -29,13 +27,12 @@ public class PlayerExecution : MonoBehaviour
     {
         playerMovement = GetComponent<PlayerMovement>();
         playerHealth = GetComponent<PlayerHealth>();
-        playerLockOn = GetComponent<PlayerLockOn>();
         impulseSource = GetComponent<CinemachineImpulseSource>();
     }
 
     private void Start()
     {
-        playerMovement.InputActions.Player.Interact.performed += OnInteractPerformed;
+        playerMovement.InputActions.Player.Execute.performed += OnExecutePerformed;
 
         if (executionCamera != null)
         {
@@ -47,101 +44,73 @@ public class PlayerExecution : MonoBehaviour
     {
         if (playerMovement != null && playerMovement.InputActions != null)
         {
-            playerMovement.InputActions.Player.Interact.performed -= OnInteractPerformed;
+            playerMovement.InputActions.Player.Execute.performed -= OnExecutePerformed;
         }
     }
 
-    private void OnInteractPerformed(InputAction.CallbackContext context)
+    private void OnExecutePerformed(InputAction.CallbackContext context)
     {
         if (isExecuting || playerMovement.IsDodging)
             return;
 
-        // ตรวจหาศัตรูในระยะที่ติดสถานะ Stun
-        DummyEnemy targetEnemy = FindStunnedEnemy();
-
-        if (targetEnemy != null)
-        {
-            StartCoroutine(DoExecutionSequence(targetEnemy));
-        }
-    }
-
-    private DummyEnemy FindStunnedEnemy()
-    {
         Collider[] colliders = Physics.OverlapSphere(transform.position, executeRange, enemyLayers);
         foreach (var col in colliders)
         {
-            if (col.TryGetComponent<DummyEnemy>(out var enemy))
+            // ค้นหาเป้าหมายใดๆ ที่รองรับการประหาร และอยู่ในสถานะที่ประหารได้ (CanBeExecuted)
+            if (col.TryGetComponent<IExecutable>(out var executable) && executable.CanBeExecuted)
             {
-                if (enemy.IsStunned)
-                {
-                    return enemy;
-                }
+                StartCoroutine(DoExecutionSequence(col.gameObject, executable));
+                return;
             }
         }
-        return null;
     }
 
-    private IEnumerator DoExecutionSequence(DummyEnemy enemy)
+    private IEnumerator DoExecutionSequence(GameObject targetEnemy, IExecutable executable)
     {
         isExecuting = true;
-
-        // 1. ล็อกการเคลื่อนที่ของผู้เล่น และให้สถานะอมตะ (I-Frame เต็มรูปแบบ)
         playerMovement.CanMove = false;
+        playerMovement.SetExternalInvincible(true); // อมตะตลอดช่วง 2 วินาที
 
-        // 2. หันหน้าเข้าหาศัตรูอย่างแม่นยำ
-        Vector3 lookDir = (enemy.transform.position - transform.position);
+        Vector3 lookDir = (targetEnemy.transform.position - transform.position);
         lookDir.y = 0f;
         if (lookDir.sqrMagnitude > 0.001f)
         {
             transform.rotation = Quaternion.LookRotation(lookDir);
         }
 
-        // 3. สลับมุมกล้องไปที่กล้องคัตซีนประหาร
         if (executionCamera != null)
         {
-            executionCamera.Target.LookAtTarget = enemy.transform;
+            executionCamera.Target.LookAtTarget = targetEnemy.transform;
             executionCamera.gameObject.SetActive(true);
         }
 
-        // 4. จังหวะคัตซีน: สโลว์โมชันเปิดฉาก
-        if (HitStopManager.Instance != null)
-        {
-            HitStopManager.Instance.TriggerHitStop(0.15f, 0.1f);
-        }
+        Debug.Log("<color=red><b>[EXECUTION] PRESS [F] SUCCESS! EXECUTING TARGET!</b></color>");
 
-        Debug.Log("<color=red><b>[EXECUTION] CUTSCENE TRIGGERED! SLICING ENEMY!</b></color>");
+        // หน่วงเวลาช่วงง้างสังหาร 1.2 วินาที
+        yield return new WaitForSecondsRealtime(1.2f);
 
-        // หน่วงเวลาสำหรับแอนิเมชันสังหาร (หรือช่วงเงื้ออาวุธ)
-        yield return new WaitForSecondsRealtime(executionDuration * 0.6f);
-
-        // 5. จังหวะปลิดชีพ (Impact Hit): สั่นกล้องอย่างรุนแรง + Hit Stop
+        // จังหวะ Impact: สั่นกล้อง + หยุดเวลา
         if (impulseSource != null)
-        {
-            impulseSource.GenerateImpulse(1.8f); // สั่นกล้องแรงสุด
-        }
+            impulseSource.GenerateImpulse(1.5f);
+
         if (HitStopManager.Instance != null)
-        {
-            HitStopManager.Instance.TriggerHitStop(0.2f, 0.0f); // หยุดสนิท
-        }
+            HitStopManager.Instance.TriggerHitStop(0.1f, 0.05f);
 
-        // สั่งให้ศัตรูตาย
-        enemy.ExecuteKill();
+        // สั่งสังหารเป้าหมาย
+        executable.ExecuteKill();
 
-        // 6. รางวัลจากการประหารตาม GDD:
-        // - ฟื้นฟู HP
-        playerHealth.Heal(healReward);
-        // - ดรอป Shattered Core (ทรัพยากรพิเศษสำหรับปลดล็อกอาวุธ/คอมโบ)
-        Debug.Log("<color=cyan><b>[DROP] +1 Shattered Core (Rare Item) Acquired!</b></color>");
+        // ฟื้นฟูเลือด 20% และดรอป Shattered Core ตามสเปก
+        playerHealth.HealPercentage(20f);
+        playerHealth.AddShatteredCore(1);
 
-        // หน่วงเวลาหลังฟันเสร็จเล็กน้อย
-        yield return new WaitForSecondsRealtime(executionDuration * 0.4f);
+        yield return new WaitForSecondsRealtime(0.8f);
 
-        // 7. คืนมุมกล้องเดิมและการควบคุม
         if (executionCamera != null)
         {
             executionCamera.gameObject.SetActive(false);
         }
 
+        playerMovement.SetExternalInvincible(false);
         playerMovement.CanMove = true;
         isExecuting = false;
     }

@@ -24,7 +24,8 @@ public class HitStopManager : MonoBehaviour
     /// </summary>
     /// <param name="duration">ระยะเวลาหยุด (เช่น 0.05 วินาที)</param>
     /// <param name="timeScale">ความเร็วเวลาขณะหยุด (0.0f = หยุดสนิท, 0.05f = สโลว์โมชันสุดขีด)</param>
-    public void TriggerHitStop(float duration, float timeScale = 0.02f)
+    // ใน HitStopManager.cs
+    public void TriggerHitStop(float duration = 0.05f, float timeScale = 0.1f)
     {
         if (hitStopCoroutine != null)
         {

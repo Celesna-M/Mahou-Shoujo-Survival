@@ -5,89 +5,112 @@ using UnityEngine.InputSystem;
 [RequireComponent(typeof(PlayerStamina))]
 public class PlayerMovement : MonoBehaviour
 {
-    [Header("Movement Speeds")]
-    [SerializeField] private float walkSpeed = 6f;
-    [SerializeField] private float sprintSpeed = 10f;
+    [Header("Movement Metrics (MVP Spec)")]
+    [SerializeField] private float moveSpeed = 5f; // ความเร็ววิ่งพื้นฐาน 5 m/s
     [SerializeField] private float rotationSmoothTime = 0.08f;
 
-    [Header("Dodge Settings")]
-    [SerializeField] private float dodgeSpeed = 16f;
-    [SerializeField] private float dodgeDuration = 0.25f;
-    [SerializeField] private float dodgeStaminaCost = 25f;
-    [SerializeField] private float dodgeCooldown = 0.4f;
+    [Header("Dodge Settings (MVP Spec)")]
+    [SerializeField] private float dodgeSpeed = 14f;
+    [SerializeField] private float dodgeDuration = 0.35f;
+    [SerializeField] private float iFrameDuration = 0.2f;    // อมตะ 0.2 วินาทีแรก
+    [SerializeField] private float dodgeStaminaCost = 20f;   // ใช้ Stamina 20 หน่วย
+    [SerializeField] private float dodgeCooldown = 0.2f;
 
-    [Header("Gravity Settings")]
+    [Header("Gravity")]
     [SerializeField] private float gravity = -20f;
     [SerializeField] private float groundedGravity = -2f;
 
-    [Header("Camera Reference")]
+    [Header("Camera")]
     [SerializeField] private Transform cameraTransform;
 
     private CharacterController controller;
     private PlayerStamina stamina;
-    private InputSystem_Actions inputActions; // เปลี่ยนมาใช้ InputSystem_Actions
+    private PlayerLockOn playerLockOn;
+    private InputSystem_Actions inputActions;
 
     private Vector2 moveInput;
-    private bool isSprinting;
     private bool isDodging;
     private float dodgeTimer;
     private float cooldownTimer;
     private Vector3 dodgeDirection;
 
-    private PlayerLockOn playerLockOn;
     private Vector3 verticalVelocity;
     private float currentVelocity;
 
-    // สถานะสำหรับระบบภายนอกตรวจสอบ
-    public bool IsInvincible => isDodging;
+    private bool externalInvincible = false;
+    public bool IsInvincible => externalInvincible || (isDodging && (dodgeDuration - dodgeTimer) <= iFrameDuration);
     public bool IsDodging => isDodging;
-    public bool CanMove { get; set; } = true; // ใช้ล็อกตัวละครขณะกำลังฟันดาบ
+    public bool CanMove { get; set; } = true;
 
-    public InputSystem_Actions InputActions => inputActions; // ให้ระบบ Combat เข้าถึง Input ได้
+    public InputSystem_Actions InputActions => inputActions;
 
     private void Awake()
     {
         controller = GetComponent<CharacterController>();
         stamina = GetComponent<PlayerStamina>();
-        playerLockOn = GetComponent<PlayerLockOn>(); // ดึงคอมโพเนนต์ Lock-On
+        playerLockOn = GetComponent<PlayerLockOn>();
         inputActions = new InputSystem_Actions();
 
-        if (cameraTransform == null && Camera.main != null)
-        {
-            cameraTransform = Camera.main.transform;
-        }
+        EnsureCameraReference();
     }
 
     private void OnEnable()
     {
         inputActions.Player.Enable();
-        inputActions.Player.Sprint.performed += OnSprintStarted;
-        inputActions.Player.Sprint.canceled += OnSprintCanceled;
         inputActions.Player.Dodge.performed += OnDodgePerformed;
     }
 
     private void OnDisable()
     {
-        inputActions.Player.Sprint.performed -= OnSprintStarted;
-        inputActions.Player.Sprint.canceled -= OnSprintCanceled;
         inputActions.Player.Dodge.performed -= OnDodgePerformed;
         inputActions.Player.Disable();
     }
 
     private void Start()
     {
+        EnsureCameraReference();
+
+        // ซ่อนและล็อกเมาส์ไว้กลางจอ
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
     }
 
+    private void EnsureCameraReference()
+    {
+        if (cameraTransform == null)
+        {
+            if (Camera.main != null)
+            {
+                cameraTransform = Camera.main.transform;
+            }
+            else
+            {
+                // ค้นหากล้องที่มีแท็ก MainCamera หรือกล้องตัวแรกในฉาก
+                Camera cam = FindAnyObjectByType<Camera>();
+                if (cam != null) cameraTransform = cam.transform;
+            }
+        }
+    }
+
     private void Update()
     {
+        // 1. อ่านค่าจาก Input System Action
         moveInput = inputActions.Player.Move.ReadValue<Vector2>();
 
-        if (cooldownTimer > 0f)
+        // Fallback: หาก Action ยังไม่ทำงาน ให้อ่านจากคีย์บอร์ด WASD โดยตรงเพื่อความชัวร์
+        if (moveInput.sqrMagnitude < 0.01f && Keyboard.current != null)
         {
-            cooldownTimer -= Time.deltaTime;
+            float x = 0f;
+            float y = 0f;
+            if (Keyboard.current.wKey.isPressed) y += 1f;
+            if (Keyboard.current.sKey.isPressed) y -= 1f;
+            if (Keyboard.current.aKey.isPressed) x -= 1f;
+            if (Keyboard.current.dKey.isPressed) x += 1f;
+            moveInput = new Vector2(x, y).normalized;
         }
+
+        if (cooldownTimer > 0f)
+            cooldownTimer -= Time.deltaTime;
 
         if (isDodging)
         {
@@ -104,48 +127,42 @@ public class PlayerMovement : MonoBehaviour
     private void HandleMovement()
     {
         Vector3 inputDirection = new Vector3(moveInput.x, 0f, moveInput.y).normalized;
-        float currentSpeed = isSprinting ? sprintSpeed : walkSpeed;
 
-        // --- กรณีที่ 1: กำลังล็อกเป้าศัตรู (Strafe Mode) ---
         if (playerLockOn != null && playerLockOn.IsLockedOn)
         {
             Transform target = playerLockOn.CurrentTarget;
-
-            // หันหน้ามองตรงไปที่ศัตรูเสมอ
             Vector3 directionToTarget = (target.position - transform.position);
             directionToTarget.y = 0f;
             if (directionToTarget.sqrMagnitude > 0.001f)
             {
-                Quaternion targetRotation = Quaternion.LookRotation(directionToTarget);
-                transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.deltaTime * 15f);
+                transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(directionToTarget), Time.deltaTime * 15f);
             }
 
-            // เคลื่อนที่ Strafe สัมพันธ์กับมุมมองกล้อง
             if (inputDirection.magnitude >= 0.1f)
             {
-                Vector3 cameraForward = cameraTransform.forward;
-                cameraForward.y = 0f;
-                cameraForward.Normalize();
+                Vector3 camFwd = cameraTransform != null ? cameraTransform.forward : Vector3.forward;
+                camFwd.y = 0f;
+                camFwd.Normalize();
 
-                Vector3 cameraRight = cameraTransform.right;
-                cameraRight.y = 0f;
-                cameraRight.Normalize();
+                Vector3 camRight = cameraTransform != null ? cameraTransform.right : Vector3.right;
+                camRight.y = 0f;
+                camRight.Normalize();
 
-                Vector3 moveDirection = (cameraForward * inputDirection.z + cameraRight * inputDirection.x).normalized;
-                controller.Move(moveDirection * (currentSpeed * Time.deltaTime));
+                Vector3 moveDir = (camFwd * inputDirection.z + camRight * inputDirection.x).normalized;
+                controller.Move(moveDir * (moveSpeed * Time.deltaTime));
             }
         }
-        // --- กรณีที่ 2: โหมดวิ่งอิสระ (Free Roam Mode) ---
         else
         {
             if (inputDirection.magnitude >= 0.1f)
             {
-                float targetAngle = Mathf.Atan2(inputDirection.x, inputDirection.z) * Mathf.Rad2Deg + cameraTransform.eulerAngles.y;
+                float camY = cameraTransform != null ? cameraTransform.eulerAngles.y : 0f;
+                float targetAngle = Mathf.Atan2(inputDirection.x, inputDirection.z) * Mathf.Rad2Deg + camY;
                 float smoothedAngle = Mathf.SmoothDampAngle(transform.eulerAngles.y, targetAngle, ref currentVelocity, rotationSmoothTime);
                 transform.rotation = Quaternion.Euler(0f, smoothedAngle, 0f);
 
-                Vector3 moveDirection = Quaternion.Euler(0f, targetAngle, 0f) * Vector3.forward;
-                controller.Move(moveDirection.normalized * (currentSpeed * Time.deltaTime));
+                Vector3 moveDir = Quaternion.Euler(0f, targetAngle, 0f) * Vector3.forward;
+                controller.Move(moveDir.normalized * (moveSpeed * Time.deltaTime));
             }
         }
     }
@@ -166,9 +183,7 @@ public class PlayerMovement : MonoBehaviour
         if (controller.isGrounded)
         {
             if (verticalVelocity.y < 0f)
-            {
                 verticalVelocity.y = groundedGravity;
-            }
         }
         else
         {
@@ -190,7 +205,8 @@ public class PlayerMovement : MonoBehaviour
 
         if (inputDirection.magnitude >= 0.1f)
         {
-            float targetAngle = Mathf.Atan2(inputDirection.x, inputDirection.z) * Mathf.Rad2Deg + cameraTransform.eulerAngles.y;
+            float camY = cameraTransform != null ? cameraTransform.eulerAngles.y : 0f;
+            float targetAngle = Mathf.Atan2(inputDirection.x, inputDirection.z) * Mathf.Rad2Deg + camY;
             transform.rotation = Quaternion.Euler(0f, targetAngle, 0f);
             dodgeDirection = Quaternion.Euler(0f, targetAngle, 0f) * Vector3.forward;
         }
@@ -204,6 +220,8 @@ public class PlayerMovement : MonoBehaviour
         cooldownTimer = dodgeCooldown;
     }
 
-    private void OnSprintStarted(InputAction.CallbackContext context) => isSprinting = true;
-    private void OnSprintCanceled(InputAction.CallbackContext context) => isSprinting = false;
+    public void SetExternalInvincible(bool state)
+    {
+        externalInvincible = state;
+    }
 }

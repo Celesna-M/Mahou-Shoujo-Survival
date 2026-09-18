@@ -1,7 +1,7 @@
 using System.Collections;
 using UnityEngine;
 
-public class DummyEnemy : MonoBehaviour, IDamageable
+public class DummyEnemy : MonoBehaviour, IDamageable, IExecutable
 {
     [Header("Health Settings")]
     [SerializeField] private float maxHealth = 200f;
@@ -119,4 +119,5 @@ public class DummyEnemy : MonoBehaviour, IDamageable
             enemyRenderer.material.color = defaultColor;
         }
     }
+    public bool CanBeExecuted => isStunned;
 }
