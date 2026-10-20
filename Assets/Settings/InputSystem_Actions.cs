@@ -166,7 +166,7 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
                     ""name"": ""Next"",
                     ""type"": ""Button"",
                     ""id"": ""21a51d3c-d521-48ff-baf9-7c13c03dd0c1"",
-                    ""expectedControlType"": ""Button"",
+                    ""expectedControlType"": """",
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false,
@@ -206,6 +206,16 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
                     ""name"": ""Execute"",
                     ""type"": ""Button"",
                     ""id"": ""da4473c5-a260-4400-9f44-e371ec4f8789"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false,
+                    ""priority"": 0
+                },
+                {
+                    ""name"": ""Locknext"",
+                    ""type"": ""Button"",
+                    ""id"": ""6175aa34-c755-4e44-bae7-a536f7cddcdb"",
                     ""expectedControlType"": """",
                     ""processors"": """",
                     ""interactions"": """",
@@ -717,6 +727,39 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""groups"": "";Gamepad"",
                     ""action"": ""Execute"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""aaf8ecf5-a9f0-46a4-aa54-dbadefd8d704"",
+                    ""path"": ""<Mouse>/forwardButton"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";Keyboard&Mouse"",
+                    ""action"": ""Locknext"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""77b860de-7432-47df-bfbd-391496d83346"",
+                    ""path"": ""<Mouse>/backButton"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";Keyboard&Mouse"",
+                    ""action"": ""Locknext"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""99489874-9415-4c5b-a48c-32e9c7d7dd44"",
+                    ""path"": ""<Keyboard>/q"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";Keyboard&Mouse"",
+                    ""action"": ""Locknext"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
                 }
@@ -1326,6 +1369,7 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
         m_Player_Dodge = m_Player.FindAction("Dodge", throwIfNotFound: true);
         m_Player_LockOn = m_Player.FindAction("LockOn", throwIfNotFound: true);
         m_Player_Execute = m_Player.FindAction("Execute", throwIfNotFound: true);
+        m_Player_Locknext = m_Player.FindAction("Locknext", throwIfNotFound: true);
         // UI
         m_UI = asset.FindActionMap("UI", throwIfNotFound: true);
         m_UI_Navigate = m_UI.FindAction("Navigate", throwIfNotFound: true);
@@ -1431,6 +1475,7 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
     private readonly InputAction m_Player_Dodge;
     private readonly InputAction m_Player_LockOn;
     private readonly InputAction m_Player_Execute;
+    private readonly InputAction m_Player_Locknext;
     /// <summary>
     /// Provides access to input actions defined in input action map "Player".
     /// </summary>
@@ -1490,6 +1535,10 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
         /// Provides access to the underlying input action "Player/Execute".
         /// </summary>
         public InputAction @Execute => m_Wrapper.m_Player_Execute;
+        /// <summary>
+        /// Provides access to the underlying input action "Player/Locknext".
+        /// </summary>
+        public InputAction @Locknext => m_Wrapper.m_Player_Locknext;
         /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
@@ -1552,6 +1601,9 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
             @Execute.started += instance.OnExecute;
             @Execute.performed += instance.OnExecute;
             @Execute.canceled += instance.OnExecute;
+            @Locknext.started += instance.OnLocknext;
+            @Locknext.performed += instance.OnLocknext;
+            @Locknext.canceled += instance.OnLocknext;
         }
 
         /// <summary>
@@ -1599,6 +1651,9 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
             @Execute.started -= instance.OnExecute;
             @Execute.performed -= instance.OnExecute;
             @Execute.canceled -= instance.OnExecute;
+            @Locknext.started -= instance.OnLocknext;
+            @Locknext.performed -= instance.OnLocknext;
+            @Locknext.canceled -= instance.OnLocknext;
         }
 
         /// <summary>
@@ -1983,6 +2038,13 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnExecute(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "Locknext" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnLocknext(InputAction.CallbackContext context);
     }
     /// <summary>
     /// Interface to implement callback methods for all input action callbacks associated with input actions defined by "UI" which allows adding and removing callbacks.

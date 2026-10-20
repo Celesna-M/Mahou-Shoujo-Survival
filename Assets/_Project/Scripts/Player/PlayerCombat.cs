@@ -1,263 +1,648 @@
-using System.Collections;
-using Unity.Cinemachine;
+using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.EventSystems;
+using Unity.Cinemachine;
+#if ENABLE_INPUT_SYSTEM
 using UnityEngine.InputSystem;
+#endif
 
-[RequireComponent(typeof(PlayerMovement))]
-[RequireComponent(typeof(CinemachineImpulseSource))]
+/// <summary>
+/// Phase 2: จัดการระบบโจมตีระยะประชิด (Melee Brawler Combo) ของผู้เล่น
+/// - เปิด/ปิด Hitbox ตามเฟรมแอนิเมชัน (hit / end)
+/// - Hit-stop: เมื่อตีโดนศัตรู สั่ง Time.timeScale = 0.1f นาน 0.05 วินาที แล้วคืนค่าเป็น 1
+/// - Screen Shake: เรียกใช้ Cinemachine Impulse สั่นกล้องเมื่อโจมตีจบคอมโบหนัก (Surprise Uppercut / หมัดที่ 3)
+/// - Animation Cancel: อนุญาตให้ปุ่ม Dodge ตัดท่าโจมตีได้ทันทีเสมอ
+/// </summary>
 public class PlayerCombat : MonoBehaviour
 {
-    [Header("Combo Settings")]
-    [SerializeField] private float attackDuration = 0.4f;
-    [SerializeField] private float comboResetTime = 0.8f;
-    [SerializeField] private float[] comboDamages = { 20f, 25f, 45f };
+    [Header("Hitbox Setup (Array สำหรับหมัดซ้าย/ขวา/อาวุธ)")]
+    [Tooltip("ลาก Collider ของจุดชก/ฟันมาใส่ที่นี่ หากเว้นว่างไว้สคริปต์จะค้นหาอัตโนมัติ")]
+    [SerializeField] private Collider[] hitboxes;
 
-    [Header("Homing Dash (Gap Closer)")]
-    [SerializeField] private float meleeRange = 2.0f;        // ระยะฟันปกติ
-    [SerializeField] private float homingMaxDistance = 12f;  // ระยะไกลสุดที่พุ่งหาได้
-    [SerializeField] private float homingSpeed = 26f;        // ความเร็วในการพุ่ง
-    [SerializeField] private TrailRenderer dashTrail;        // เอฟเฟกต์เส้นแสงตอนพุ่ง
+    [Header("Mouse & Camera Filter")]
+    [Tooltip("เปิด/ปิดการใช้คลิกซ้ายโจมตี")]
+    [SerializeField] private bool allowLeftClickAttack = true;
+    [Tooltip("ระยะลากเมาส์ขั้นต่ำ (Pixels) ที่จะถือว่าเป็นการลากหันกล้อง ไม่ใช่การคลิกโจมตี")]
+    [SerializeField] private float dragThreshold = 14f;
+    [Tooltip("ล็อกเมาส์กลางจออัตโนมัติในฉากต่อสู้")]
+    [SerializeField] private bool autoLockCursor = false;
 
-    [Header("Game Feel (Hit-Stop & Shake)")]
-    [SerializeField] private float[] hitStopDurations = { 0.04f, 0.05f, 0.12f };
-    [SerializeField] private float[] shakeForces = { 0.3f, 0.4f, 1.0f };
+    private Vector2 mouseDownPosition;
+    private float mouseDownTime;
+    private bool isMousePotentialAttack;
 
-    [Header("Hitbox Settings")]
-    [SerializeField] private Transform attackPoint;
-    [SerializeField] private float attackRadius = 1.2f;
+    [Header("Combat Settings")]
+    [SerializeField] private float damage = 25f;
+    [SerializeField] private float heavyFinisherDamageMultiplier = 1.4f;
+    [SerializeField] private float attackCooldown = 0.25f;
+    [SerializeField] private float combatExitDelay = 4.0f;
     [SerializeField] private LayerMask enemyLayers;
 
+    [Header("Game Feel: Hit-stop & Screen Shake (Phase 2)")]
+    [Tooltip("เวลาหน่วง Hit-stop เมื่อตีโดนศัตรู (วินาที)")]
+    [SerializeField] private float hitStopDuration = 0.05f;
+    [Tooltip("ความเร็วเวลาขณะเกิด Hit-stop (เช่น 0.1f)")]
+    [SerializeField] private float hitStopTimeScale = 0.1f;
+    [SerializeField] private CinemachineImpulseSource impulseSource;
+    [Tooltip("แรงสั่นกล้องเมื่อโจมตีจบคอมโบหนัก (หมัดสุดท้าย / Surprise Uppercut)")]
+    [SerializeField] private float heavyComboShakeForce = 0.45f;
+    [Tooltip("แรงสั่นกล้องเบาๆ ในหมัดปกติ (ใส่ 0 หากต้องการให้สั่นเฉพาะจบคอมโบหนักเท่านั้น)")]
+    [SerializeField] private float normalHitShakeForce = 0.08f;
+
+    [Header("Fallback Hitbox Sphere")]
+    [SerializeField] private Transform attackPoint;
+    [SerializeField] private float attackRadius = 0.8f;
+
     private PlayerMovement playerMovement;
-    private PlayerLockOn playerLockOn;
+    private PlayerExecution playerExecution;
     private CharacterController controller;
-    private CinemachineImpulseSource impulseSource;
+    private Animator animator;
 
-    private int comboIndex = 0;
-    private int currentHitIndex = 0;
-    private float attackTimer = 0f;
-    private float comboResetTimer = 0f;
-    private bool isAttacking = false;
-    private bool isHoming = false;
-    private Coroutine homingCoroutine;
+    private float lastAttackTime = -999f;
+    private bool isAttacking;
+    private bool inCombat;
+    private float combatTimer;
+    private bool isHitboxActive;
+    private int currentHitIndex;
+    private int comboStepCounter;
 
-    public bool IsHoming => isHoming;
+    private readonly List<GameObject> hitEnemies = new List<GameObject>();
+    private readonly HashSet<IDamageable> damagedTargets = new HashSet<IDamageable>();
+    private readonly Collider[] hitBuffer = new Collider[16];
+
+    private static readonly int ParamAttack = Animator.StringToHash("Attack");
+    private static readonly int ParamInCombat = Animator.StringToHash("InCombat");
+
+    public bool InCombat => inCombat;
+    public bool IsAttacking => isAttacking;
 
     private void Awake()
     {
-        playerMovement = GetComponent<PlayerMovement>();
-        playerLockOn = GetComponent<PlayerLockOn>();
-        controller = GetComponent<CharacterController>();
-        impulseSource = GetComponent<CinemachineImpulseSource>();
+        playerMovement = GetComponent<PlayerMovement>() ?? GetComponentInParent<PlayerMovement>() ?? GetComponentInChildren<PlayerMovement>();
+        playerExecution = GetComponent<PlayerExecution>() ?? GetComponentInParent<PlayerExecution>() ?? GetComponentInChildren<PlayerExecution>();
+        controller = GetComponent<CharacterController>() ?? GetComponentInParent<CharacterController>();
 
-        if (dashTrail != null)
+        if (impulseSource == null)
+            impulseSource = GetComponent<CinemachineImpulseSource>();
+
+        if (animator == null)
+            animator = GetComponentInChildren<Animator>(true);
+        if (animator == null && playerMovement != null)
+            animator = playerMovement.Animator;
+        if (animator == null)
+            animator = GetComponentInParent<Animator>();
+
+        if (attackPoint == null)
         {
-            dashTrail.emitting = false;
+            Transform found = transform.Find("AttackPoint") ?? transform.Find("Hitbox");
+            if (found != null) attackPoint = found;
         }
+
+        SetupHitboxColliders();
+
+        if (enemyLayers.value == 0)
+        {
+            int enemyLayer = LayerMask.NameToLayer("Enemy");
+            if (enemyLayer != -1)
+                enemyLayers = 1 << enemyLayer;
+            else
+                enemyLayers = ~LayerMask.GetMask("Player", "Ignore Raycast");
+        }
+
+        SetupAnimationEventReceiver();
     }
 
     private void Start()
     {
-        playerMovement.InputActions.Player.Attack.performed += OnAttackPerformed;
-        playerMovement.InputActions.Player.Dodge.performed += OnDodgeTriggered;
-    }
-
-    private void OnDestroy()
-    {
-        if (playerMovement != null && playerMovement.InputActions != null)
+        if (autoLockCursor)
         {
-            playerMovement.InputActions.Player.Attack.performed -= OnAttackPerformed;
-            playerMovement.InputActions.Player.Dodge.performed -= OnDodgeTriggered;
+            Cursor.lockState = CursorLockMode.Locked;
+            Cursor.visible = false;
         }
     }
 
-    private void Update()
+    private void SetupHitboxColliders()
     {
-        if (isAttacking)
+        if (hitboxes == null || hitboxes.Length == 0)
         {
-            attackTimer -= Time.deltaTime;
-            if (attackTimer <= 0f)
+            var foundList = new List<Collider>();
+
+            if (attackPoint != null && attackPoint.TryGetComponent<Collider>(out var col))
             {
-                EndAttack();
-            }
-        }
-
-        if (comboIndex > 0 && !isAttacking && !isHoming)
-        {
-            comboResetTimer -= Time.deltaTime;
-            if (comboResetTimer <= 0f)
-            {
-                comboIndex = 0;
-            }
-        }
-    }
-
-    private void OnAttackPerformed(InputAction.CallbackContext context)
-    {
-        // ไม่ออกท่าหากกำลังหลบ, กำลังพุ่ง, หรือกำลังฟันอยู่
-        if (playerMovement.IsDodging || isHoming || isAttacking)
-            return;
-
-        // ตรวจสอบเงื่อนไข Homing Dash: ถ้าล็อกเป้าอยู่และศัตรูอยู่ห่างเกินระยะฟัน
-        if (playerLockOn != null && playerLockOn.IsLockedOn)
-        {
-            Transform target = playerLockOn.CurrentTarget;
-            float distanceToTarget = Vector3.Distance(transform.position, target.position);
-
-            if (distanceToTarget > meleeRange && distanceToTarget <= homingMaxDistance)
-            {
-                StartHomingDash(target);
-                return;
-            }
-        }
-
-        // หากอยู่ในระยะประชิดอยู่แล้ว ให้ฟันปกติ
-        StartAttack();
-    }
-
-    private void StartHomingDash(Transform target)
-    {
-        if (homingCoroutine != null)
-        {
-            StopCoroutine(homingCoroutine);
-        }
-
-        homingCoroutine = StartCoroutine(DoHomingDash(target));
-    }
-
-    private IEnumerator DoHomingDash(Transform target)
-    {
-        isHoming = true;
-        playerMovement.CanMove = false;
-
-        if (dashTrail != null)
-        {
-            dashTrail.emitting = true;
-        }
-
-        float maxDashTime = 0.4f; // Timeout ป้องกันการพุ่งติดสิ่งกีดขวาง
-        float timer = 0f;
-
-        while (timer < maxDashTime)
-        {
-            // หากเป้าหมายตายหรือถูกทำลายกลางคัน
-            if (target == null || !target.gameObject.activeInHierarchy)
-                break;
-
-            Vector3 direction = (target.position - transform.position);
-            direction.y = 0f;
-            float distance = direction.magnitude;
-
-            // หมุนหน้าเข้าหาเป้าหมาย
-            if (direction.sqrMagnitude > 0.001f)
-            {
-                transform.rotation = Quaternion.LookRotation(direction);
+                foundList.Add(col);
             }
 
-            // เมื่อเข้าถึงระยะฟัน ให้หยุดพุ่ง
-            if (distance <= meleeRange)
+            foreach (var c in GetComponentsInChildren<Collider>(true))
             {
-                break;
-            }
-
-            // พุ่งตัวเข้าหาเป้าหมาย
-            controller.Move(direction.normalized * (homingSpeed * Time.deltaTime));
-
-            timer += Time.deltaTime;
-            yield return null;
-        }
-
-        if (dashTrail != null)
-        {
-            dashTrail.emitting = false;
-        }
-
-        isHoming = false;
-        homingCoroutine = null;
-
-        // เมื่อถึงตัวศัตรูแล้ว ออกดาบฟันทันที!
-        StartAttack();
-    }
-
-    private void StartAttack()
-    {
-        isAttacking = true;
-        attackTimer = attackDuration;
-        comboResetTimer = comboResetTime;
-
-        playerMovement.CanMove = false;
-
-        currentHitIndex = comboIndex;
-        ExecuteAttackHitbox(comboDamages[currentHitIndex], currentHitIndex);
-
-        comboIndex = (comboIndex + 1) % comboDamages.Length;
-    }
-
-    private void EndAttack()
-    {
-        isAttacking = false;
-        playerMovement.CanMove = true;
-    }
-
-    private void OnDodgeTriggered(InputAction.CallbackContext context)
-    {
-        // สามารถกด Dodge เพื่อแคนเซิลการพุ่ง (Homing Dash) ได้ด้วย
-        if (isHoming)
-        {
-            if (homingCoroutine != null)
-            {
-                StopCoroutine(homingCoroutine);
-                homingCoroutine = null;
-            }
-            if (dashTrail != null)
-            {
-                dashTrail.emitting = false;
-            }
-            isHoming = false;
-            Debug.Log("[Combat] Homing Dash Cancelled by Dodge!");
-        }
-
-        if (isAttacking)
-        {
-            EndAttack();
-            comboIndex = 0;
-        }
-    }
-
-    private void ExecuteAttackHitbox(float damage, int hitStep)
-    {
-        Vector3 origin = attackPoint != null ? attackPoint.position : transform.position + transform.forward;
-        Collider[] hitColliders = Physics.OverlapSphere(origin, attackRadius, enemyLayers);
-
-        if (hitColliders.Length > 0)
-        {
-            if (HitStopManager.Instance != null)
-            {
-                HitStopManager.Instance.TriggerHitStop(hitStopDurations[hitStep]);
-            }
-
-            if (impulseSource != null)
-            {
-                impulseSource.GenerateImpulse(shakeForces[hitStep]);
-            }
-
-            foreach (var hit in hitColliders)
-            {
-                if (hit.TryGetComponent<IDamageable>(out var damageable))
+                if (c != controller && (c.isTrigger || c.name.ToLower().Contains("hitbox") || c.name.ToLower().Contains("attack") || c.name.ToLower().Contains("weapon")))
                 {
-                    damageable.TakeDamage(damage, hit.ClosestPoint(origin));
+                    if (!foundList.Contains(c)) foundList.Add(c);
+                }
+            }
+
+            if (foundList.Count > 0)
+            {
+                hitboxes = foundList.ToArray();
+            }
+        }
+
+        if (hitboxes != null)
+        {
+            for (int i = 0; i < hitboxes.Length; i++)
+            {
+                if (hitboxes[i] != null)
+                {
+                    hitboxes[i].isTrigger = true;
+                    hitboxes[i].enabled = false;
+
+                    if (hitboxes[i].gameObject != gameObject)
+                    {
+                        var forwarder = hitboxes[i].GetComponent<HitboxTriggerForwarder>();
+                        if (forwarder == null)
+                            forwarder = hitboxes[i].gameObject.AddComponent<HitboxTriggerForwarder>();
+                        forwarder.Initialize(this);
+                    }
                 }
             }
         }
     }
 
+    private void SetupAnimationEventReceiver()
+    {
+        var animEventReceiver = GetComponent<PlayerAnimationEvents>()
+                             ?? GetComponentInChildren<PlayerAnimationEvents>(true)
+                             ?? GetComponentInParent<PlayerAnimationEvents>();
+
+        if (animEventReceiver == null)
+        {
+            var targetGo = (animator != null) ? animator.gameObject : gameObject;
+            targetGo.AddComponent<PlayerAnimationEvents>();
+        }
+    }
+
+    private void OnEnable()
+    {
+        if (playerMovement != null && playerMovement.InputActions != null)
+        {
+            playerMovement.InputActions.Player.Attack.performed += OnAttackPerformed;
+            playerMovement.InputActions.Player.Dodge.performed += OnDodgePerformed;
+        }
+    }
+
+    private void OnDisable()
+    {
+        if (playerMovement != null && playerMovement.InputActions != null)
+        {
+            playerMovement.InputActions.Player.Attack.performed -= OnAttackPerformed;
+            playerMovement.InputActions.Player.Dodge.performed -= OnDodgePerformed;
+        }
+    }
+
+    private void Update()
+    {
+        if (playerExecution != null && playerExecution.IsExecuting)
+            return;
+
+        HandleCombatStanceTimer();
+        CheckDirectAttackInput();
+        UpdateAttackWatchdog();
+
+        if (isHitboxActive)
+        {
+            ScanAndDealDamage();
+        }
+    }
+
+    private void CheckDirectAttackInput()
+    {
+        if (autoLockCursor && Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
+        {
+            Cursor.lockState = (Cursor.lockState == CursorLockMode.Locked) ? CursorLockMode.None : CursorLockMode.Locked;
+            Cursor.visible = (Cursor.lockState != CursorLockMode.Locked);
+        }
+
+        if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())
+        {
+            isMousePotentialAttack = false;
+            return;
+        }
+
+#if ENABLE_INPUT_SYSTEM
+        if (Mouse.current != null && Mouse.current.rightButton.isPressed)
+        {
+            isMousePotentialAttack = false;
+            return;
+        }
+
+        if (allowLeftClickAttack && Mouse.current != null)
+        {
+            if (Cursor.lockState == CursorLockMode.Locked)
+            {
+                if (Mouse.current.leftButton.wasPressedThisFrame)
+                {
+                    PerformAttack();
+                    return;
+                }
+            }
+            else
+            {
+                if (Mouse.current.leftButton.wasPressedThisFrame)
+                {
+                    mouseDownPosition = Mouse.current.position.ReadValue();
+                    mouseDownTime = Time.time;
+                    isMousePotentialAttack = true;
+                }
+                else if (Mouse.current.leftButton.isPressed && isMousePotentialAttack)
+                {
+                    Vector2 currentPos = Mouse.current.position.ReadValue();
+                    if (Vector2.Distance(currentPos, mouseDownPosition) > dragThreshold)
+                    {
+                        isMousePotentialAttack = false;
+                    }
+                }
+                else if (Mouse.current.leftButton.wasReleasedThisFrame && isMousePotentialAttack)
+                {
+                    if (Time.time - mouseDownTime <= 0.3f)
+                    {
+                        PerformAttack();
+                        isMousePotentialAttack = false;
+                        return;
+                    }
+                    isMousePotentialAttack = false;
+                }
+            }
+        }
+
+        if (Gamepad.current != null && (Gamepad.current.buttonWest.wasPressedThisFrame || Gamepad.current.rightTrigger.wasPressedThisFrame))
+        {
+            PerformAttack();
+            return;
+        }
+
+        // ปุ่ม J สำหรับโจมตีคีย์บอร์ด (ส่วนปุ่ม F สงวนไว้ให้ระบบ Execution ตามข้อตกลง)
+        if (Keyboard.current != null && Keyboard.current.jKey.wasPressedThisFrame)
+        {
+            PerformAttack();
+            return;
+        }
+#endif
+
+#if ENABLE_LEGACY_INPUT_MANAGER
+        if (Input.GetMouseButton(1))
+        {
+            isMousePotentialAttack = false;
+            return;
+        }
+
+        if (Input.GetKeyDown(KeyCode.J))
+        {
+            PerformAttack();
+            return;
+        }
+#endif
+    }
+
+    private void OnAttackPerformed(InputAction.CallbackContext context)
+    {
+        if (context.control != null && (context.control.device is Mouse || context.control.device is Touchscreen || context.control.device is Pointer))
+        {
+            return;
+        }
+
+        // หาก InputAction Attack ผูกปุ่ม F ไว้ด้วย ให้ข้ามถ้ากด F เพื่อไม่ให้ชนกับปุ่ม Execution [F]
+        if (context.control != null && context.control.name == "f")
+        {
+            return;
+        }
+
+        PerformAttack();
+    }
+
+    private void OnDodgePerformed(InputAction.CallbackContext context)
+    {
+        if (isAttacking) CancelCombat();
+    }
+
+    public void PerformAttack()
+    {
+        if (playerExecution != null && playerExecution.IsExecuting) return;
+        if (playerMovement != null && playerMovement.IsDodging) return;
+        if (Time.time < lastAttackTime + attackCooldown) return;
+
+        // รีเซ็ตตัวนับคอมโบหากเว้นช่วงนานเกินไป
+        if (Time.time - lastAttackTime > 1.1f)
+        {
+            comboStepCounter = 0;
+        }
+
+        lastAttackTime = Time.time;
+        comboStepCounter = (comboStepCounter % 3) + 1;
+        isAttacking = true;
+        isHitboxActive = false;
+        hitEnemies.Clear();
+        damagedTargets.Clear();
+
+        EnterCombatState();
+
+        if (playerMovement != null)
+            playerMovement.CanMove = false;
+
+        if (animator != null)
+        {
+            var state = animator.GetCurrentAnimatorStateInfo(0);
+            bool isAlreadyInAttack = state.IsName("Cross Punch") || state.IsName("Hook Punch") || state.IsName("Surprise Uppercut");
+
+            if (!isAlreadyInAttack)
+            {
+                comboStepCounter = 1;
+                animator.ResetTrigger(ParamAttack);
+                animator.CrossFadeInFixedTime("Cross Punch", 0.06f, 0);
+            }
+            else
+            {
+                animator.SetTrigger(ParamAttack);
+            }
+        }
+
+        CancelInvoke(nameof(ResetAttack));
+        Invoke(nameof(ResetAttack), 0.65f);
+    }
+
+    /// <summary>
+    /// ตรวจสอบว่าการโจมตีจังหวะปัจจุบันเป็นท่าปิดคอมโบหนัก (Surprise Uppercut / หมัดที่ 3) หรือไม่
+    /// </summary>
+    private bool IsHeavyComboFinisher()
+    {
+        if (animator != null)
+        {
+            var state = animator.GetCurrentAnimatorStateInfo(0);
+            if (state.IsName("Surprise Uppercut")) return true;
+        }
+        return comboStepCounter >= 3 || currentHitIndex >= 3;
+    }
+
+    public void EnterCombatState()
+    {
+        inCombat = true;
+        combatTimer = combatExitDelay;
+
+        if (animator != null)
+        {
+            foreach (var param in animator.parameters)
+            {
+                if (param.nameHash == ParamInCombat)
+                {
+                    animator.SetBool(ParamInCombat, true);
+                    break;
+                }
+            }
+        }
+    }
+
+    public void ExitCombatState()
+    {
+        inCombat = false;
+        combatTimer = 0f;
+
+        if (animator != null)
+        {
+            foreach (var param in animator.parameters)
+            {
+                if (param.nameHash == ParamInCombat)
+                {
+                    animator.SetBool(ParamInCombat, false);
+                    break;
+                }
+            }
+        }
+    }
+
+    private void HandleCombatStanceTimer()
+    {
+        if (inCombat)
+        {
+            bool isMoving = (playerMovement != null && playerMovement.IsMoving);
+            if (!isMoving && animator != null)
+            {
+                isMoving = animator.GetFloat(PlayerAnimID.Speed) > 0.1f;
+            }
+
+            if (!isAttacking && isMoving)
+            {
+                ExitCombatState();
+                return;
+            }
+
+            combatTimer -= Time.deltaTime;
+            if (combatTimer <= 0f)
+            {
+                ExitCombatState();
+            }
+        }
+    }
+
+    private void UpdateAttackWatchdog()
+    {
+        if (isAttacking && Time.time > lastAttackTime + 0.4f && animator != null)
+        {
+            if (animator.IsInTransition(0)) return;
+
+            var state = animator.GetCurrentAnimatorStateInfo(0);
+            if (!state.IsName("Cross Punch") && !state.IsName("Hook Punch") && !state.IsName("Surprise Uppercut"))
+            {
+                ResetAttack();
+            }
+        }
+
+        if (!isAttacking && (playerExecution == null || !playerExecution.IsExecuting) && playerMovement != null && !playerMovement.CanMove)
+        {
+            playerMovement.CanMove = true;
+        }
+    }
+
+    // =========================================================================
+    // HITBOX EVENT FUNCTIONS: hit(int) & end()
+    // =========================================================================
+
+    public void hit(int hitIndex = 0)
+    {
+        currentHitIndex = hitIndex;
+        isHitboxActive = true;
+        hitEnemies.Clear();
+        damagedTargets.Clear();
+
+        if (hitboxes != null && hitboxes.Length > 0)
+        {
+            if (hitIndex > 0 && hitIndex <= hitboxes.Length)
+            {
+                int targetIdx = hitIndex - 1;
+                for (int i = 0; i < hitboxes.Length; i++)
+                {
+                    if (hitboxes[i] != null)
+                        hitboxes[i].enabled = (i == targetIdx);
+                }
+            }
+            else
+            {
+                for (int i = 0; i < hitboxes.Length; i++)
+                {
+                    if (hitboxes[i] != null)
+                        hitboxes[i].enabled = true;
+                }
+            }
+        }
+
+        ScanAndDealDamage();
+    }
+
+    public void end()
+    {
+        isHitboxActive = false;
+
+        if (hitboxes != null)
+        {
+            for (int i = 0; i < hitboxes.Length; i++)
+            {
+                if (hitboxes[i] != null)
+                    hitboxes[i].enabled = false;
+            }
+        }
+
+        if (playerMovement != null && (playerExecution == null || !playerExecution.IsExecuting))
+            playerMovement.CanMove = true;
+
+        isAttacking = false;
+    }
+
+    public void OnHitboxEnd() => end();
+    public void EnableHitbox() => hit(0);
+    public void DisableHitbox() => end();
+
+    public void ResetAttack()
+    {
+        end();
+    }
+
+    public void ProcessHit(Collider other)
+    {
+        if (!isHitboxActive) return;
+        OnTriggerEnter(other);
+    }
+
+    private void OnTriggerEnter(Collider other)
+    {
+        if (!isHitboxActive || other == null) return;
+        if (other.transform.root == transform.root) return;
+
+        var damageable = other.GetComponentInParent<IDamageable>()
+                      ?? other.GetComponent<IDamageable>()
+                      ?? other.GetComponentInChildren<IDamageable>();
+
+        if (damageable != null && !damageable.IsDead && !damagedTargets.Contains(damageable))
+        {
+            damagedTargets.Add(damageable);
+
+            bool isHeavyFinisher = IsHeavyComboFinisher();
+            float effectiveBaseDamage = (GameProgressionManager.Instance != null && GameProgressionManager.Instance.HasSelectedCharacter) ? GameProgressionManager.Instance.TotalEffectiveAtk : (damage + (GameProgressionManager.Instance != null ? GameProgressionManager.Instance.BonusAttackDamage : 0f));
+            float finalDamage = isHeavyFinisher ? effectiveBaseDamage * heavyFinisherDamageMultiplier : effectiveBaseDamage;
+
+            Vector3 hitPoint = other.ClosestPoint(transform.position);
+            damageable.TakeDamage(finalDamage, hitPoint);
+
+            // Phase 2 Game Feel (Hit-stop): เมื่อ OnTriggerEnter โดนศัตรู -> สั่ง Time.timeScale = 0.1f หน่วงไว้ 0.05 วินาที แล้วคืนค่าเป็น 1
+            HitStopManager.Trigger(hitStopDuration, hitStopTimeScale);
+
+            // Phase 2 Game Feel (Screen Shake): เรียกใช้ Cinemachine Impulse สั่นกล้องสั้นๆ เมื่อโจมตีจบคอมโบหนัก
+            if (impulseSource != null)
+            {
+                if (isHeavyFinisher)
+                {
+                    impulseSource.GenerateImpulse(heavyComboShakeForce);
+                }
+                else if (normalHitShakeForce > 0f)
+                {
+                    impulseSource.GenerateImpulse(normalHitShakeForce);
+                }
+            }
+        }
+    }
+
+    private void ScanAndDealDamage()
+    {
+        Vector3 origin = attackPoint != null
+            ? attackPoint.position
+            : transform.position + transform.forward * 1.1f + Vector3.up * 1.0f;
+        float radius = attackRadius;
+
+        if (hitboxes != null)
+        {
+            for (int i = 0; i < hitboxes.Length; i++)
+            {
+                if (hitboxes[i] != null && hitboxes[i].enabled)
+                {
+                    origin = hitboxes[i].bounds.center;
+                    radius = Mathf.Max(hitboxes[i].bounds.extents.x, hitboxes[i].bounds.extents.z, 0.8f);
+                    break;
+                }
+            }
+        }
+
+        int count = Physics.OverlapSphereNonAlloc(origin, radius, hitBuffer, enemyLayers);
+        for (int i = 0; i < count; i++)
+        {
+            OnTriggerEnter(hitBuffer[i]);
+        }
+    }
+
+    /// <summary>
+    /// Phase 2 Animation Cancel: ยกเลิกท่าโจมตีทันทีเมื่อผู้เล่นกด Dodge หรือเข้าสู่ท่า Execution
+    /// </summary>
+    public void CancelCombat()
+    {
+        CancelInvoke(nameof(ResetAttack));
+        ResetAttack();
+
+        if (animator != null)
+        {
+            animator.ResetTrigger(ParamAttack);
+        }
+    }
+
     private void OnDrawGizmosSelected()
     {
-        Gizmos.color = Color.red;
-        Vector3 origin = attackPoint != null ? attackPoint.position : transform.position + transform.forward;
-        Gizmos.DrawWireSphere(origin, attackRadius);
+        Gizmos.color = isHitboxActive ? Color.red : new Color(1f, 0f, 0f, 0.3f);
 
-        // แสดงระยะตรวจจับ Homing Dash
-        Gizmos.color = Color.cyan;
-        Gizmos.DrawWireSphere(transform.position, homingMaxDistance);
+        if (hitboxes != null && hitboxes.Length > 0)
+        {
+            for (int i = 0; i < hitboxes.Length; i++)
+            {
+                if (hitboxes[i] != null)
+                {
+                    Gizmos.DrawWireSphere(hitboxes[i].bounds.center, Mathf.Max(hitboxes[i].bounds.extents.x, 0.5f));
+                }
+            }
+        }
+        else
+        {
+            Vector3 origin = attackPoint != null
+                ? attackPoint.position
+                : transform.position + transform.forward * 1.1f + Vector3.up * 1.0f;
+            Gizmos.DrawWireSphere(origin, attackRadius);
+        }
+    }
+}
+
+public class HitboxTriggerForwarder : MonoBehaviour
+{
+    private PlayerCombat playerCombat;
+    private EnemyController enemyController;
+
+    public void Initialize(PlayerCombat combat) => playerCombat = combat;
+    public void Initialize(EnemyController enemy) => enemyController = enemy;
+
+    private void OnTriggerEnter(Collider other)
+    {
+        if (playerCombat != null) playerCombat.ProcessHit(other);
+        if (enemyController != null) enemyController.ProcessHit(other);
     }
 }

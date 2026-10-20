@@ -1,36 +1,57 @@
 using System.Collections;
 using UnityEngine;
 
+/// <summary>
+/// จัดการระบบ Hit-stop (หน่วงเวลาสั้นๆ เมื่อโจมตีโดนศัตรู) ตาม Phase 2
+/// รองรับการเรียกใช้งานอัตโนมัติแม้ลืมวาง GameObject ในฉาก
+/// </summary>
 public class HitStopManager : MonoBehaviour
 {
-    public static HitStopManager Instance { get; private set; }
+    private static HitStopManager instance;
+    public static HitStopManager Instance
+    {
+        get
+        {
+            if (instance == null)
+            {
+                instance = FindAnyObjectByType<HitStopManager>();
+                if (instance == null)
+                {
+                    GameObject go = new GameObject("[HitStopManager]");
+                    instance = go.AddComponent<HitStopManager>();
+                }
+            }
+            return instance;
+        }
+    }
 
     private Coroutine hitStopCoroutine;
 
     private void Awake()
     {
-        if (Instance != null && Instance != cameraInstanceValid())
+        if (instance != null && instance != this)
         {
             Destroy(gameObject);
             return;
         }
-        Instance = this;
+        instance = this;
     }
 
-    private bool cameraInstanceValid() => this;
+    public static void Trigger(float duration = 0.05f, float timeScale = 0.1f)
+    {
+        if (Instance != null)
+        {
+            Instance.TriggerHitStop(duration, timeScale);
+        }
+    }
 
-    /// <summary>
-    /// สั่งหยุดเวลาเสี้ยววินาที โดยใช้เวลาจริง (Realtime) เพื่อไม่ให้ Coroutine หยุดทำงานตาม TimeScale
-    /// </summary>
-    /// <param name="duration">ระยะเวลาหยุด (เช่น 0.05 วินาที)</param>
-    /// <param name="timeScale">ความเร็วเวลาขณะหยุด (0.0f = หยุดสนิท, 0.05f = สโลว์โมชันสุดขีด)</param>
-    // ใน HitStopManager.cs
     public void TriggerHitStop(float duration = 0.05f, float timeScale = 0.1f)
     {
+        // ป้องกันการรบกวนฉากจบหรือตอนผู้เล่นตายที่ปรับ Time.timeScale ค้างไว้
+        if (Time.timeScale <= 0.01f) return;
+
         if (hitStopCoroutine != null)
-        {
             StopCoroutine(hitStopCoroutine);
-        }
 
         hitStopCoroutine = StartCoroutine(DoHitStop(duration, timeScale));
     }
@@ -38,14 +59,22 @@ public class HitStopManager : MonoBehaviour
     private IEnumerator DoHitStop(float duration, float timeScale)
     {
         Time.timeScale = timeScale;
+        Time.fixedDeltaTime = 0.02f * timeScale;
+
         yield return new WaitForSecondsRealtime(duration);
+
         Time.timeScale = 1.0f;
+        Time.fixedDeltaTime = 0.02f;
         hitStopCoroutine = null;
     }
 
-    private void OnDisable()
+    private void OnDestroy()
     {
-        // ป้องกันกรณีเปลี่ยน Scene หรือหยุดเล่นแล้วเวลายังค้างอยู่ที่ 0
-        Time.timeScale = 1.0f;
+        if (instance == this)
+        {
+            Time.timeScale = 1.0f;
+            Time.fixedDeltaTime = 0.02f;
+            instance = null;
+        }
     }
 }

@@ -1,48 +1,22 @@
-using UnityEngine;
 using System;
+using UnityEngine;
 
 public class PlayerStamina : MonoBehaviour
 {
     [Header("Stamina Settings")]
     [SerializeField] private float maxStamina = 100f;
-    [SerializeField] private float regenRate = 25f; // อัตราการฟื้นฟูต่อวินาที
-    [SerializeField] private float regenDelay = 1f;  // ดีเลย์ก่อนเริ่มฟื้นฟูหลังใช้
+    [SerializeField] private float regenRate = 25f;
+    [SerializeField] private float regenDelay = 1f;
 
     public float CurrentStamina { get; private set; }
     public float MaxStamina => maxStamina;
 
     private float delayTimer;
-
-    // Event สำหรับเชื่อมต่อกับแถบ UI ในอนาคต
     public event Action<float, float> OnStaminaChanged;
 
-    private void Awake()
-    {
-        CurrentStamina = maxStamina;
-    }
+    private void Awake() => CurrentStamina = maxStamina;
 
     private void Update()
-    {
-        HandleRegen();
-    }
-
-    /// <summary>
-    /// ฟังก์ชันพยายามใช้ Stamina หากพอจะคืนค่า true และหักค่าทันที
-    /// </summary>
-    public bool TryConsumeStamina(float amount)
-    {
-        if (CurrentStamina >= amount)
-        {
-            CurrentStamina -= amount;
-            delayTimer = regenDelay; // รีเซ็ตตัวนับเวลาก่อนฟื้นฟู
-            OnStaminaChanged?.Invoke(CurrentStamina, maxStamina);
-            return true;
-        }
-
-        return false;
-    }
-
-    private void HandleRegen()
     {
         if (delayTimer > 0f)
         {
@@ -52,9 +26,29 @@ public class PlayerStamina : MonoBehaviour
 
         if (CurrentStamina < maxStamina)
         {
-            CurrentStamina += regenRate * Time.deltaTime;
-            CurrentStamina = Mathf.Clamp(CurrentStamina, 0f, maxStamina);
+            CurrentStamina = Mathf.Min(maxStamina, CurrentStamina + (regenRate * Time.deltaTime));
             OnStaminaChanged?.Invoke(CurrentStamina, maxStamina);
         }
+    }
+
+    public bool HasEnoughStamina(float amount) => CurrentStamina >= amount;
+
+    public bool TryConsumeStamina(float amount)
+    {
+        if (amount <= 0f) return true;
+        if (CurrentStamina >= amount)
+        {
+            CurrentStamina -= amount;
+            delayTimer = regenDelay;
+            OnStaminaChanged?.Invoke(CurrentStamina, maxStamina);
+            return true;
+        }
+        return false;
+    }
+
+    public void RestoreFullStamina()
+    {
+        CurrentStamina = maxStamina;
+        OnStaminaChanged?.Invoke(CurrentStamina, maxStamina);
     }
 }

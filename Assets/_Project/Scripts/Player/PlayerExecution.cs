@@ -1,123 +1,259 @@
 using System.Collections;
 using Unity.Cinemachine;
 using UnityEngine;
+#if ENABLE_INPUT_SYSTEM
 using UnityEngine.InputSystem;
+#endif
 
-[RequireComponent(typeof(PlayerMovement))]
-[RequireComponent(typeof(PlayerHealth))]
-[RequireComponent(typeof(CinemachineImpulseSource))]
+/// <summary>
+/// Phase 3: ระบบท่าสังหาร (Execution Logic) สำหรับศัตรูระดับ Boss / Elite ที่เกราะแตกติด Stun
+/// - กดปุ่ม [F] เมื่ออยู่ในระยะของศัตรูที่ติด Stun (CanBeExecuted == true)
+/// - ล็อกตำแหน่งผู้เล่นหน้าเป้าหมาย (ไม่ตัดคัตซีนมุมกล้อง) และเล่นแอนิเมชันเร็วๆ
+/// - ผู้เล่นเป็นอมตะ (I-Frame) ตลอดการออกท่า และฟื้นฟู HP เมื่อปลิดชีพสำเร็จ
+/// </summary>
 public class PlayerExecution : MonoBehaviour
 {
-    [Header("Execution Settings (MVP Spec)")]
-    [SerializeField] private float executeRange = 2.5f;
-    [SerializeField] private float executionDuration = 2.0f; // อมตะและคัตซีน 2 วินาที
-    [SerializeField] private LayerMask enemyLayers;
+    [Header("Execution Settings (Phase 3 - ปุ่ม F)")]
+    [Tooltip("ระยะตรวจจับเป้าหมายที่ติด Stun เพื่อกดปุ่ม [F] ทำ Execution")]
+    [SerializeField] private float executionRange = 3.5f;
+    [Tooltip("ระยะห่างที่ล็อกผู้เล่นไว้หน้าศัตรูตอนออกท่า Execution")]
+    [SerializeField] private float standOffDistance = 1.15f;
+    [Tooltip("ความเร็วแอนิเมชันตอนทำท่า Execution (เล่นแอนิเมชันเร็วๆ ดุดัน ไม่ตัดคัตซีน)")]
+    [SerializeField] private float executionAnimSpeed = 1.45f;
+    [Tooltip("เวลาทั้งหมดของท่า Execution (วินาที)")]
+    [SerializeField] private float executionDuration = 0.65f;
+    [Tooltip("จังหวะเวลาที่หมัด/อาวุธปะทะเป้าหมายเพื่อปลิดชีพและฟื้นเลือด (วินาที)")]
+    [SerializeField] private float impactTime = 0.30f;
 
-    [Header("Cameras")]
-    [SerializeField] private CinemachineCamera executionCamera;
+    [Header("Reward: HP Recovery")]
+    [Tooltip("เปอร์เซ็นต์เลือดที่ฟื้นฟูหลังทำ Execution สำเร็จ (0 - 100%)")]
+    [SerializeField] private float healPercentageOnExecute = 35f;
+
+    [Header("Game Feel")]
+    [SerializeField] private float executeHitStopDuration = 0.08f;
+    [SerializeField] private float executeHitStopTimeScale = 0.05f;
+    [SerializeField] private float executeShakeForce = 0.65f;
 
     private PlayerMovement playerMovement;
+    private PlayerCombat playerCombat;
     private PlayerHealth playerHealth;
+    private Animator animator;
     private CinemachineImpulseSource impulseSource;
 
-    private bool isExecuting = false;
+    private bool isExecuting;
+    private bool hasTriggeredImpact;
+    private IExecutable currentTarget;
+    private readonly Collider[] scanBuffer = new Collider[24];
+
     public bool IsExecuting => isExecuting;
+    public float ExecutionRange => executionRange;
 
     private void Awake()
     {
-        playerMovement = GetComponent<PlayerMovement>();
-        playerHealth = GetComponent<PlayerHealth>();
-        impulseSource = GetComponent<CinemachineImpulseSource>();
+        playerMovement = GetComponent<PlayerMovement>() ?? GetComponentInParent<PlayerMovement>();
+        playerCombat = GetComponent<PlayerCombat>() ?? GetComponentInParent<PlayerCombat>();
+        playerHealth = GetComponent<PlayerHealth>() ?? GetComponentInParent<PlayerHealth>();
+        impulseSource = GetComponent<CinemachineImpulseSource>() ?? GetComponentInParent<CinemachineImpulseSource>();
+
+        if (animator == null)
+            animator = GetComponentInChildren<Animator>(true) ?? GetComponentInParent<Animator>();
     }
 
-    private void Start()
+    private void Update()
     {
-        playerMovement.InputActions.Player.Execute.performed += OnExecutePerformed;
+        if (isExecuting) return;
+        if (playerHealth != null && playerHealth.IsDead) return;
 
-        if (executionCamera != null)
+        bool fPressed = false;
+#if ENABLE_INPUT_SYSTEM
+        if (Keyboard.current != null && Keyboard.current.fKey.wasPressedThisFrame)
+            fPressed = true;
+        else if (Gamepad.current != null && Gamepad.current.buttonNorth.wasPressedThisFrame)
+            fPressed = true;
+#endif
+#if ENABLE_LEGACY_INPUT_MANAGER
+        if (Input.GetKeyDown(KeyCode.F))
+            fPressed = true;
+#endif
+
+        if (fPressed)
         {
-            executionCamera.gameObject.SetActive(false);
+            TryExecuteNearbyTarget();
         }
     }
 
-    private void OnDestroy()
+    /// <summary>
+    /// ค้นหาศัตรูระดับ Elite / Boss ที่เกราะแตกติด Stun ในระยะ แล้วเริ่มทำท่า Execution ทันที
+    /// </summary>
+    public bool TryExecuteNearbyTarget()
     {
-        if (playerMovement != null && playerMovement.InputActions != null)
-        {
-            playerMovement.InputActions.Player.Execute.performed -= OnExecutePerformed;
-        }
+        if (isExecuting) return false;
+
+        IExecutable bestTarget = FindNearestExecutableTarget();
+        if (bestTarget == null) return false;
+
+        StartCoroutine(ExecutionRoutine(bestTarget));
+        return true;
     }
 
-    private void OnExecutePerformed(InputAction.CallbackContext context)
+    public IExecutable FindNearestExecutableTarget()
     {
-        if (isExecuting || playerMovement.IsDodging)
-            return;
+        int count = Physics.OverlapSphereNonAlloc(transform.position, executionRange, scanBuffer);
+        IExecutable nearest = null;
+        float minDist = float.MaxValue;
 
-        Collider[] colliders = Physics.OverlapSphere(transform.position, executeRange, enemyLayers);
-        foreach (var col in colliders)
+        for (int i = 0; i < count; i++)
         {
-            // ค้นหาเป้าหมายใดๆ ที่รองรับการประหาร และอยู่ในสถานะที่ประหารได้ (CanBeExecuted)
-            if (col.TryGetComponent<IExecutable>(out var executable) && executable.CanBeExecuted)
+            Collider col = scanBuffer[i];
+            if (col == null) continue;
+
+            IExecutable exec = col.GetComponentInParent<IExecutable>() ?? col.GetComponent<IExecutable>();
+            if (exec != null && exec.CanBeExecuted && exec.Transform != null)
             {
-                StartCoroutine(DoExecutionSequence(col.gameObject, executable));
-                return;
+                float dist = Vector3.Distance(transform.position, exec.Transform.position);
+                if (dist < minDist)
+                {
+                    minDist = dist;
+                    nearest = exec;
+                }
             }
         }
+
+        return nearest;
     }
 
-    private IEnumerator DoExecutionSequence(GameObject targetEnemy, IExecutable executable)
+    private IEnumerator ExecutionRoutine(IExecutable target)
     {
         isExecuting = true;
-        playerMovement.CanMove = false;
-        playerMovement.SetExternalInvincible(true); // อมตะตลอดช่วง 2 วินาที
+        hasTriggeredImpact = false;
+        currentTarget = target;
 
-        Vector3 lookDir = (targetEnemy.transform.position - transform.position);
-        lookDir.y = 0f;
-        if (lookDir.sqrMagnitude > 0.001f)
+        // 1. แจ้งศัตรูให้ล็อกสถานะ Stun ไม่ให้หลุดหรือขยับระหว่างโดนท่าสังหาร
+        target.OnExecutionStart();
+
+        // 2. ยกเลิกท่าโจมตีปกติและเปิดสถานะอมตะ (I-Frame) ให้ผู้เล่นตลอดการทำท่า
+        if (playerCombat != null)
         {
-            transform.rotation = Quaternion.LookRotation(lookDir);
+            playerCombat.CancelCombat();
+            playerCombat.EnterCombatState();
         }
 
-        if (executionCamera != null)
+        if (playerMovement != null)
         {
-            executionCamera.Target.LookAtTarget = targetEnemy.transform;
-            executionCamera.gameObject.SetActive(true);
+            playerMovement.CanMove = false;
+            playerMovement.SetExternalInvincible(true);
         }
 
-        Debug.Log("<color=red><b>[EXECUTION] PRESS [F] SUCCESS! EXECUTING TARGET!</b></color>");
-
-        // หน่วงเวลาช่วงง้างสังหาร 1.2 วินาที
-        yield return new WaitForSecondsRealtime(1.2f);
-
-        // จังหวะ Impact: สั่นกล้อง + หยุดเวลา
-        if (impulseSource != null)
-            impulseSource.GenerateImpulse(1.5f);
-
-        if (HitStopManager.Instance != null)
-            HitStopManager.Instance.TriggerHitStop(0.1f, 0.05f);
-
-        // สั่งสังหารเป้าหมาย
-        executable.ExecuteKill();
-
-        // ฟื้นฟูเลือด 20% และดรอป Shattered Core ตามสเปก
-        playerHealth.HealPercentage(20f);
-        playerHealth.AddShatteredCore(1);
-
-        yield return new WaitForSecondsRealtime(0.8f);
-
-        if (executionCamera != null)
+        // 3. ล็อกตำแหน่งผู้เล่นหน้าเป้าหมาย (ไม่ตัดคัตซีนมุมกล้อง!)
+        if (target.Transform != null)
         {
-            executionCamera.gameObject.SetActive(false);
+            Vector3 targetPos = target.Transform.position;
+            Vector3 dirFromTargetToPlayer = (transform.position - targetPos);
+            dirFromTargetToPlayer.y = 0f;
+
+            if (dirFromTargetToPlayer.sqrMagnitude < 0.001f)
+            {
+                dirFromTargetToPlayer = -target.Transform.forward;
+                dirFromTargetToPlayer.y = 0f;
+            }
+            dirFromTargetToPlayer.Normalize();
+
+            Vector3 lockedPlayerPos = targetPos + (dirFromTargetToPlayer * standOffDistance);
+            lockedPlayerPos.y = transform.position.y;
+
+            if (playerMovement != null)
+            {
+                playerMovement.WarpToPositionAndLookAt(lockedPlayerPos, targetPos);
+            }
+            else
+            {
+                transform.position = lockedPlayerPos;
+                Vector3 lookDir = targetPos - lockedPlayerPos;
+                lookDir.y = 0f;
+                if (lookDir.sqrMagnitude > 0.001f)
+                    transform.rotation = Quaternion.LookRotation(lookDir);
+            }
+
+            // หมุนศัตรูให้หันหน้ามารับท่าสังหารของผู้เล่น
+            Vector3 enemyLookDir = lockedPlayerPos - targetPos;
+            enemyLookDir.y = 0f;
+            if (enemyLookDir.sqrMagnitude > 0.001f)
+            {
+                target.Transform.rotation = Quaternion.LookRotation(enemyLookDir.normalized);
+            }
         }
 
-        playerMovement.SetExternalInvincible(false);
-        playerMovement.CanMove = true;
+        // 4. เล่นแอนิเมชันท่าสังหารแบบรวดเร็ว ดุดัน (ไม่เปิดแถบดำคัตซีน ไม่สลับกล้อง)
+        float originalAnimSpeed = 1f;
+        if (animator != null)
+        {
+            originalAnimSpeed = animator.speed;
+            animator.speed = executionAnimSpeed;
+            animator.ResetTrigger(PlayerAnimID.Attack);
+            animator.SetTrigger(PlayerAnimID.Execute);
+        }
+
+        // 5. รอจังหวะปะทะ (Impact)
+        float clampedImpact = Mathf.Clamp(impactTime, 0.1f, executionDuration - 0.05f);
+        yield return new WaitForSeconds(clampedImpact);
+
+        TriggerExecutionImpact();
+
+        // 6. รอจนจบท่าแล้วคืนค่าการควบคุมและปิดอมตะ
+        float remainingTime = Mathf.Max(0.05f, executionDuration - clampedImpact);
+        yield return new WaitForSeconds(remainingTime);
+
+        if (animator != null)
+        {
+            animator.speed = originalAnimSpeed;
+        }
+
+        if (playerMovement != null)
+        {
+            playerMovement.SetExternalInvincible(false);
+            playerMovement.CanMove = true;
+        }
+
+        currentTarget = null;
         isExecuting = false;
     }
 
-    private void OnDrawGizmosSelected()
+    public void TriggerExecutionImpactFromAnim()
     {
-        Gizmos.color = Color.magenta;
-        Gizmos.DrawWireSphere(transform.position, executeRange);
+        if (isExecuting && !hasTriggeredImpact)
+        {
+            TriggerExecutionImpact();
+        }
+    }
+
+    private void TriggerExecutionImpact()
+    {
+        if (hasTriggeredImpact) return;
+        hasTriggeredImpact = true;
+
+        // ปลิดชีพเป้าหมายที่ติด Stun
+        if (currentTarget != null)
+        {
+            currentTarget.ExecuteKill();
+        }
+
+        // ฟื้นฟูเลือดผู้เล่นตามเปอร์เซ็นต์ที่กำหนด
+        if (playerHealth != null && !playerHealth.IsDead)
+        {
+            playerHealth.HealPercentage(healPercentageOnExecute);
+
+            if (BattleHUD.Instance != null)
+            {
+                BattleHUD.Instance.SpawnFloatingFeedback("HP", "HP", Mathf.RoundToInt(healPercentageOnExecute), new Color(0.25f, 1f, 0.45f), transform.position + Vector3.up * 1.6f, "%");
+            }
+        }
+
+        // Hit-stop และ Screen Shake เน้นความสะใจ
+        HitStopManager.Trigger(executeHitStopDuration, executeHitStopTimeScale);
+
+        if (impulseSource != null)
+        {
+            impulseSource.GenerateImpulse(executeShakeForce);
+        }
     }
 }

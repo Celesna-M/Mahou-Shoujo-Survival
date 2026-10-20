@@ -80,7 +80,7 @@
                     "name": "Next",
                     "type": "Button",
                     "id": "21a51d3c-d521-48ff-baf9-7c13c03dd0c1",
-                    "expectedControlType": "Button",
+                    "expectedControlType": "",
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false,
@@ -120,6 +120,16 @@
                     "name": "Execute",
                     "type": "Button",
                     "id": "da4473c5-a260-4400-9f44-e371ec4f8789",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false,
+                    "priority": 0
+                },
+                {
+                    "name": "Locknext",
+                    "type": "Button",
+                    "id": "6175aa34-c755-4e44-bae7-a536f7cddcdb",
                     "expectedControlType": "",
                     "processors": "",
                     "interactions": "",
@@ -631,6 +641,39 @@
                     "processors": "",
                     "groups": ";Gamepad",
                     "action": "Execute",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "aaf8ecf5-a9f0-46a4-aa54-dbadefd8d704",
+                    "path": "<Mouse>/forwardButton",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": ";Keyboard&Mouse",
+                    "action": "Locknext",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "77b860de-7432-47df-bfbd-391496d83346",
+                    "path": "<Mouse>/backButton",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": ";Keyboard&Mouse",
+                    "action": "Locknext",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "99489874-9415-4c5b-a48c-32e9c7d7dd44",
+                    "path": "<Keyboard>/q",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": ";Keyboard&Mouse",
+                    "action": "Locknext",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }
