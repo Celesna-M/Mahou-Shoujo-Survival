@@ -7,9 +7,7 @@ using UnityEngine.UI;
 
 /// <summary>
 /// Battle HUD & In-Game Settings / Pause Menu (Scene 4: The Action)
-/// - Pure ASCII English text (no unsupported symbols)
-/// - Full Settings Panel in Action scene (ESC or Settings Button) with Volume, Sensitivity, Fullscreen, and Mid-Game Exit buttons (Exit to Lobby / StageMap / MainMenu)
-/// - Top-Left Floating Text "+ [STAR DUST] 15" / "+ [CORE] 1"
+/// - Pulls ALL HUD strings, floating feedback, execution prompts, and Victory summary templates directly from GameTextMasterConfig!
 /// </summary>
 public class BattleHUD : MonoBehaviour
 {
@@ -65,11 +63,8 @@ public class BattleHUD : MonoBehaviour
     [SerializeField] private Button toggleFullscreenButton;
     [SerializeField] private TextMeshProUGUI fullscreenStatusText;
     [SerializeField] private Button closeSettingsButton;
-    [Tooltip("Button inside Settings Panel to quit the current battle and return to Lobby")]
     [SerializeField] private Button exitToLobbyMidGameButton;
-    [Tooltip("Optional button inside Settings Panel to quit battle and return to StageMap")]
     [SerializeField] private Button exitToStageMapMidGameButton;
-    [Tooltip("Optional button inside Settings Panel to quit battle and return to MainMenu")]
     [SerializeField] private Button exitToMainMenuMidGameButton;
 
     private PlayerHealth playerHealth;
@@ -105,6 +100,11 @@ public class BattleHUD : MonoBehaviour
     private void Start()
     {
         GameProgressionManager.Instance.LoadFromPrefs();
+
+        if (hpFillImage != null)
+        {
+            hpFillImage.color = GameProgressionManager.Instance.GetProgressionUiThemeColor();
+        }
 
         GameObject player = GameObject.FindGameObjectWithTag("Player");
         if (player != null)
@@ -292,11 +292,11 @@ public class BattleHUD : MonoBehaviour
     {
         var prog = GameProgressionManager.Instance;
         if (volumeValueText != null)
-            volumeValueText.text = $"{Mathf.RoundToInt(prog.MasterVolume * 100f)}%";
+            volumeValueText.text = string.Format(GameTextMasterConfig.Settings_VolumeValueFormat, Mathf.RoundToInt(prog.MasterVolume * 100f));
         if (sensitivityValueText != null)
-            sensitivityValueText.text = $"{prog.MouseSensitivity:F1}x";
+            sensitivityValueText.text = string.Format(GameTextMasterConfig.Settings_SensitivityValueFormat, prog.MouseSensitivity);
         if (fullscreenStatusText != null)
-            fullscreenStatusText.text = Screen.fullScreen ? "FULLSCREEN" : "WINDOWED";
+            fullscreenStatusText.text = Screen.fullScreen ? GameTextMasterConfig.Settings_FullscreenOn : GameTextMasterConfig.Settings_FullscreenOff;
     }
 
     private void OnDestroy()
@@ -377,15 +377,11 @@ public class BattleHUD : MonoBehaviour
         {
             if (canExecuteNearby)
             {
-                executePromptText.text = "[F] EXECUTE (HEAL HP)";
+                executePromptText.text = GameTextMasterConfig.HUD_ExecutePromptText;
             }
             executePromptText.gameObject.SetActive(canExecuteNearby);
         }
     }
-
-    // =========================================================================
-    // PHASE 5: TOP-LEFT FLOATING UI FEEDBACK (Pure ASCII English)
-    // =========================================================================
 
     public void SpawnFloatingFeedback(string iconSymbol, string label, int amount, Color textColor, Vector3 worldPos, string suffix = "")
     {
@@ -420,7 +416,7 @@ public class BattleHUD : MonoBehaviour
 
         TextMeshProUGUI tmp = floatObj.AddComponent<TextMeshProUGUI>();
         if (cachedFont != null) tmp.font = cachedFont;
-        tmp.text = $"+ [{iconSymbol}] {amount}{suffix}";
+        tmp.text = string.Format(GameTextMasterConfig.HUD_FloatingGainFormat, iconSymbol, amount, suffix);
         tmp.fontSize = 26f;
         tmp.fontStyle = FontStyles.Bold;
         tmp.alignment = TextAlignmentOptions.Left;
@@ -455,11 +451,14 @@ public class BattleHUD : MonoBehaviour
         if (rt != null) Destroy(rt.gameObject);
     }
 
-    // --- UI Update Events ---
-
     private void OnHealthChanged(float current, float max)
     {
-        if (hpFillImage != null && max > 0) hpFillImage.fillAmount = current / max;
+        if (hpFillImage != null && max > 0)
+        {
+            hpFillImage.fillAmount = current / max;
+            if (GameProgressionManager.Instance != null)
+                hpFillImage.color = GameProgressionManager.Instance.GetProgressionUiThemeColor();
+        }
     }
 
     private void OnStaminaChanged(float current, float max)
@@ -469,11 +468,9 @@ public class BattleHUD : MonoBehaviour
 
     private void OnCurrencyChanged(int starDust, int shatteredCore)
     {
-        if (starDustText != null) starDustText.text = $"STAR DUST : {starDust}";
-        if (shatteredCoreText != null) shatteredCoreText.text = $"CORE : {shatteredCore}";
+        if (starDustText != null) starDustText.text = string.Format(GameTextMasterConfig.HUD_StarDustCounterFormat, starDust);
+        if (shatteredCoreText != null) shatteredCoreText.text = string.Format(GameTextMasterConfig.HUD_ShatteredCoreCounterFormat, shatteredCore);
     }
-
-    // --- Boss Bar Management ---
 
     public void ShowBossBar(string bossName, float currentHp, float maxHp, float stagger, float maxStagger)
     {
@@ -499,8 +496,6 @@ public class BattleHUD : MonoBehaviour
     {
         if (bossBarContainer != null) bossBarContainer.SetActive(false);
     }
-
-    // --- Screen Flashes ---
 
     public void SetCinematicBars(bool active)
     {
@@ -554,8 +549,6 @@ public class BattleHUD : MonoBehaviour
         flashCoroutine = null;
     }
 
-    // --- Game Over, Victory & Mid-Game Exit States ---
-
     public void ShowGameOverScreen()
     {
         if (gameOverPanel != null) gameOverPanel.SetActive(true);
@@ -595,12 +588,12 @@ public class BattleHUD : MonoBehaviour
                 GameObject summaryGo = new GameObject("AutoScoreSummaryText");
                 summaryGo.transform.SetParent(victoryPanel.transform, false);
                 RectTransform rt = summaryGo.AddComponent<RectTransform>();
-                rt.sizeDelta = new Vector2(540f, 160f);
+                rt.sizeDelta = new Vector2(680f, 220f);
                 rt.anchoredPosition = new Vector2(0f, -20f);
 
                 scoreSummaryText = summaryGo.AddComponent<TextMeshProUGUI>();
                 if (cachedFont != null) scoreSummaryText.font = cachedFont;
-                scoreSummaryText.fontSize = 24f;
+                scoreSummaryText.fontSize = 22f;
                 scoreSummaryText.alignment = TextAlignmentOptions.Center;
                 scoreSummaryText.color = Color.white;
             }
@@ -608,10 +601,20 @@ public class BattleHUD : MonoBehaviour
 
         if (scoreSummaryText != null)
         {
-            scoreSummaryText.text =
-                $"<b>SCORE SUMMARY</b>\n" +
-                $"<color=#FFE040>+ [STAR DUST] : {playerHealth.StageStarDustEarned} (TOTAL: {playerHealth.StarDust})</color>\n" +
-                $"<color=#F259FF>+ [SHATTERED CORE] : {playerHealth.StageShatteredCoreEarned} (TOTAL: {playerHealth.ShatteredCore})</color>";
+            var prog = GameProgressionManager.Instance;
+            string firstClearLine = (prog != null && prog.LastClearWasFirstTime)
+                ? string.Format(GameTextMasterConfig.Victory_FirstClearBonusLineFormat, prog.LastFirstClearStarDustBonus, prog.LastFirstClearCoreBonus)
+                : "";
+
+            string rankPromoteLine = (prog != null && !string.IsNullOrEmpty(prog.LastUnlockedRankLetter))
+                ? string.Format(GameTextMasterConfig.Victory_RankPromotionLineFormat, prog.LastUnlockedRankLetter, prog.CurrentRankZoneName, prog.CurrentRankStoryLine)
+                : "";
+
+            string headerLine = string.Format(GameTextMasterConfig.Victory_HeaderFormat, prog != null ? prog.CurrentRankLetter : GameTextMasterConfig.RankLetters[0]);
+            string dustLine = string.Format(GameTextMasterConfig.Victory_StarDustLineFormat, playerHealth.StageStarDustEarned, prog.StarDust);
+            string coreLine = string.Format(GameTextMasterConfig.Victory_ShatteredCoreLineFormat, playerHealth.StageShatteredCoreEarned, prog.ShatteredCore);
+
+            scoreSummaryText.text = $"{headerLine}\n{dustLine}\n{coreLine}{firstClearLine}{rankPromoteLine}";
         }
     }
 
@@ -653,3 +656,28 @@ public class BattleHUD : MonoBehaviour
         }
     }
 }
+
+
+/* ============================================================================
+ * คำอธิบายการทำงานของโค้ดและฟังก์ชันทั้งหมดใน BattleHUD.cs
+ * (ส่วนนี้เป็น Comment ล้วน 100% — คอมไพเลอร์และระบบเกมจะไม่นำไปรันเด็ดขาด)
+ * ============================================================================
+ *
+ * 1. Start() & OnHealthChanged() / OnStaminaChanged() / OnCurrencyChanged()
+ *    - เชื่อมต่ออีเวนต์จาก PlayerHealth และ PlayerStamina เพื่ออัปเดตหลอดเลือด หลอด Stamina และจำนวนแร่บนหน้าจอ
+ *    - เปลี่ยนสีหลอดเลือดผู้เล่นตามระดับ Milestone (ชมพูอ่อน -> แดงเข้ม) จาก GameProgressionManager
+ *
+ * 2. OpenSettingsPanel(), CloseSettingsPanel() & ReturnToLobby()
+ *    - เปิด/ปิดหน้าต่างตั้งค่าระหว่างเล่นด้วยปุ่ม ESC หรือปุ่มบนจอ พร้อมหยุดเวลาเกม (Time.timeScale = 0)
+ *    - รองรับปุ่มกดออกจากด่านกลางคัน (Exit to Lobby / StageMap / MainMenu)
+ *
+ * 3. UpdateExecutionPromptVisibility()
+ *    - ตรวจจับว่ามีบอสที่เกราะแตกติดสถานะ Stun อยู่ในระยะหรือไม่ ถ้ามีจะแสดงข้อความ "[F] EXECUTE (HEAL HP)"
+ *
+ * 4. SpawnFloatingFeedback() & AnimateFloatingFeedbackRoutine()
+ *    - สร้างข้อความเด้งขึ้นมุมซ้ายบน (เช่น "+ [STAR DUST] 15", "+ [CORE] 1") เมื่อลูกแก้วพลังงานลอยเข้าตัวผู้เล่น
+ *
+ * 5. ShowVictoryScreen() & UpdateScoreSummaryDisplay()
+ *    - แสดงหน้าจอชนะด่าน พร้อมสรุปจำนวนแร่ที่ได้ในด่าน โบนัสเคลียร์ครั้งแรก ([FIRST-CLEAR BONUS!])
+ *      การเลื่อนขั้น Rank ([RANK PROMOTION!]) และเนื้อเรื่องสั้น 1 บรรทัดประจำ Rank ที่ปลดล็อกใหม่
+ * ============================================================================ */

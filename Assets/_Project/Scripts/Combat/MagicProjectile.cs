@@ -153,3 +153,24 @@ public class MagicProjectile : MonoBehaviour
         Destroy(gameObject);
     }
 }
+
+/*
+===============================================================================
+[คำอธิบายโค้ดและฟังก์ชันทั้งหมดในไฟล์ MagicProjectile.cs]
+
+1. Awake()
+   - ดึง CinemachineImpulseSource และตั้งค่า SphereCollider ให้เป็น Trigger
+
+2. Initialize(GameObject caster, Transform target, float dmg, float splashDmg, float splashRad)
+   - ตั้งค่าข้อมูลเริ่มต้นของกระสุนเวท (ผู้ยิง, เป้าหมาย Homing, ดาเมจตรง, ดาเมจระเบิดรอบข้าง และรัศมี)
+
+3. Update()
+   - ควบคุมการเคลื่อนที่ของกระสุนเวท ระบบเลี้ยวเข้าหาเป้าหมายอัตโนมัติ (Soft Homing) และการตรวจจับการชนด้วย SphereCast
+
+4. OnTriggerEnter(Collider other)
+   - ตรวจจับเมื่อกระสุนชนเป้าหมายหรือสิ่งกีดขวาง แล้วสั่งระเบิดทำงาน
+
+5. Explode(Vector3 hitPoint, Collider directHitCollider)
+   - สร้างดาเมจใส่เป้าหมายหลักและดาเมจลูกหลง (Splash AoE) ใส่ศัตรูรอบข้าง พร้อมเล่นเอฟเฟกต์ VFX, Hit-stop และสั่นหน้าจอแล้วทำลายกระสุนทิ้ง
+===============================================================================
+*/

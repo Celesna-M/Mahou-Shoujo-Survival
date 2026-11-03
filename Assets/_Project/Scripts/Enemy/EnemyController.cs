@@ -5,8 +5,8 @@ using UnityEngine.AI;
 
 public enum LostSightBehavior
 {
-    StandStill,  // เดินกลับไปจุดเกิดเดิมแล้วยืนรอ
-    Patrol       // สลับไปเดินลาดตระเวนตามจุด Patrol Points
+    StandStill,
+    Patrol
 }
 
 public enum RewardDropType
@@ -16,9 +16,10 @@ public enum RewardDropType
 }
 
 /// <summary>
-/// Phase 3 & Phase 5: ระบบศัตรู AI ด้วย State Pattern, ระบบเกจเกราะ (Stagger) เฉพาะ Boss/Elite,
-/// การติดสถานะ Stun รอรับปุ่ม [F] ทำ Execution, ระบบสุ่มดรอปของแรร์ (Shattered Core) แบบแยกอิสระ,
-/// และระบบเสก Particle ลอยเข้าหาผู้เล่น (MoveTowards) เมื่อศัตรูตาย
+/// EnemyController
+/// - Prevents pushing the player through the floor (forces child bone colliders to isTrigger = true & keeps safe separation distance).
+/// - Uses customizable Inspector Lists for Animation Events (Default: Open/Damage = ["hite"], Close = ["end"]).
+///   You can freely add or remove event names in the Inspector List!
 /// </summary>
 [RequireComponent(typeof(NavMeshAgent))]
 public class EnemyController : MonoBehaviour, IDamageable, IExecutable
@@ -26,45 +27,44 @@ public class EnemyController : MonoBehaviour, IDamageable, IExecutable
     [Header("Base Stats")]
     [SerializeField] private float maxHealth = 100f;
     [SerializeField] private float moveSpeed = 3.5f;
-    [SerializeField] private float rotationSpeed = 9f;
+    [SerializeField] private float rotationSpeed = 10f;
+
+    [Header("1. Animation Event Name Lists (เพิ่ม/ลดชื่อ Event ได้ตามใจ)")]
+    [Tooltip("List of Animation Event names that open the hitbox & deal damage (Default: hite)")]
+    [SerializeField] private List<string> openHitboxEventNames = new List<string> { "hite" };
+    [Tooltip("List of Animation Event names that close the hitbox (Default: end)")]
+    [SerializeField] private List<string> closeHitboxEventNames = new List<string> { "end" };
 
     [Header("Phase 3: Enemy Dead Settings")]
-    [Tooltip("เวลาหน่วงก่อน Destroy เมื่อศัตรูตาย (0 = Destroy ทันที, หรือตั้งเวลาหน่วงโดยหยุดแอนิเมชันทันทีไม่ให้เล่นต่อ)")]
     [SerializeField] private float destroyDelayOnDeath = 0f;
 
     [Header("Phase 3: Elite / Boss & Stagger System")]
-    [Tooltip("เปิดใช้งานสำหรับศัตรูระดับสูง (Boss / Elite) เพื่อให้มีเกจ Stagger และกดปุ่ม [F] ทำ Execution ได้")]
     [SerializeField] private bool isEliteOrBoss = false;
     [SerializeField] private string enemyDisplayName = "ELITE ENTITY";
-    [Tooltip("ค่าเกจเกราะสูงสุดของศัตรูระดับ Elite / Boss")]
     [SerializeField] private float maxStagger = 100f;
-    [Tooltip("ตัวคูณการลดเกจ Stagger เมื่อถูกโจมตี")]
     [SerializeField] private float staggerDamageMultiplier = 1.15f;
-    [Tooltip("ระยะเวลาที่ศัตรูติด Stun รอให้ผู้เล่นกดปุ่ม [F] ทำ Execution (วินาที)")]
     [SerializeField] private float stunDuration = 5.0f;
 
-    [Header("Phase 3 & 5: Drops & RNG Rare Drop (No Inventory)")]
+    [Header("Phase 3 & 5: Drops & RNG Rare Drop")]
     [SerializeField] private int starDustReward = 15;
-    [Tooltip("โอกาสสุ่มดรอปของแรร์ Shattered Core (0 - 100%) แยกลอจิกอิสระจากการทำ Execution")]
     [Range(0f, 100f)]
     [SerializeField] private float shatteredCoreDropChance = 20f;
     [SerializeField] private int shatteredCoreDropAmount = 1;
     [SerializeField] private GameObject dropItemPrefab;
 
-    [Header("Detection & Vision (State Pattern)")]
-    [Tooltip("เริ่มเกมให้เดินไล่ล่าผู้เล่นทันที")]
+    [Header("Detection & Combat Settings")]
     [SerializeField] private bool alwaysChasePlayer = true;
-    [Tooltip("ระยะการมองเห็นผู้เล่น (Vision Range)")]
     [SerializeField] private float visionRange = 25f;
-    [Tooltip("ระยะเข้าโจมตี (Attack Range)")]
     [SerializeField] private float attackRange = 2.0f;
-    [Tooltip("ระยะเวลาคูลดาวน์หลังจบคอมโบ (วินาที)")]
+    [Tooltip("Minimum horizontal distance kept from the player so the enemy collider never overlaps or pushes the player through the floor")]
+    [SerializeField] private float minBodySeparationDistance = 1.15f;
+    [SerializeField] private float attackHitReachBonus = 0.85f;
+    [SerializeField] private float activeHitWindowDuration = 0.25f;
     [SerializeField] private float attackCooldown = 1.8f;
-    [Tooltip("ความเสียหายต่อฮิต")]
     [SerializeField] private float attackDamage = 12f;
 
-    [Header("Taunt Settings (สุ่มเยาะเย้ย)")]
-    [SerializeField] private bool enableRandomTaunt = true;
+    [Header("Taunt Settings")]
+    [SerializeField] private bool enableRandomTaunt = false;
     [SerializeField] private float minTauntInterval = 7.0f;
     [SerializeField] private float maxTauntInterval = 12.0f;
     [Range(0f, 100f)]
@@ -79,17 +79,21 @@ public class EnemyController : MonoBehaviour, IDamageable, IExecutable
     [SerializeField] private Animator animator;
     [SerializeField] private Renderer enemyRenderer;
 
-    [Header("Hitbox Detection (กำหนดจำนวนได้ตามใจ)")]
-    [Tooltip("กำหนดจำนวนและใส่ Collider ของ Hitbox ศัตรูได้ไม่จำกัด (เปิด IsTrigger = true)")]
+    [Header("Hitbox Detection")]
     [SerializeField] private Collider[] hitboxes;
+
     private readonly List<Collider> hitPlayers = new List<Collider>();
+    private readonly Collider[] overlapBuffer = new Collider[16];
     private bool isHitboxActive = false;
+    private bool hasDealtDamageThisSwing = false;
+    private float hitWindowTimer = 0f;
 
     // Runtime Fields
     private NavMeshAgent agent;
     private Collider[] bodyColliders;
     private Transform playerTransform;
     private PlayerHealth playerHealth;
+    private CharacterController playerCharacterController;
     private EnemyState currentState;
     private Vector3 spawnPosition;
     private float currentHealth;
@@ -106,7 +110,6 @@ public class EnemyController : MonoBehaviour, IDamageable, IExecutable
 
     public static bool GlobalExecutionFreeze { get; set; } = false;
 
-    // Properties สำหรับ State ต่างๆ ใช้งาน
     public NavMeshAgent Agent => agent;
     public Animator Animator => animator;
     public Transform PlayerTransform => playerTransform;
@@ -130,22 +133,30 @@ public class EnemyController : MonoBehaviour, IDamageable, IExecutable
     public float MaxStagger => maxStagger;
     public bool IsStunned => isStunned;
 
-    // --- IDamageable Implementation ---
     public float CurrentHealth => currentHealth;
     public float MaxHealth => maxHealth;
     public bool IsDead => isDead;
 
-    // --- IExecutable Implementation (Phase 3) ---
     public bool CanBeExecuted => isEliteOrBoss && isStunned && !isDead && !isBeingExecuted;
     public Transform Transform => transform;
 
+    private void Reset()
+    {
+        EnsureDefaultEventLists();
+    }
+
     private void Awake()
     {
+        EnsureDefaultEventLists();
+
         agent = GetComponent<NavMeshAgent>();
-        bodyColliders = GetComponentsInChildren<Collider>();
+        bodyColliders = GetComponentsInChildren<Collider>(true);
 
         if (animator == null)
-            animator = GetComponentInChildren<Animator>();
+            animator = GetComponentInChildren<Animator>(true);
+
+        if (animator != null)
+            animator.applyRootMotion = false;
 
         if (enemyRenderer == null)
             enemyRenderer = GetComponentInChildren<Renderer>();
@@ -155,7 +166,6 @@ public class EnemyController : MonoBehaviour, IDamageable, IExecutable
             defaultColor = enemyRenderer.material.color;
         }
 
-        // ตรวจสอบชื่อ Prefab อัตโนมัติหากเป็น Elite หรือ Boss
         string lowerName = gameObject.name.ToLower();
         if (!isEliteOrBoss && (lowerName.Contains("elite") || lowerName.Contains("boss") || maxHealth >= 200f))
         {
@@ -167,7 +177,20 @@ public class EnemyController : MonoBehaviour, IDamageable, IExecutable
         spawnPosition = transform.position;
 
         SetupAnimationEventForwarder();
-        SetupWeaponHitbox();
+        SetupWeaponHitboxAndPreventSolidBonePush();
+        BindCustomAnimationClipEvents();
+    }
+
+    private void EnsureDefaultEventLists()
+    {
+        if (openHitboxEventNames == null || openHitboxEventNames.Count == 0)
+        {
+            openHitboxEventNames = new List<string> { "hite" };
+        }
+        if (closeHitboxEventNames == null || closeHitboxEventNames.Count == 0)
+        {
+            closeHitboxEventNames = new List<string> { "end" };
+        }
     }
 
     private void Start()
@@ -175,8 +198,8 @@ public class EnemyController : MonoBehaviour, IDamageable, IExecutable
         if (agent != null)
         {
             agent.speed = moveSpeed;
-            agent.acceleration = 14f;
-            agent.stoppingDistance = attackRange * 0.85f;
+            agent.acceleration = 16f;
+            agent.stoppingDistance = Mathf.Max(minBodySeparationDistance, attackRange * 0.75f);
             agent.autoBraking = true;
             agent.updatePosition = true;
             agent.updateRotation = true;
@@ -184,6 +207,7 @@ public class EnemyController : MonoBehaviour, IDamageable, IExecutable
 
         EnsureAgentOnNavMesh();
         FindPlayerTarget();
+        IgnorePhysicalPushAgainstPlayer();
 
         if (isEliteOrBoss && BattleHUD.Instance != null)
         {
@@ -195,8 +219,27 @@ public class EnemyController : MonoBehaviour, IDamageable, IExecutable
     }
 
     /// <summary>
-    /// ตั้งค่าให้ศัตรูตัวนี้เป็นระดับ Elite / Boss จาก Spawner โดยตรง
+    /// Prevents any moving collider on the Enemy from physically pushing the Player's CharacterController downward through the floor!
     /// </summary>
+    private void IgnorePhysicalPushAgainstPlayer()
+    {
+        if (playerCharacterController == null && playerTransform != null)
+        {
+            playerCharacterController = playerTransform.GetComponent<CharacterController>();
+        }
+
+        if (playerCharacterController == null || bodyColliders == null) return;
+
+        foreach (var col in bodyColliders)
+        {
+            // Keep trigger hitboxes able to detect hits, but prevent solid colliders on child bones from physically ramming the player downward
+            if (col != null && col.gameObject != gameObject && !col.isTrigger)
+            {
+                Physics.IgnoreCollision(playerCharacterController, col, true);
+            }
+        }
+    }
+
     public void ConfigureAsEliteOrBoss(bool eliteStatus, string customName = "")
     {
         isEliteOrBoss = eliteStatus;
@@ -233,6 +276,9 @@ public class EnemyController : MonoBehaviour, IDamageable, IExecutable
     {
         if (isDead) return;
 
+        if (animator != null && animator.applyRootMotion)
+            animator.applyRootMotion = false;
+
         if (GlobalExecutionFreeze || isBeingExecuted)
         {
             StopMovement();
@@ -256,6 +302,7 @@ public class EnemyController : MonoBehaviour, IDamageable, IExecutable
         if (playerTransform == null)
         {
             FindPlayerTarget();
+            IgnorePhysicalPushAgainstPlayer();
             if (playerTransform == null)
             {
                 if (animator != null) animator.SetFloat("Speed", 0f);
@@ -265,10 +312,22 @@ public class EnemyController : MonoBehaviour, IDamageable, IExecutable
 
         if (playerHealth != null && playerHealth.IsDead)
         {
+            ExecuteCloseHitbox();
             StopMovement();
             SetInCombat(false);
             if (animator != null) animator.SetFloat("Speed", 0f);
             return;
+        }
+
+        if (isHitboxActive)
+        {
+            ScanActiveHitboxesAndAttackArc();
+
+            hitWindowTimer -= Time.deltaTime;
+            if (hitWindowTimer <= 0f)
+            {
+                ExecuteCloseHitbox();
+            }
         }
 
         UpdateAnimatorSpeed();
@@ -318,6 +377,7 @@ public class EnemyController : MonoBehaviour, IDamageable, IExecutable
         if (playerObj != null)
         {
             playerTransform = playerObj.transform;
+            playerCharacterController = playerObj.GetComponent<CharacterController>();
             playerHealth = playerObj.GetComponent<PlayerHealth>()
                         ?? playerObj.GetComponentInChildren<PlayerHealth>()
                         ?? playerObj.GetComponentInParent<PlayerHealth>();
@@ -378,6 +438,14 @@ public class EnemyController : MonoBehaviour, IDamageable, IExecutable
     {
         if (isDead || isStunned || isBeingExecuted) return;
 
+        // Never walk closer than minBodySeparationDistance to the player so enemy colliders never push the player through the floor
+        if (playerTransform != null && GetHorizontalDistanceToPlayer() <= minBodySeparationDistance)
+        {
+            StopMovement();
+            RotateTowards(playerTransform.position);
+            return;
+        }
+
         if (agent != null && agent.isActiveAndEnabled && agent.isOnNavMesh)
         {
             agent.isStopped = false;
@@ -385,11 +453,11 @@ public class EnemyController : MonoBehaviour, IDamageable, IExecutable
         }
         else
         {
-            Vector3 dir = (destination - transform.position);
-            dir.y = 0f;
-            if (dir.sqrMagnitude > 0.05f)
+            Vector3 targetFlat = new Vector3(destination.x, transform.position.y, destination.z);
+            Vector3 dir = targetFlat - transform.position;
+            if (dir.sqrMagnitude > 0.02f)
             {
-                transform.position = Vector3.MoveTowards(transform.position, destination, moveSpeed * Time.deltaTime);
+                transform.position = Vector3.MoveTowards(transform.position, targetFlat, moveSpeed * Time.deltaTime);
                 RotateTowards(destination);
                 if (animator != null) animator.SetFloat("Speed", moveSpeed);
             }
@@ -401,6 +469,7 @@ public class EnemyController : MonoBehaviour, IDamageable, IExecutable
         if (agent != null && agent.isActiveAndEnabled && agent.isOnNavMesh)
         {
             agent.isStopped = true;
+            agent.velocity = Vector3.zero;
         }
     }
 
@@ -417,17 +486,25 @@ public class EnemyController : MonoBehaviour, IDamageable, IExecutable
         return false;
     }
 
+    public float GetHorizontalDistanceToPlayer()
+    {
+        if (playerTransform == null) return Mathf.Infinity;
+        Vector2 enemyXZ = new Vector2(transform.position.x, transform.position.z);
+        Vector2 playerXZ = new Vector2(playerTransform.position.x, playerTransform.position.z);
+        return Vector2.Distance(enemyXZ, playerXZ);
+    }
+
     public bool IsPlayerInVision()
     {
         if (alwaysChasePlayer) return true;
         if (playerTransform == null) return false;
-        return Vector3.Distance(transform.position, playerTransform.position) <= visionRange;
+        return GetHorizontalDistanceToPlayer() <= visionRange;
     }
 
     public bool IsPlayerInAttackRange()
     {
         if (playerTransform == null) return false;
-        return Vector3.Distance(transform.position, playerTransform.position) <= attackRange;
+        return GetHorizontalDistanceToPlayer() <= attackRange;
     }
 
     public void RotateTowards(Vector3 targetPosition)
@@ -455,12 +532,9 @@ public class EnemyController : MonoBehaviour, IDamageable, IExecutable
             bool isStandingStill = (agent != null && agent.isActiveAndEnabled && agent.isOnNavMesh && agent.velocity.sqrMagnitude < 0.05f)
                                    || currentState is IdleState;
 
-            if (isStandingStill)
+            if (isStandingStill && Random.Range(0f, 100f) <= tauntChance)
             {
-                if (Random.Range(0f, 100f) <= tauntChance)
-                {
-                    StartCoroutine(TauntRoutine());
-                }
+                StartCoroutine(TauntRoutine());
             }
         }
     }
@@ -479,14 +553,30 @@ public class EnemyController : MonoBehaviour, IDamageable, IExecutable
         isTaunting = false;
     }
 
-    private void SetupWeaponHitbox()
+    /// <summary>
+    /// Forces all child bone/weapon colliders to be Triggers (isTrigger = true) so swinging arms/weapons
+    /// NEVER physically push the Player's CharacterController downward through the floor!
+    /// </summary>
+    private void SetupWeaponHitboxAndPreventSolidBonePush()
     {
+        foreach (var col in GetComponentsInChildren<Collider>(true))
+        {
+            if (col != null && col.gameObject != gameObject)
+            {
+                if (col is MeshCollider meshCol && !meshCol.convex)
+                {
+                    meshCol.convex = true;
+                }
+                col.isTrigger = true;
+            }
+        }
+
         if (hitboxes == null || hitboxes.Length == 0)
         {
             var found = new List<Collider>();
             foreach (var col in GetComponentsInChildren<Collider>(true))
             {
-                if (col != null && (col.isTrigger || col.name.ToLower().Contains("hitbox") || col.name.ToLower().Contains("attack") || col.name.ToLower().Contains("weapon")))
+                if (col != null && col.gameObject != gameObject)
                 {
                     if (!found.Contains(col)) found.Add(col);
                 }
@@ -498,42 +588,160 @@ public class EnemyController : MonoBehaviour, IDamageable, IExecutable
         {
             for (int i = 0; i < hitboxes.Length; i++)
             {
-                if (hitboxes[i] != null)
+                if (hitboxes[i] != null && hitboxes[i].gameObject != gameObject)
                 {
+                    if (hitboxes[i] is MeshCollider mc && !mc.convex)
+                        mc.convex = true;
+
                     hitboxes[i].isTrigger = true;
                     hitboxes[i].enabled = false;
 
-                    if (hitboxes[i].gameObject != gameObject)
-                    {
-                        var forwarder = hitboxes[i].GetComponent<HitboxTriggerForwarder>();
-                        if (forwarder == null)
-                            forwarder = hitboxes[i].gameObject.AddComponent<HitboxTriggerForwarder>();
-                        forwarder.Initialize(this);
-                    }
+                    var forwarder = hitboxes[i].GetComponent<HitboxTriggerForwarder>();
+                    if (forwarder == null)
+                        forwarder = hitboxes[i].gameObject.AddComponent<HitboxTriggerForwarder>();
+                    forwarder.Initialize(this);
                 }
             }
         }
     }
 
+    private void SetupAnimationEventForwarder()
+    {
+        Animator[] allAnimators = GetComponentsInChildren<Animator>(true);
+        foreach (var anim in allAnimators)
+        {
+            if (anim != null && anim.gameObject != gameObject)
+            {
+                var forwarder = anim.GetComponent<EnemyAnimationEvents>();
+                if (forwarder == null)
+                {
+                    forwarder = anim.gameObject.AddComponent<EnemyAnimationEvents>();
+                }
+                forwarder.Initialize(this);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Automatically binds any custom event name added to openHitboxEventNames or closeHitboxEventNames in the Inspector!
+    /// </summary>
+    private void BindCustomAnimationClipEvents()
+    {
+        if (animator == null || animator.runtimeAnimatorController == null) return;
+
+        AnimationClip[] clips = animator.runtimeAnimatorController.animationClips;
+        if (clips == null) return;
+
+        foreach (var clip in clips)
+        {
+            if (clip == null) continue;
+            AnimationEvent[] events = clip.events;
+            if (events == null || events.Length == 0) continue;
+
+            bool modified = false;
+            for (int i = 0; i < events.Length; i++)
+            {
+                string fn = events[i].functionName;
+                if (string.IsNullOrEmpty(fn)) continue;
+
+                // If it's a custom event name in our Lists (other than the built-in hite / end), route it through OnCustomEnemyAnimEvent
+                if (fn != "hite" && fn != "end" && (IsOpenEventName(fn) || IsCloseEventName(fn)))
+                {
+                    events[i].stringParameter = fn;
+                    events[i].functionName = nameof(OnCustomEnemyAnimEvent);
+                    modified = true;
+                }
+            }
+
+            if (modified)
+            {
+                clip.events = events;
+            }
+        }
+    }
+
     // =========================================================================
-    // ENEMY HITBOX EVENT FUNCTIONS: hite(int) & end()
+    // LIST-DRIVEN ANIMATION EVENT SYSTEM (DEFAULT: hite / end)
     // =========================================================================
 
+    public bool IsOpenEventName(string eventName)
+    {
+        if (string.IsNullOrEmpty(eventName) || openHitboxEventNames == null) return false;
+        for (int i = 0; i < openHitboxEventNames.Count; i++)
+        {
+            if (!string.IsNullOrEmpty(openHitboxEventNames[i]) &&
+                string.Equals(openHitboxEventNames[i].Trim(), eventName.Trim(), System.StringComparison.Ordinal))
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public bool IsCloseEventName(string eventName)
+    {
+        if (string.IsNullOrEmpty(eventName) || closeHitboxEventNames == null) return false;
+        for (int i = 0; i < closeHitboxEventNames.Count; i++)
+        {
+            if (!string.IsNullOrEmpty(closeHitboxEventNames[i]) &&
+                string.Equals(closeHitboxEventNames[i].Trim(), eventName.Trim(), System.StringComparison.Ordinal))
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public void OnCustomEnemyAnimEvent(string eventName)
+    {
+        if (IsOpenEventName(eventName))
+        {
+            ExecuteOpenHitbox(0);
+        }
+        else if (IsCloseEventName(eventName))
+        {
+            ExecuteCloseHitbox();
+        }
+    }
+
+    /// <summary>
+    /// Default Enemy Open Hitbox & Deal Damage Event ("hite")
+    /// Only executes if "hite" is present in openHitboxEventNames List!
+    /// </summary>
     public void hite(int hitIndex = 0)
+    {
+        if (!IsOpenEventName("hite")) return;
+        ExecuteOpenHitbox(hitIndex);
+    }
+
+    /// <summary>
+    /// Default Enemy Close Hitbox Event ("end")
+    /// Only executes if "end" is present in closeHitboxEventNames List!
+    /// </summary>
+    public void end()
+    {
+        if (!IsCloseEventName("end")) return;
+        ExecuteCloseHitbox();
+    }
+
+    public void ExecuteOpenHitbox(int hitIndex = 0)
     {
         if (isDead || isStunned || isBeingExecuted) return;
 
         hitPlayers.Clear();
+        hasDealtDamageThisSwing = false;
         isHitboxActive = true;
+        hitWindowTimer = Mathf.Max(0.15f, activeHitWindowDuration);
 
         EnableHitboxByIndex(hitIndex);
-        OnEnemyAttackHit();
+        ScanActiveHitboxesAndAttackArc();
     }
 
-    public void end()
+    public void ExecuteCloseHitbox()
     {
         DisableAllHitboxes();
         isHitboxActive = false;
+        hitWindowTimer = 0f;
     }
 
     private void EnableHitboxByIndex(int index)
@@ -544,15 +752,20 @@ public class EnemyController : MonoBehaviour, IDamageable, IExecutable
         {
             for (int i = 0; i < hitboxes.Length; i++)
             {
-                if (hitboxes[i] != null) hitboxes[i].enabled = true;
+                if (hitboxes[i] != null && hitboxes[i].gameObject != gameObject)
+                {
+                    hitboxes[i].isTrigger = true;
+                    hitboxes[i].enabled = true;
+                }
             }
             return;
         }
 
         for (int i = 0; i < hitboxes.Length; i++)
         {
-            if (hitboxes[i] != null)
+            if (hitboxes[i] != null && hitboxes[i].gameObject != gameObject)
             {
+                hitboxes[i].isTrigger = true;
                 hitboxes[i].enabled = (i == index - 1);
             }
         }
@@ -563,13 +776,56 @@ public class EnemyController : MonoBehaviour, IDamageable, IExecutable
         if (hitboxes == null) return;
         for (int i = 0; i < hitboxes.Length; i++)
         {
-            if (hitboxes[i] != null) hitboxes[i].enabled = false;
+            if (hitboxes[i] != null && hitboxes[i].gameObject != gameObject)
+                hitboxes[i].enabled = false;
         }
     }
 
-    public void OnHitboxEnd() => end();
-    public void EnableHitbox() => hite(0);
-    public void DisableHitbox() => end();
+    private void ScanActiveHitboxesAndAttackArc()
+    {
+        if (!isHitboxActive || hasDealtDamageThisSwing || isDead || isStunned || isBeingExecuted) return;
+
+        if (hitboxes != null && hitboxes.Length > 0)
+        {
+            for (int i = 0; i < hitboxes.Length; i++)
+            {
+                Collider hb = hitboxes[i];
+                if (hb != null && hb.enabled && hb.gameObject != gameObject)
+                {
+                    float radius = Mathf.Max(hb.bounds.extents.x, hb.bounds.extents.y, hb.bounds.extents.z, 0.45f);
+                    int count = Physics.OverlapSphereNonAlloc(hb.bounds.center, radius, overlapBuffer);
+                    for (int c = 0; c < count; c++)
+                    {
+                        if (TryApplyDamageToCollider(overlapBuffer[c]))
+                            return;
+                    }
+                }
+            }
+        }
+
+        if (playerTransform == null || playerHealth == null)
+        {
+            FindPlayerTarget();
+        }
+
+        if (playerTransform != null && playerHealth != null && !playerHealth.IsDead)
+        {
+            float horizDist = GetHorizontalDistanceToPlayer();
+            if (horizDist <= attackRange + attackHitReachBonus)
+            {
+                Vector3 flatToPlayer = playerTransform.position - transform.position;
+                flatToPlayer.y = 0f;
+                float angle = flatToPlayer.sqrMagnitude > 0.001f
+                    ? Vector3.Angle(transform.forward, flatToPlayer.normalized)
+                    : 0f;
+
+                if (angle <= 120f)
+                {
+                    DealDamageToPlayerOnce(playerHealth, playerTransform.position + Vector3.up * 1.0f);
+                }
+            }
+        }
+    }
 
     private void OnTriggerEnter(Collider other)
     {
@@ -578,60 +834,41 @@ public class EnemyController : MonoBehaviour, IDamageable, IExecutable
 
     public void ProcessHit(Collider other)
     {
-        if (!isHitboxActive || isStunned || isDead || other == null) return;
-
-        bool isPlayer = other.CompareTag("Player") || other.GetComponentInParent<PlayerHealth>() != null;
-
-        if (isPlayer && !hitPlayers.Contains(other))
-        {
-            hitPlayers.Add(other);
-
-            PlayerHealth hp = other.GetComponentInParent<PlayerHealth>() ?? other.GetComponent<PlayerHealth>();
-            if (hp != null && !hp.IsDead)
-            {
-                hp.TakeDamage(attackDamage, other.ClosestPoint(transform.position));
-            }
-        }
+        if (!isHitboxActive || hasDealtDamageThisSwing || isStunned || isDead || other == null) return;
+        TryApplyDamageToCollider(other);
     }
 
-    public void OnEnemyAttackHit()
+    private bool TryApplyDamageToCollider(Collider other)
     {
-        if (isDead || isStunned || isBeingExecuted) return;
+        if (other == null || other.transform.root == transform.root) return false;
 
-        if (playerTransform != null && playerHealth != null && !playerHealth.IsDead)
+        PlayerHealth hp = other.GetComponentInParent<PlayerHealth>()
+                       ?? other.GetComponent<PlayerHealth>()
+                       ?? (other.CompareTag("Player") ? playerHealth : null);
+
+        if (hp != null && !hp.IsDead)
         {
-            float dist = Vector3.Distance(transform.position, playerTransform.position);
-            if (dist <= attackRange + 0.9f)
-            {
-                Vector3 dirToPlayer = (playerTransform.position - transform.position).normalized;
-                float angle = Vector3.Angle(transform.forward, dirToPlayer);
-
-                if (angle <= 110f)
-                {
-                    playerHealth.TakeDamage(attackDamage, playerTransform.position + Vector3.up * 1.0f);
-                }
-            }
+            DealDamageToPlayerOnce(hp, other.ClosestPoint(transform.position));
+            return true;
         }
+
+        return false;
     }
 
-    public void OnAttackHit() => OnEnemyAttackHit();
-    public void DealDamage() => OnEnemyAttackHit();
+    private void DealDamageToPlayerOnce(PlayerHealth targetPlayerHealth, Vector3 hitPoint)
+    {
+        if (hasDealtDamageThisSwing || targetPlayerHealth == null || targetPlayerHealth.IsDead) return;
+
+        hasDealtDamageThisSwing = true;
+        targetPlayerHealth.TakeDamage(attackDamage, hitPoint);
+    }
 
     public void SetAttackingState(bool attacking)
     {
         isAttacking = attacking;
-    }
-
-    private void SetupAnimationEventForwarder()
-    {
-        if (animator != null && animator.gameObject != gameObject)
+        if (!attacking)
         {
-            var forwarder = animator.GetComponent<EnemyAnimationEvents>();
-            if (forwarder == null)
-            {
-                forwarder = animator.gameObject.AddComponent<EnemyAnimationEvents>();
-            }
-            forwarder.Initialize(this);
+            ExecuteCloseHitbox();
         }
     }
 
@@ -645,7 +882,6 @@ public class EnemyController : MonoBehaviour, IDamageable, IExecutable
 
         currentHealth -= amount;
 
-        // คำนวณลดเกจ Stagger เฉพาะศัตรูระดับสูง (Elite / Boss)
         if (isEliteOrBoss)
         {
             if (!isStunned)
@@ -653,12 +889,10 @@ public class EnemyController : MonoBehaviour, IDamageable, IExecutable
                 float staggerReduction = amount * staggerDamageMultiplier;
                 currentStagger = Mathf.Max(0f, currentStagger - staggerReduction);
 
-                // เมื่อเกราะแตก (currentStagger <= 0) ให้ติด Stun ทันทีเพื่อเปิดโอกาสให้ผู้เล่นกด [F] ทำ Execution ฟื้นเลือด
                 if (currentStagger <= 0f)
                 {
                     if (currentHealth <= 0f)
                     {
-                        // เลี้ยงเลือดไว้ 1 HP ตอนเกราะแตกพอดี เพื่อให้ผู้เล่นกด [F] ทำ Execution เอาเลือดได้
                         currentHealth = 1f;
                     }
                     TriggerStun();
@@ -680,35 +914,30 @@ public class EnemyController : MonoBehaviour, IDamageable, IExecutable
             return;
         }
 
-        if (animator != null)
+        if (currentHealth <= 0f)
         {
-            animator.SetTrigger("Hurt");
+            Die();
+            return;
         }
 
         isTaunting = false;
 
-        if (!(currentState is AttackState))
+        if (!isAttacking && !(currentState is AttackState))
         {
+            if (animator != null)
+            {
+                animator.SetTrigger("Hurt");
+            }
             TransitionTo(new ChaseState(this));
         }
 
-        StartCoroutine(HurtFlinchRoutine());
-
-        if (currentHealth <= 0f)
-        {
-            Die();
-        }
+        StartCoroutine(HurtFlashOnlyRoutine());
     }
 
-    /// <summary>
-    /// สั่งให้ศัตรูเกราะแตกและติดสถานะ Stun รอรับปุ่ม [F] ทำ Execution
-    /// (รองรับการกดปุ่มเทส [F3] Instant Stun จาก CombatDebugTester ด้วย)
-    /// </summary>
     public void TriggerStun()
     {
         if (isDead) return;
 
-        // หากกดเรียกจาก Debug Tester บนมอนสเตอร์ทั่วไป ให้เปิดสิทธิ์ทำ Execution ชั่วคราวเพื่อทดสอบได้ทันที
         isEliteOrBoss = true;
         currentStagger = 0f;
         isStunned = true;
@@ -716,7 +945,7 @@ public class EnemyController : MonoBehaviour, IDamageable, IExecutable
         isTaunting = false;
         stunTimer = stunDuration;
 
-        end();
+        ExecuteCloseHitbox();
         StopMovement();
 
         if (animator != null)
@@ -727,7 +956,7 @@ public class EnemyController : MonoBehaviour, IDamageable, IExecutable
 
         if (enemyRenderer != null && enemyRenderer.material.HasProperty("_Color"))
         {
-            enemyRenderer.material.color = new Color(1f, 0.85f, 0.2f); // สีเหลืองทองแสดงสถานะ Stun เกราะแตก
+            enemyRenderer.material.color = new Color(1f, 0.85f, 0.2f);
         }
 
         if (BattleHUD.Instance != null)
@@ -761,7 +990,7 @@ public class EnemyController : MonoBehaviour, IDamageable, IExecutable
         isBeingExecuted = true;
         isStunned = true;
         stunTimer = 99f;
-        end();
+        ExecuteCloseHitbox();
         StopMovement();
     }
 
@@ -772,24 +1001,19 @@ public class EnemyController : MonoBehaviour, IDamageable, IExecutable
         Die();
     }
 
-    private IEnumerator HurtFlinchRoutine()
+    private IEnumerator HurtFlashOnlyRoutine()
     {
-        isHurt = true;
-        StopMovement();
-
         if (enemyRenderer != null && enemyRenderer.material.HasProperty("_Color"))
         {
             enemyRenderer.material.color = Color.red;
         }
 
-        yield return new WaitForSeconds(0.25f);
+        yield return new WaitForSeconds(0.18f);
 
-        if (enemyRenderer != null && enemyRenderer.material.HasProperty("_Color"))
+        if (!isDead && enemyRenderer != null && enemyRenderer.material.HasProperty("_Color"))
         {
             enemyRenderer.material.color = isStunned ? new Color(1f, 0.85f, 0.2f) : defaultColor;
         }
-
-        isHurt = false;
     }
 
     private void Die()
@@ -802,18 +1026,21 @@ public class EnemyController : MonoBehaviour, IDamageable, IExecutable
         isTaunting = false;
         isHurt = false;
 
-        // หยุด Coroutine และ Hitbox ทั้งหมดทันที
         StopAllCoroutines();
         currentState?.Exit();
         currentState = null;
-        end();
+        ExecuteCloseHitbox();
+
+        if (GameProgressionManager.Instance != null)
+        {
+            GameProgressionManager.Instance.RegisterEnemyKill(isEliteOrBoss);
+        }
 
         if (isEliteOrBoss && BattleHUD.Instance != null)
         {
             BattleHUD.Instance.HideBossBar();
         }
 
-        // Phase 3 Enemy Dead: หยุดแอนิเมชันทันที ไม่ให้มีการเล่นแอนิเมชันใดๆ ต่อระหว่างรอหรือก่อน Destroy
         if (animator != null)
         {
             animator.speed = 0f;
@@ -840,20 +1067,17 @@ public class EnemyController : MonoBehaviour, IDamageable, IExecutable
             enemyRenderer.material.color = defaultColor;
         }
 
-        // Phase 5: เสก Particle ออบเจกต์ให้ลอย MoveTowards พุ่งเข้าหาผู้เล่น
         Vector3 dropOrigin = transform.position + Vector3.up * 0.9f;
         if (starDustReward > 0)
         {
             RewardDropParticle.Spawn(dropOrigin, RewardDropType.StarDust, starDustReward, dropItemPrefab);
         }
 
-        // Phase 3 RNG Rare Drop: สุ่มโอกาสดรอปของแรร์ (Shattered Core) แยกลอจิกอิสระจากการทำ Execution
         if (shatteredCoreDropAmount > 0 && Random.Range(0f, 100f) <= shatteredCoreDropChance)
         {
             RewardDropParticle.Spawn(dropOrigin + new Vector3(0.35f, 0.2f, 0f), RewardDropType.ShatteredCore, shatteredCoreDropAmount, dropItemPrefab);
         }
 
-        // เรียก Destroy ทันที (หาก destroyDelayOnDeath <= 0) หรือหน่วงเวลาตามที่กำหนดโดยไม่มีแอนิเมชันเล่นต่อ
         if (destroyDelayOnDeath <= 0f)
         {
             Destroy(gameObject);
@@ -875,13 +1099,9 @@ public class EnemyController : MonoBehaviour, IDamageable, IExecutable
 }
 
 // =========================================================================
-// PHASE 5: HOMING PARTICLE DROP (MoveTowards Player + Floating UI Trigger)
+// PHASE 5: HOMING PARTICLE DROP
 // =========================================================================
 
-/// <summary>
-/// Phase 5: Particle ออบเจกต์ที่เสกออกมาเมื่อศัตรูตาย ลอย MoveTowards พุ่งเข้าหาตำแหน่งผู้เล่น
-/// เมื่อชนผู้เล่นจะบวกแต้มเข้าตัวแปรและเด้งข้อความ Floating UI สไตล์ "+ [ไอคอน] จำนวน"
-/// </summary>
 public class RewardDropParticle : MonoBehaviour
 {
     private RewardDropType dropType;
@@ -923,10 +1143,9 @@ public class RewardDropParticle : MonoBehaviour
     private static void CreateProceduralParticleVisual(GameObject host, RewardDropType type)
     {
         Color mainColor = (type == RewardDropType.ShatteredCore)
-            ? new Color(0.95f, 0.25f, 1.0f)   // สีม่วงชมพูสำหรับแรร์ไอเทม Shattered Core
-            : new Color(1.0f, 0.88f, 0.25f);  // สีทองสว่างสำหรับ Star Dust
+            ? new Color(0.95f, 0.25f, 1.0f)
+            : new Color(1.0f, 0.88f, 0.25f);
 
-        // สร้างลูกแก้วแสงขนาดเล็ก
         GameObject visualSphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
         visualSphere.transform.SetParent(host.transform, false);
         visualSphere.transform.localScale = (type == RewardDropType.ShatteredCore) ? Vector3.one * 0.34f : Vector3.one * 0.24f;
@@ -941,7 +1160,6 @@ public class RewardDropParticle : MonoBehaviour
             rend.material.color = mainColor;
         }
 
-        // สร้าง Particle System ประกายแสงวิ่งตามลูกแก้ว
         ParticleSystem ps = host.AddComponent<ParticleSystem>();
         var main = ps.main;
         main.startColor = mainColor;
@@ -963,7 +1181,6 @@ public class RewardDropParticle : MonoBehaviour
         dropType = type;
         amount = rewardAmount;
 
-        // ปิด Collider ที่ไม่ใช่ Trigger บน Prefab เพื่อไม่ให้สะดุดขาผู้เล่น
         foreach (var col in GetComponentsInChildren<Collider>())
         {
             col.isTrigger = true;
@@ -977,7 +1194,6 @@ public class RewardDropParticle : MonoBehaviour
         trigger.isTrigger = true;
         trigger.radius = 0.5f;
 
-        // สุ่มแรงดีดตัวขึ้นสั้นๆ ตอนดรอปออกจากตัวศัตรู
         Vector2 randCircle = Random.insideUnitCircle * 2.2f;
         scatterVelocity = new Vector3(randCircle.x, Random.Range(2.2f, 3.6f), randCircle.y);
 
@@ -1010,7 +1226,6 @@ public class RewardDropParticle : MonoBehaviour
             if (targetPlayer == null) return;
         }
 
-        // จังหวะที่ 1: ลอยกระจายตัวขึ้นสั้นๆ ให้เห็นชัดเจนว่าดรอปจากศัตรู
         if (scatterTimer > 0f)
         {
             scatterTimer -= Time.deltaTime;
@@ -1019,7 +1234,6 @@ public class RewardDropParticle : MonoBehaviour
             return;
         }
 
-        // จังหวะที่ 2: พุ่งเข้าหาตำแหน่งผู้เล่นด้วย Vector3.MoveTowards (Phase 5)
         currentHomingSpeed = Mathf.Min(maxHomingSpeed, currentHomingSpeed + acceleration * Time.deltaTime);
         Vector3 targetCenter = targetPlayer.position + Vector3.up * 1.0f;
 
@@ -1163,7 +1377,7 @@ public class AttackState : EnemyState
 
         if (enemy.IsAttacking) return;
 
-        if (!enemy.IsPlayerInAttackRange())
+        if (enemy.GetHorizontalDistanceToPlayer() > enemy.AttackRange * 1.15f)
         {
             enemy.TransitionTo(new ChaseState(enemy));
             return;
@@ -1179,18 +1393,31 @@ public class AttackState : EnemyState
     {
         nextAttackTime = Time.time + enemy.AttackCooldown;
 
+        if (enemy.PlayerTransform != null)
+        {
+            Vector3 lookDir = enemy.PlayerTransform.position - enemy.transform.position;
+            lookDir.y = 0f;
+            if (lookDir.sqrMagnitude > 0.001f)
+            {
+                enemy.transform.rotation = Quaternion.LookRotation(lookDir.normalized);
+            }
+        }
+
         if (enemy.Animator != null)
         {
+            enemy.Animator.ResetTrigger("Hurt");
             enemy.Animator.SetTrigger("Attack");
         }
 
+        if (attackRoutine != null)
+            enemy.StopCoroutine(attackRoutine);
         attackRoutine = enemy.StartCoroutine(ComboDurationRoutine());
     }
 
     private IEnumerator ComboDurationRoutine()
     {
         enemy.SetAttackingState(true);
-        yield return new WaitForSeconds(1.5f);
+        yield return new WaitForSeconds(Mathf.Max(0.8f, enemy.AttackCooldown * 0.85f));
         enemy.SetAttackingState(false);
     }
 
@@ -1264,7 +1491,7 @@ public class PatrolState : EnemyState
 }
 
 // =========================================================================
-// ANIMATION EVENT FORWARDER
+// ENEMY ANIMATION EVENT FORWARDER (LIST-DRIVEN: DEFAULT hite / end)
 // =========================================================================
 
 public class EnemyAnimationEvents : MonoBehaviour
@@ -1284,34 +1511,73 @@ public class EnemyAnimationEvents : MonoBehaviour
         enemyController = controller;
     }
 
-    public void hite(int hitIndex = 0)
+    private EnemyController GetEnemy()
     {
         if (enemyController == null)
-            enemyController = GetComponentInParent<EnemyController>();
-
-        enemyController?.hite(hitIndex);
+            enemyController = GetComponentInParent<EnemyController>() ?? GetComponent<EnemyController>();
+        return enemyController;
     }
 
-    public void end()
-    {
-        if (enemyController == null)
-            enemyController = GetComponentInParent<EnemyController>();
+    // Default Enemy Events: hite / end
+    public void hite(int hitIndex = 0) => GetEnemy()?.hite(hitIndex);
+    public void end() => GetEnemy()?.end();
 
-        enemyController?.end();
-    }
-
-    public void OnHitboxEnd() => end();
-    public void EnableHitbox() => hite(0);
-    public void DisableHitbox() => end();
-
-    public void OnEnemyAttackHit()
-    {
-        if (enemyController == null)
-            enemyController = GetComponentInParent<EnemyController>();
-
-        enemyController?.OnEnemyAttackHit();
-    }
-
-    public void OnAttackHit() => OnEnemyAttackHit();
-    public void DealDamage() => OnEnemyAttackHit();
+    // Custom Event Handler for any extra event names added to the Inspector List
+    public void OnCustomEnemyAnimEvent(string eventName) => GetEnemy()?.OnCustomEnemyAnimEvent(eventName);
 }
+
+
+/* ============================================================================
+ * คำอธิบายการทำงานของโค้ดและฟังก์ชันทั้งหมดใน EnemyController.cs
+ * (ส่วนนี้เป็น Comment ล้วน 100% — คอมไพเลอร์และระบบเกมจะไม่นำไปรันเด็ดขาด)
+ * ============================================================================
+ *
+ * 1. Awake() & EnsureDefaultEventLists()
+ *    - เตรียมค่าเริ่มต้นของมอนสเตอร์ ดึงคอมโพเนนต์ NavMeshAgent, Animator, Renderer
+ *    - ปิด applyRootMotion ของ Animator เพื่อไม่ให้แอนิเมชันดึงตัวมอนสเตอร์จมพื้น
+ *    - ตั้งค่ารายการชื่อ Animation Event เริ่มต้นใน List:
+ *      • openHitboxEventNames = ["hite"] (สำหรับเปิด Hitbox และทำดาเมจ)
+ *      • closeHitboxEventNames = ["end"] (สำหรับปิด Hitbox)
+ *
+ * 2. Start() & IgnorePhysicalPushAgainstPlayer()
+ *    - ตั้งค่าระยะหยุดของ NavMeshAgent (stoppingDistance) ไม่ให้เดินชนซ้อนทับตัวผู้เล่น
+ *    - สั่ง Physics.IgnoreCollision ระหว่าง CharacterController ของผู้เล่น กับ Collider ลูกบนกระดูกแขน/อาวุธของมอนสเตอร์
+ *      เพื่อป้องกันไม่ให้แขนของมอนสเตอร์ตบผู้เล่นจมทะลุพื้นแมพ (แก้ปัญหาตกแมพ)
+ *
+ * 3. SetupWeaponHitboxAndPreventSolidBonePush()
+ *    - บังคับให้ Collider ลูกทุกชิ้นบนตัวมอนสเตอร์ (เช่น มือ, แขน, อาวุธ) เป็น Trigger (isTrigger = true)
+ *    - ผูก HitboxTriggerForwarder เข้ากับก้อน Hitbox เพื่อส่งข้อมูลการชนกลับมาหา EnemyController
+ *
+ * 4. BindCustomAnimationClipEvents() & OnCustomEnemyAnimEvent(string eventName)
+ *    - สแกนคลิปแอนิเมชันทั้งหมดใน Animator อัตโนมัติ
+ *    - หากคุณกด + เพิ่มชื่อ Event ใหม่เข้าไปใน List บน Inspector (นอกเหนือจาก hite / end)
+ *      ระบบจะเชื่อมชื่อ Event นั้นเข้ากับฟังก์ชันเปิด/ปิด Hitbox ให้อัตโนมัติโดยไม่ต้องเขียนโค้ดเพิ่ม
+ *
+ * 5. hite(int hitIndex) & ExecuteOpenHitbox(int hitIndex)
+ *    - ถูกเรียกเมื่อแอนิเมชันโจมตีของมอนสเตอร์เล่นถึงเฟรมที่ปักหมุด Event "hite"
+ *    - เช็กว่าชื่อ "hite" อยู่ใน openHitboxEventNames List หรือไม่ ถ้าอยู่จะเปิดใช้งานก้อน Hitbox
+ *      ตั้งเวลาหน้าต่างดาเมจ (activeHitWindowDuration = 0.25 วินาที) และสแกนทำดาเมจทันที
+ *
+ * 6. end() & ExecuteCloseHitbox()
+ *    - ถูกเรียกเมื่อแอนิเมชันเล่นถึงหมุด Event "end" (หรือเมื่อหมดเวลาหน้าต่างดาเมจ 0.25 วินาที)
+ *    - ปิดก้อน Hitbox ทั้งหมดทันทีเพื่อจบการโจมตีในรอบนั้น
+ *
+ * 7. ScanActiveHitboxesAndAttackArc() & DealDamageToPlayerOnce()
+ *    - ทำงานทุกเฟรมในช่วงที่ Hitbox เปิดอยู่
+ *    - ตรวจจับการโดนตัวผู้เล่นทั้งจากก้อน Hitbox (OverlapSphere) และระยะแนวราบ XZ ด้านหน้ามอนสเตอร์
+ *    - ล็อกตัวแปร hasDealtDamageThisSwing = true เมื่อทำดาเมจสำเร็จ เพื่อการันตีว่าต่อย 1 หมัด เลือดลดแค่ 1 ครั้ง
+ *
+ * 8. MoveTo(Vector3 destination) & GetHorizontalDistanceToPlayer()
+ *    - คำนวณระยะห่างแนวราบ (แกน X, Z ไม่รวมความสูง Y) เพื่อให้เช็กระยะโจมตีแม่นยำ
+ *    - หยุดเดินทันทีเมื่อเข้าใกล้ผู้เล่นถึงระยะ minBodySeparationDistance (1.15m) ไม่เดินเบียดทับตัวผู้เล่น
+ *
+ * 9. TakeDamage(float amount, Vector3 hitPoint) & TriggerStun()
+ *    - ลดเลือดมอนสเตอร์เมื่อถูกผู้เล่นโจมตี และลดเกจ Stagger สำหรับบอส/Elite
+ *    - หากมอนสเตอร์กำลังออกท่าโจมตีอยู่ (isAttacking == true) จะกะพริบตัวสีแดงแต่ไม่สั่งเล่นท่า Hurt แทรก
+ *      เพื่อไม่ให้แอนิเมชันโจมตีของมอนสเตอร์ถูกตัดทิ้งก่อนถึงเฟรมทำดาเมจ
+ *    - หากเกจ Stagger ของบอสลดเหลือ 0 จะเข้าสู่สถานะ Stun (ตัวสีเหลืองทอง) รอให้ผู้เล่นกดปุ่ม [F] สังหาร
+ *
+ * 10. Die() & RewardDropParticle
+ *    - เมื่อเลือดหมด จะหยุดแอนิเมชันทันที บันทึกจำนวนการสังหารเข้า GameProgressionManager
+ *    - เสกลูกแก้วพลังงาน Star Dust และสุ่มดรอป Shattered Core ให้ลอยพุ่งเข้าหาตัวผู้เล่นก่อนลบออบเจกต์ทิ้ง
+ * ============================================================================ */

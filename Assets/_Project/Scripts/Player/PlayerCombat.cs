@@ -646,3 +646,35 @@ public class HitboxTriggerForwarder : MonoBehaviour
         if (enemyController != null) enemyController.ProcessHit(other);
     }
 }
+
+/*
+===============================================================================
+[คำอธิบายโค้ดและฟังก์ชันทั้งหมดในไฟล์ PlayerCombat.cs]
+1. Awake() / Start()
+   - ค้นหาและเตรียมอ้างอิงคอมโพเนนต์ทั้งหมด ตั้งค่า Hitbox Colliders, LayerMask ของศัตรู และติดตั้งตัวรับ Animation Event (PlayerAnimationEvents)
+
+2. SetupHitboxColliders() / SetupAnimationEventReceiver()
+   - ตั้งค่าให้ Collider ของหมัด/อาวุธทุกชิ้นเป็น Trigger และปิดไว้จนกว่าจะถึงเฟรมโจมตี พร้อมผูก HitboxTriggerForwarder ส่งต่อการชนกลับมาประมวลผล
+
+3. Update() / CheckDirectAttackInput()
+   - ตรวจจับการกดโจมตี (คลิกซ้าย / ปุ่ม J / จอยเกม), กรองการลากเมาส์หันกล้องออกจากคลิกโจมตี และสแกนทำดาเมจเมื่อ Hitbox เปิดทำงาน
+
+4. PerformAttack()
+   - สั่งเริ่มท่าโจมตีและนับจังหวะคอมโบ 3 หมัด (Cross Punch -> Hook Punch -> Surprise Uppercut)
+
+5. IsHeavyComboFinisher()
+   - ตรวจสอบว่าเป็นหมัดปิดคอมโบหนัก (หมัดที่ 3 / Surprise Uppercut) หรือไม่ เพื่อคูณดาเมจและสั่นหน้าจอแรงขึ้น
+
+6. EnterCombatState() / ExitCombatState() / HandleCombatStanceTimer()
+   - จัดการสถานะตั้งการ์ดต่อสู้ (InCombat) และนับถอยหลังกลับสู่ท่ายืนปกติเมื่อไม่ได้โจมตีหรือเมื่อเริ่มวิ่ง
+
+7. hit(int hitIndex = 0) / end()
+   - ฟังก์ชันหลักที่รับคำสั่งจาก Animation Event (รายการชื่ออีเวนท์ใน PlayerAnimationEvents: hit / end) เพื่อเปิดและปิด Hitbox ตามเฟรมแอนิเมชัน
+
+8. ProcessHit(Collider other) / OnTriggerEnter(Collider other) / ScanAndDealDamage()
+   - คำนวณดาเมจรวมกับโบนัสอัปเกรดจาก Hub (Raw Power) ส่งดาเมจให้ศัตรู พร้อมสั่ง Hit-stop และสั่นหน้าจอ (Cinemachine Impulse)
+
+9. CancelCombat()
+   - ยกเลิกท่าโจมตีทันทีเมื่อผู้เล่นกดกลิ้งหลบ (Animation Cancel) หรือกดใช้ท่าสังหาร (Execution)
+===============================================================================
+*/

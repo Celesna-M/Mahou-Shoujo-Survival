@@ -4,9 +4,10 @@ using UnityEngine.InputSystem;
 #endif
 
 /// <summary>
-/// [DefaultExecutionOrder(2000)] ensures LateUpdate runs AFTER CinemachineBrain,
-/// so Camera Anti-Clipping always pulls the camera in front of walls/props without being overwritten by Cinemachine.
-/// Does NOT require any "Obstacle" Tag or Layer.
+/// PlayerMovement (Anti-Fall-Through-Map Edition)
+/// - Removed OnControllerColliderHit downward push that caused the player to fall through the floor when hit by enemies.
+/// - Added Ground Floor Safety Clamp (lockMinGroundHeight) so the player can NEVER be pushed under the map by enemy attacks!
+/// - Respects the exact CharacterController collider settings configured in the Inspector.
 /// </summary>
 [DefaultExecutionOrder(2000)]
 [RequireComponent(typeof(CharacterController))]
@@ -16,23 +17,17 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private float moveSpeed = 5.0f;
     [SerializeField] private float rotationSmoothTime = 0.08f;
 
-    [Header("1. Camera Anti-Clipping (Prevent Camera Going Through Scene/Walls)")]
-    [Tooltip("Automatically pulls the Main Camera forward when a wall, floor, or prop blocks the line of sight")]
-    [SerializeField] private bool enableCameraAntiClip = true;
-    [Tooltip("Height on the player where the camera raycast starts (shoulder/head height)")]
-    [SerializeField] private float cameraPivotHeight = 1.45f;
-    [Tooltip("Radius of the sphere cast used to keep the camera away from walls")]
-    [SerializeField] private float cameraCollisionRadius = 0.28f;
-    [Tooltip("Minimum distance allowed between camera and player pivot")]
-    [SerializeField] private float minCameraDistance = 0.55f;
-    [Tooltip("Layers that block the camera (defaults to everything except Player, Enemy, Ignore Raycast, UI)")]
-    [SerializeField] private LayerMask cameraCollisionLayers;
+    [Header("1. Anti-Fall-Through-Map Protection (กันตกแมพเวลามอนตี)")]
+    [Tooltip("Prevents the player's Y position from ever being pushed below the starting floor height when enemies attack")]
+    [SerializeField] private bool preventFallingThroughMap = true;
+    [SerializeField] private float floorHeightTolerance = 0.05f;
 
-    [Header("2. Anti-Climb / No-Step Prop Guard (Prevent Stepping Onto Props)")]
-    [Tooltip("Locks CharacterController stepOffset to a tiny value (0.05m) so the player cannot step up onto props")]
-    [SerializeField] private float maxStepOffset = 0.05f;
-    [Tooltip("Locks CharacterController slopeLimit (15 deg) so the player cannot walk up sloped prop edges")]
-    [SerializeField] private float maxSlopeLimit = 15f;
+    [Header("2. Camera Anti-Clipping (Prevent Camera Going Through Scene/Walls)")]
+    [SerializeField] private bool enableCameraAntiClip = true;
+    [SerializeField] private float cameraPivotHeight = 1.45f;
+    [SerializeField] private float cameraCollisionRadius = 0.28f;
+    [SerializeField] private float minCameraDistance = 0.55f;
+    [SerializeField] private LayerMask cameraCollisionLayers;
 
     [Header("Dodge & I-Frame Settings")]
     [SerializeField] private float dodgeSpeed = 14f;
@@ -42,7 +37,7 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private float dodgeCooldown = 0.2f;
 
     [Header("Gravity")]
-    [SerializeField] private float downwardForce = -9.8f;
+    [SerializeField] private float downwardForce = -3.5f;
 
     [Header("References")]
     [SerializeField] private Transform cameraTransform;
@@ -90,9 +85,16 @@ public class PlayerMovement : MonoBehaviour
         if (cameraTransform == null && Camera.main != null)
             cameraTransform = Camera.main.transform;
 
-        if (GameProgressionManager.Instance != null && GameProgressionManager.Instance.HasSelectedCharacter)
+        if (GameProgressionManager.Instance != null)
         {
-            moveSpeed = GameProgressionManager.Instance.SelectedCharacterMoveSpeed;
+            if (GameProgressionManager.Instance.HasSelectedCharacter)
+            {
+                moveSpeed = GameProgressionManager.Instance.SelectedCharacterMoveSpeed;
+            }
+            if (GameProgressionManager.Instance.BonusDodgeCostReduction > 0f)
+            {
+                dodgeStaminaCost = Mathf.Max(5f, dodgeStaminaCost - GameProgressionManager.Instance.BonusDodgeCostReduction);
+            }
         }
 
         if (cameraCollisionLayers.value == 0)
@@ -100,34 +102,11 @@ public class PlayerMovement : MonoBehaviour
             cameraCollisionLayers = ~LayerMask.GetMask("Player", "Enemy", "Ignore Raycast", "UI");
         }
 
-        ConfigureCharacterController();
-        IgnoreSelfCollisions();
-        initialGroundY = transform.position.y;
-    }
-
-    private void ConfigureCharacterController()
-    {
-        if (controller == null) return;
-
-        if (controller.height < 1.5f || controller.height > 2.5f)
-            controller.height = 2.0f;
-
-        float correctCenterY = controller.height * 0.5f;
-        if (Mathf.Abs(controller.center.y - correctCenterY) > 0.05f)
-        {
-            Vector3 center = controller.center;
-            center.y = correctCenterY;
-            controller.center = center;
-        }
-
-        // Lock stepOffset and slopeLimit so CharacterController never steps up onto props
-        controller.stepOffset = Mathf.Clamp(maxStepOffset, 0.01f, 0.1f);
-        controller.slopeLimit = Mathf.Clamp(maxSlopeLimit, 5f, 30f);
-        controller.skinWidth = 0.02f;
-        controller.minMoveDistance = 0f;
-
         if (animator != null && animator.applyRootMotion)
             animator.applyRootMotion = false;
+
+        initialGroundY = transform.position.y;
+        IgnoreSelfCollisions();
     }
 
     private void IgnoreSelfCollisions()
@@ -174,6 +153,7 @@ public class PlayerMovement : MonoBehaviour
 
         if (playerExecution != null && playerExecution.IsExecuting)
         {
+            ClampAboveGroundFloor();
             UpdateAnimatorParameters(Vector3.zero);
             return;
         }
@@ -234,11 +214,14 @@ public class PlayerMovement : MonoBehaviour
         if (controller != null && controller.enabled)
             controller.Move(finalVelocity * Time.deltaTime);
 
+        ClampAboveGroundFloor();
         UpdateAnimatorParameters(horizontalVelocity);
     }
 
     private void LateUpdate()
     {
+        ClampAboveGroundFloor();
+
         if (enableCameraAntiClip)
         {
             ResolveCameraCollision();
@@ -246,9 +229,25 @@ public class PlayerMovement : MonoBehaviour
     }
 
     /// <summary>
-    /// Runs after CinemachineBrain in LateUpdate (ExecutionOrder 2000).
-    /// Casts a sphere from the player's shoulder/head pivot to the camera and pulls the camera in front of any hit wall or prop.
+    /// Guarantees the player can NEVER fall through the map floor when hit or pushed by enemies!
     /// </summary>
+    private void ClampAboveGroundFloor()
+    {
+        if (!preventFallingThroughMap) return;
+
+        if (transform.position.y < initialGroundY - floorHeightTolerance)
+        {
+            bool wasEnabled = controller != null && controller.enabled;
+            if (wasEnabled) controller.enabled = false;
+
+            Vector3 pos = transform.position;
+            pos.y = initialGroundY;
+            transform.position = pos;
+
+            if (wasEnabled) controller.enabled = true;
+        }
+    }
+
     private void ResolveCameraCollision()
     {
         if (cameraTransform == null)
@@ -283,38 +282,12 @@ public class PlayerMovement : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Slides the player off horizontally if they ever touch the upper surface of an elevated prop or enemy.
-    /// Uses geometry & height checks instead of any "Obstacle" Tag or Layer.
-    /// </summary>
-    private void OnControllerColliderHit(ControllerColliderHit hit)
-    {
-        if (hit.collider == null || hit.collider.isTrigger) return;
-
-        bool isEnemy = hit.collider.GetComponentInParent<EnemyController>() != null;
-        bool isElevatedSurface = hit.point.y > initialGroundY + 0.12f &&
-                                 hit.collider.bounds.max.y > initialGroundY + 0.15f;
-
-        if ((isEnemy || isElevatedSurface) && hit.normal.y > 0.35f && transform.position.y > initialGroundY + 0.08f)
-        {
-            Vector3 pushOut = new Vector3(
-                transform.position.x - hit.collider.bounds.center.x,
-                0f,
-                transform.position.z - hit.collider.bounds.center.z);
-
-            if (pushOut.sqrMagnitude < 0.001f) pushOut = -transform.forward;
-            pushOut.Normalize();
-
-            if (controller != null && controller.enabled)
-            {
-                controller.Move((pushOut * 5.0f + Vector3.down * 10f) * Time.deltaTime);
-            }
-        }
-    }
-
     private void ComputeVerticalVelocity()
     {
-        verticalVelocity = downwardForce;
+        if (controller != null && controller.isGrounded)
+            verticalVelocity = -1.5f;
+        else
+            verticalVelocity = downwardForce;
     }
 
     private void UpdateAnimatorParameters(Vector3 currentWorldVelocity)
@@ -461,3 +434,38 @@ public class PlayerMovement : MonoBehaviour
         if (wasEnabled) controller.enabled = true;
     }
 }
+
+
+/* ============================================================================
+ * คำอธิบายการทำงานของโค้ดและฟังก์ชันทั้งหมดใน PlayerMovement.cs
+ * (ส่วนนี้เป็น Comment ล้วน 100% — คอมไพเลอร์และระบบเกมจะไม่นำไปรันเด็ดขาด)
+ * ============================================================================
+ *
+ * 1. Awake() & IgnoreSelfCollisions()
+ *    - ดึงคอมโพเนนต์ CharacterController, PlayerStamina, PlayerLockOn, PlayerCombat, PlayerExecution
+ *    - ซิงก์ความเร็วการเดิน (moveSpeed) และส่วนลด Stamina ตอนกลิ้งหลบจาก GameProgressionManager
+ *    - บันทึกความสูงระดับพื้นสนามเริ่มต้น (initialGroundY) สำหรับใช้ป้องกันตัวละครตกแมพ
+ *    - สั่ง Physics.IgnoreCollision ไม่ให้ CharacterController ชนกับ Collider ลูกของตัวเอง
+ *
+ * 2. Update() & ComputeMovementVelocity()
+ *    - อ่านค่าปุ่มเดิน WASD / ลูกศร / จอยเกม และคำนวณทิศทางการเดินอ้างอิงตามมุมกล้องหลัก
+ *    - หากล็อกเป้าศัตรูอยู่ (PlayerLockOn) ตัวละครจะหันหน้าหาศัตรูพร้อมเดินสเตรฟซ้าย-ขวาได้
+ *    - หากไม่ได้ล็อกเป้า ตัวละครจะหมุนตัวไปตามทิศทางที่เดินอย่างสมูทด้วย SmoothDampAngle
+ *
+ * 3. PerformDodge() & ComputeDodgeVelocity()
+ *    - เมื่อกดปุ่ม Left Shift หรือ Space จะหักค่า Stamina และพุ่งตัวหลบ (Dodge) ไปตามทิศทางที่กด
+ *    - เปิดสถานะอมตะชั่วคราว (IsInvincible / I-Frame) ตามเวลา iFrameDuration และสามารถกดกลิ้งเพื่อยกเลิกท่าโจมตีได้ทันที
+ *
+ * 4. ClampAboveGroundFloor() (ระบบป้องกันตัวละครจมพื้น/ตกแมพเวลามอนตี)
+ *    - ทำงานทั้งใน Update() และ LateUpdate()
+ *    - ตรวจสอบทุกเฟรมว่าค่าความสูงแกน Y ของตัวละครต่ำกว่าระดับพื้นเริ่มต้น (initialGroundY - floorHeightTolerance) หรือไม่
+ *    - หากโดนมอนสเตอร์กระแทกหรือฟันจนกดตัวละครจมลงไปใต้พื้น ระบบจะดึงตัวละครกลับขึ้นมาบนระดับพื้นทันที ไม่ให้ตกแมพเด็ดขาด
+ *
+ * 5. LateUpdate() & ResolveCameraCollision() (ระบบกันกล้องทะลุกำแพง/ฉาก)
+ *    - ทำงานเป็นลำดับสุดท้ายหลังจาก Cinemachine อัปเดตตำแหน่งกล้องเสร็จแล้ว ([DefaultExecutionOrder(2000)])
+ *    - ยิง Physics.SphereCast จากระดับไหล่ผู้เล่น (cameraPivotHeight) ไปยังตำแหน่งกล้อง
+ *    - หากมีกำแพงหรือฉากขวางกั้น จะดึงกล้องเข้ามาด้านหน้ากำแพงทันทีโดยไม่ชนตัวผู้เล่นหรือมอนสเตอร์
+ *
+ * 6. WarpToPositionAndLookAt()
+ *    - ปิด CharacterController ชั่วคราวก่อนย้ายตำแหน่งตัวละคร (เช่น ตอนเริ่มด่านหรือทำท่า Execution) แล้วเปิดใหม่
+ * ============================================================================ */

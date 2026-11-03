@@ -1277,12 +1277,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 15a8d5a28c79f6a4e9ef55f7ddf40a2b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyController
-  maxHealth: 100
-  moveSpeed: 3.5
-  rotationSpeed: 9
-  destroyDelayOnDeath: 0
   isEliteOrBoss: 0
   enemyDisplayName: ENTITY
+  maxHealth: 100
+  moveSpeed: 3.5
+  rotationSpeed: 10
+  destroyDelayOnDeath: 0
+  useDirectMoveTowards: 1
+  attackRange: 1
+  attackDamage: 12
+  attackCooldown: 1.6
+  hitboxes:
+  - {fileID: 8894893675243853426}
+  - {fileID: 2726847990121874410}
   maxStagger: 100
   staggerDamageMultiplier: 1.15
   stunDuration: 5
@@ -1290,23 +1297,8 @@ MonoBehaviour:
   shatteredCoreDropChance: 20
   shatteredCoreDropAmount: 1
   dropItemPrefab: {fileID: 0}
-  alwaysChasePlayer: 1
-  visionRange: 25
-  attackRange: 3
-  attackCooldown: 2.5
-  attackDamage: 12
-  enableRandomTaunt: 1
-  minTauntInterval: 7
-  maxTauntInterval: 12
-  tauntChance: 20
-  tauntDuration: 2
-  lostSightBehavior: 0
-  patrolPoints: []
   animator: {fileID: 4641665743560075219}
   enemyRenderer: {fileID: 0}
-  hitboxes:
-  - {fileID: 8894893675243853426}
-  - {fileID: 2726847990121874410}
 --- !u!95 &4641665743560075219 stripped
 Animator:
   m_CorrespondingSourceObject: {fileID: 5866666021909216657, guid: 2736dc4556809ca4db0b3e3172769f05, type: 3}

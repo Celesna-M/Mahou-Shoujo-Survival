@@ -1600,22 +1600,22 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyController
   isEliteOrBoss: 1
-  enemyDisplayName: ELITE ENTITY
-  maxHealth: 200
-  moveSpeed: 3.5
-  rotationSpeed: 9
+  enemyDisplayName: THE ENTITY (BOSS)
+  maxHealth: 300
+  moveSpeed: 4
+  rotationSpeed: 10
   destroyDelayOnDeath: 0
-  attackRange: 2
-  attackDamage: 5
-  attackCooldown: 10
-  attackWindupHitTime: 0.45
+  useDirectMoveTowards: 1
+  attackRange: 1
+  attackDamage: 20
+  attackCooldown: 1.8
   hitboxes:
   - {fileID: 2500970429667270508}
   maxStagger: 100
   staggerDamageMultiplier: 1.15
   stunDuration: 5
-  starDustReward: 15
-  shatteredCoreDropChance: 20
+  starDustReward: 50
+  shatteredCoreDropChance: 100
   shatteredCoreDropAmount: 1
   dropItemPrefab: {fileID: 0}
   animator: {fileID: 6867062331071982685}

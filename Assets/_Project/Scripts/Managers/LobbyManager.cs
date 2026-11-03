@@ -57,11 +57,8 @@ public class ScrollRectDragForwarder : MonoBehaviour, IBeginDragHandler, IDragHa
 }
 
 /// <summary>
-/// Scene 2: Lobby / Hub Manager (The lobby)
-/// - Mouse Drag & Wheel Character Selection
-/// - Pure ASCII English UI Text (No unsupported symbols)
-/// - Play Energy Limit Display & Refill
-/// - Full Settings Panel support in Lobby
+/// Scene 2: The Hub / Lobby Manager
+/// - Pulls ALL auto-generated strings & templates directly from GameTextMasterConfig!
 /// </summary>
 public class LobbyManager : MonoBehaviour
 {
@@ -75,7 +72,7 @@ public class LobbyManager : MonoBehaviour
     [SerializeField] private Button backToMainMenuButton;
     [SerializeField] private Button quitButton;
 
-    [Header("Economy & Energy Display (Pure English Text)")]
+    [Header("Economy & Energy Display")]
     [SerializeField] private TextMeshProUGUI starDustText;
     [SerializeField] private TextMeshProUGUI shatteredCoreText;
     [SerializeField] private TextMeshProUGUI energyText;
@@ -87,22 +84,35 @@ public class LobbyManager : MonoBehaviour
     [SerializeField] private float mouseWheelScrollSensitivity = 0.15f;
     [SerializeField] private List<CharacterProfileData> characters = new List<CharacterProfileData>();
 
-    [Header("Character Info & Combined Stats Display")]
+    [Header("Character Info, Rank & Combined Stats Display")]
     [SerializeField] private TextMeshProUGUI selectedCharacterNameText;
     [SerializeField] private TextMeshProUGUI selectedCharacterLoreText;
     [SerializeField] private TextMeshProUGUI combinedStatsSummaryText;
 
-    [Header("Linear Upgrade System")]
+    [Header("1. Vitality Boost (Max HP Upgrade)")]
     [SerializeField] private Button upgradeMaxHpButton;
     [SerializeField] private TextMeshProUGUI upgradeMaxHpText;
     [SerializeField] private int baseHpUpgradeCost = 30;
     [SerializeField] private int hpCostIncreasePerLevel = 15;
     [SerializeField] private float bonusMaxHpPerUpgrade = 25f;
 
+    [Header("2. Stamina Efficiency (Dodge Cost & Stamina Regen Upgrade)")]
+    [SerializeField] private Button upgradeStaminaButton;
+    [SerializeField] private TextMeshProUGUI upgradeStaminaText;
+    [SerializeField] private int baseStaminaUpgradeCost = 25;
+    [SerializeField] private int staminaCostIncreasePerLevel = 15;
+    [SerializeField] private float bonusStaminaRegenPerUpgrade = 4.0f;
+    [SerializeField] private float bonusDodgeReductionPerUpgrade = 1.5f;
+
+    [Header("3. Raw Power (Base Attack Upgrade)")]
     [SerializeField] private Button upgradeAttackButton;
     [SerializeField] private TextMeshProUGUI upgradeAttackText;
     [SerializeField] private int baseAttackCoreCost = 1;
     [SerializeField] private float bonusAttackPerUpgrade = 5f;
+
+    [Header("Milestone Unlocks (Flavor Text & Soft Pink -> Deep Crimson UI Shift)")]
+    [SerializeField] private TextMeshProUGUI milestoneFlavorText;
+    [SerializeField] private Image[] milestoneAccentImages;
 
     [Header("Settings Panel (Available in Lobby Scene)")]
     [SerializeField] private Button openSettingsButton;
@@ -223,9 +233,9 @@ public class LobbyManager : MonoBehaviour
         {
             new CharacterProfileData
             {
-                characterId = "CHAR_01",
-                characterName = "01 : HIKARI - BRAWLER STRIKER",
-                characterRoleAndLore = "Balanced Striker | High mobility and fast melee combos.",
+                characterId = GameTextMasterConfig.CharacterIds[0],
+                characterName = GameTextMasterConfig.CharacterNames[0],
+                characterRoleAndLore = GameTextMasterConfig.CharacterLores[0],
                 baseMaxHealth = 100f,
                 baseAttackDamage = 25f,
                 baseMoveSpeed = 5.2f,
@@ -233,9 +243,9 @@ public class LobbyManager : MonoBehaviour
             },
             new CharacterProfileData
             {
-                characterId = "CHAR_02",
-                characterName = "02 : AKANE - CRIMSON BREAKER",
-                characterRoleAndLore = "Heavy Breaker | Crushes enemy stagger gauges with heavy blows.",
+                characterId = GameTextMasterConfig.CharacterIds[1],
+                characterName = GameTextMasterConfig.CharacterNames[1],
+                characterRoleAndLore = GameTextMasterConfig.CharacterLores[1],
                 baseMaxHealth = 90f,
                 baseAttackDamage = 34f,
                 baseMoveSpeed = 5.0f,
@@ -243,9 +253,9 @@ public class LobbyManager : MonoBehaviour
             },
             new CharacterProfileData
             {
-                characterId = "CHAR_03",
-                characterName = "03 : SHIRO - AEGIS GUARDIAN",
-                characterRoleAndLore = "Aegis Tank | High base health built for surviving relentless swarms.",
+                characterId = GameTextMasterConfig.CharacterIds[2],
+                characterName = GameTextMasterConfig.CharacterNames[2],
+                characterRoleAndLore = GameTextMasterConfig.CharacterLores[2],
                 baseMaxHealth = 140f,
                 baseAttackDamage = 22f,
                 baseMoveSpeed = 4.7f,
@@ -278,6 +288,12 @@ public class LobbyManager : MonoBehaviour
         {
             upgradeMaxHpButton.onClick.RemoveAllListeners();
             upgradeMaxHpButton.onClick.AddListener(OnUpgradeMaxHpClicked);
+        }
+
+        if (upgradeStaminaButton != null)
+        {
+            upgradeStaminaButton.onClick.RemoveAllListeners();
+            upgradeStaminaButton.onClick.AddListener(OnUpgradeStaminaClicked);
         }
 
         if (upgradeAttackButton != null)
@@ -401,11 +417,11 @@ public class LobbyManager : MonoBehaviour
     {
         var prog = GameProgressionManager.Instance;
         if (volumeValueText != null)
-            volumeValueText.text = $"{Mathf.RoundToInt(prog.MasterVolume * 100f)}%";
+            volumeValueText.text = string.Format(GameTextMasterConfig.Settings_VolumeValueFormat, Mathf.RoundToInt(prog.MasterVolume * 100f));
         if (sensitivityValueText != null)
-            sensitivityValueText.text = $"{prog.MouseSensitivity:F1}x";
+            sensitivityValueText.text = string.Format(GameTextMasterConfig.Settings_SensitivityValueFormat, prog.MouseSensitivity);
         if (fullscreenStatusText != null)
-            fullscreenStatusText.text = Screen.fullScreen ? "FULLSCREEN" : "WINDOWED";
+            fullscreenStatusText.text = Screen.fullScreen ? GameTextMasterConfig.Settings_FullscreenOn : GameTextMasterConfig.Settings_FullscreenOff;
     }
 
     public void SelectCharacterByIndex(int index)
@@ -453,10 +469,24 @@ public class LobbyManager : MonoBehaviour
         return baseHpUpgradeCost + (GameProgressionManager.Instance.HpUpgradeLevel * hpCostIncreasePerLevel);
     }
 
+    public int GetCurrentStaminaUpgradeCost()
+    {
+        return baseStaminaUpgradeCost + (GameProgressionManager.Instance.StaminaUpgradeLevel * staminaCostIncreasePerLevel);
+    }
+
     public void OnUpgradeMaxHpClicked()
     {
         int cost = GetCurrentHpUpgradeCost();
         if (GameProgressionManager.Instance.TryUpgradeMaxHealth(cost, bonusMaxHpPerUpgrade))
+        {
+            RefreshHubUI();
+        }
+    }
+
+    public void OnUpgradeStaminaClicked()
+    {
+        int cost = GetCurrentStaminaUpgradeCost();
+        if (GameProgressionManager.Instance.TryUpgradeStaminaEfficiency(cost, bonusStaminaRegenPerUpgrade, bonusDodgeReductionPerUpgrade))
         {
             RefreshHubUI();
         }
@@ -484,9 +514,9 @@ public class LobbyManager : MonoBehaviour
         if (energyText != null)
         {
             if (prog.CurrentEnergy < prog.MaxEnergy)
-                energyText.text = $"ENERGY : {prog.CurrentEnergy} / {prog.MaxEnergy} (+1 in {Mathf.CeilToInt(prog.EnergyRechargeRemainingSeconds)}s)";
+                energyText.text = string.Format(GameTextMasterConfig.Lobby_EnergyRechargingFormat, prog.CurrentEnergy, prog.MaxEnergy, Mathf.CeilToInt(prog.EnergyRechargeRemainingSeconds));
             else
-                energyText.text = $"ENERGY : {prog.CurrentEnergy} / {prog.MaxEnergy} (MAX)";
+                energyText.text = string.Format(GameTextMasterConfig.Lobby_EnergyMaxFormat, prog.CurrentEnergy, prog.MaxEnergy);
         }
     }
 
@@ -497,19 +527,20 @@ public class LobbyManager : MonoBehaviour
         int totalShatteredCore = prog.ShatteredCore;
 
         RefreshEnergyDisplayOnly();
+        ApplyMilestoneThemeColorShift(prog.GetProgressionUiThemeColor());
 
         if (starDustText != null)
         {
             if (shatteredCoreText != null)
             {
-                starDustText.text = $"STAR DUST : {totalStarDust}";
+                starDustText.text = string.Format(GameTextMasterConfig.Lobby_StarDustFormat, totalStarDust);
                 shatteredCoreText.text = (energyText == null)
-                    ? $"SHATTERED CORE : {totalShatteredCore}  |  ENERGY : {prog.CurrentEnergy}/{prog.MaxEnergy}"
-                    : $"SHATTERED CORE : {totalShatteredCore}";
+                    ? string.Format(GameTextMasterConfig.Lobby_ShatteredCoreWithEnergyFormat, totalShatteredCore, prog.CurrentEnergy, prog.MaxEnergy)
+                    : string.Format(GameTextMasterConfig.Lobby_ShatteredCoreFormat, totalShatteredCore);
             }
             else
             {
-                starDustText.text = $"STAR DUST : {totalStarDust}  |  CORE : {totalShatteredCore}  |  ENERGY : {prog.CurrentEnergy}/{prog.MaxEnergy}";
+                starDustText.text = string.Format(GameTextMasterConfig.Lobby_CombinedCurrencyFormat, totalStarDust, totalShatteredCore, prog.CurrentEnergy, prog.MaxEnergy);
             }
         }
 
@@ -519,45 +550,86 @@ public class LobbyManager : MonoBehaviour
 
         float baseHp = currentChar != null ? currentChar.baseMaxHealth : 100f;
         float baseAtk = currentChar != null ? currentChar.baseAttackDamage : 25f;
-        float moveSpd = currentChar != null ? currentChar.baseMoveSpeed : 5.0f;
 
         if (selectedCharacterNameText != null && currentChar != null)
-            selectedCharacterNameText.text = $"<b>{currentChar.characterName}</b>";
+            selectedCharacterNameText.text = string.Format(GameTextMasterConfig.Lobby_SelectedCharTitleFormat, currentChar.characterName, prog.CurrentRankLetter);
 
         if (selectedCharacterLoreText != null && currentChar != null)
-            selectedCharacterLoreText.text = currentChar.characterRoleAndLore;
+            selectedCharacterLoreText.text = string.Format(GameTextMasterConfig.Lobby_SelectedCharLoreFormat, currentChar.characterRoleAndLore, prog.CurrentRankStoryLine);
 
         float totalHp = baseHp + prog.BonusMaxHealth;
         float totalAtk = baseAtk + prog.BonusAttackDamage;
 
         if (combinedStatsSummaryText != null)
         {
-            combinedStatsSummaryText.text =
-                $"<b>CHARACTER STATUS SUMMARY</b>\n" +
-                $"- MAX HP : <b><color=#40FF80>{totalHp:F0}</color></b>  <size=17>(Base {baseHp:F0} + Bonus {prog.BonusMaxHealth:F0} [Lv.{prog.HpUpgradeLevel}])</size>\n" +
-                $"- ATTACK : <b><color=#FF6699>{totalAtk:F0}</color></b>  <size=17>(Base {baseAtk:F0} + Bonus {prog.BonusAttackDamage:F0} [Lv.{prog.AttackUpgradeLevel}])</size>\n" +
-                $"- SPEED : <b><color=#66E0FF>{moveSpd:F1}</color></b>   |   ENERGY : <b>{prog.CurrentEnergy} / {prog.MaxEnergy}</b>";
+            combinedStatsSummaryText.text = string.Format(
+                GameTextMasterConfig.Lobby_CombinedStatsSummaryFormat,
+                prog.CurrentRankLetter,
+                prog.CurrentRankZoneName,
+                totalHp,
+                baseHp,
+                prog.BonusMaxHealth,
+                prog.HpUpgradeLevel,
+                prog.BonusStaminaRegen,
+                prog.BonusDodgeCostReduction,
+                prog.StaminaUpgradeLevel,
+                totalAtk,
+                baseAtk,
+                prog.BonusAttackDamage,
+                prog.AttackUpgradeLevel,
+                prog.GetMilestoneFlavorText()
+            );
+        }
+
+        if (milestoneFlavorText != null)
+        {
+            milestoneFlavorText.text = $"{prog.CurrentRankStoryLine}\n{prog.GetMilestoneFlavorText()}";
         }
 
         int hpCost = GetCurrentHpUpgradeCost();
         if (upgradeMaxHpText != null)
         {
-            upgradeMaxHpText.text = $"<b>UPGRADE MAX HP (+{bonusMaxHpPerUpgrade:F0} HP)</b>\nCost: {hpCost} Star Dust  |  Lv.{prog.HpUpgradeLevel} ({totalHp:F0} HP)";
+            upgradeMaxHpText.text = string.Format(GameTextMasterConfig.Lobby_Upgrade1_VitalityFormat, bonusMaxHpPerUpgrade, hpCost, prog.HpUpgradeLevel, totalHp);
         }
-
         if (upgradeMaxHpButton != null)
         {
             upgradeMaxHpButton.interactable = (totalStarDust >= hpCost);
         }
 
-        if (upgradeAttackText != null)
+        int stamCost = GetCurrentStaminaUpgradeCost();
+        if (upgradeStaminaText != null)
         {
-            upgradeAttackText.text = $"<b>UPGRADE ATTACK (+{bonusAttackPerUpgrade:F0} ATK)</b>\nCost: {baseAttackCoreCost} Shattered Core  |  Lv.{prog.AttackUpgradeLevel} ({totalAtk:F0} ATK)";
+            upgradeStaminaText.text = string.Format(GameTextMasterConfig.Lobby_Upgrade2_StaminaFormat, bonusStaminaRegenPerUpgrade, bonusDodgeReductionPerUpgrade, stamCost, prog.StaminaUpgradeLevel);
+        }
+        if (upgradeStaminaButton != null)
+        {
+            upgradeStaminaButton.interactable = (totalStarDust >= stamCost);
         }
 
+        if (upgradeAttackText != null)
+        {
+            upgradeAttackText.text = string.Format(GameTextMasterConfig.Lobby_Upgrade3_RawPowerFormat, bonusAttackPerUpgrade, baseAttackCoreCost, prog.AttackUpgradeLevel, totalAtk);
+        }
         if (upgradeAttackButton != null)
         {
             upgradeAttackButton.interactable = (totalShatteredCore >= baseAttackCoreCost);
+        }
+    }
+
+    private void ApplyMilestoneThemeColorShift(Color milestoneColor)
+    {
+        if (milestoneAccentImages != null)
+        {
+            for (int i = 0; i < milestoneAccentImages.Length; i++)
+            {
+                if (milestoneAccentImages[i] != null)
+                    milestoneAccentImages[i].color = milestoneColor;
+            }
+        }
+
+        if (startBattleButton != null && startBattleButton.TryGetComponent<Image>(out var startBtnImg))
+        {
+            startBtnImg.color = milestoneColor;
         }
     }
 
@@ -590,3 +662,29 @@ public class LobbyManager : MonoBehaviour
 #endif
     }
 }
+
+
+/* ============================================================================
+ * คำอธิบายการทำงานของโค้ดและฟังก์ชันทั้งหมดใน LobbyManager.cs
+ * (ส่วนนี้เป็น Comment ล้วน 100% — คอมไพเลอร์และระบบเกมจะไม่นำไปรันเด็ดขาด)
+ * ============================================================================
+ *
+ * 1. Start() & ConfigureMouseScrollRect()
+ *    - โหลดข้อมูลเซฟจาก GameProgressionManager และตั้งค่า ScrollRect สำหรับใช้เมาส์ลากหรือหมุนลูกกลิ้งเลือกตัวละครซ้าย-ขวา
+ *    - ผูก ScrollRectDragForwarder เข้ากับการ์ดตัวละครแต่ละใบเพื่อให้คลิกค้างบนการ์ดแล้วลากเลื่อนแถบได้
+ *
+ * 2. SelectCharacterByIndex(int index)
+ *    - เลือกตัวละครตามลำดับ (0 = HIKARI, 1 = AKANE, 2 = SHIRO) บันทึกสเตตัสพื้นฐานเข้า GameProgressionManager
+ *      และเปลี่ยนสี/ขนาดการ์ดที่ถูกเลือกให้โดดเด่นขึ้น
+ *
+ * 3. OnUpgradeMaxHpClicked(), OnUpgradeStaminaClicked(), OnUpgradeAttackClicked()
+ *    - ฟังก์ชันสำหรับปุ่มอัปเกรดถาวรทั้ง 3 สายใน Hub:
+ *      • สายที่ 1 (Vitality Boost): ใช้ Star Dust เพิ่มเลือดสูงสุด (Max HP)
+ *      • สายที่ 2 (Stamina Efficiency): ใช้ Star Dust เพิ่มความเร็วรีเจน Stamina และลดการใช้ Stamina ตอนกลิ้งหลบ
+ *      • สายที่ 3 (Raw Power): ใช้ Shattered Core เพิ่มดาเมจโจมตีพื้นฐาน (Attack Damage)
+ *
+ * 4. RefreshHubUI() & ApplyMilestoneThemeColorShift()
+ *    - อัปเดตตัวเลข Star Dust, Shattered Core, พลังงาน (Play Energy), ระดับ Rank (E ถึง S),
+ *      เนื้อเรื่อง 1 บรรทัด, และข้อความลับ (Milestone Flavor Text) ขึ้นหน้าจอ
+ *    - เปลี่ยนโทนสีของปุ่มหลักและกรอบ UI จากสีชมพูอ่อนเป็นสีแดงเข้มตามระดับ Milestone ของผู้เล่น
+ * ============================================================================ */

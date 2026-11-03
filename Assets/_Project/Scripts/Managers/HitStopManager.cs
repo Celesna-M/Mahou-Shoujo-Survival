@@ -78,3 +78,19 @@ public class HitStopManager : MonoBehaviour
         }
     }
 }
+
+/*
+===============================================================================
+[คำอธิบายโค้ดและฟังก์ชันทั้งหมดในไฟล์ HitStopManager.cs]
+
+
+1. Awake() / OnDestroy()
+   - จัดการ Singleton Instance ของ HitStopManager และคืนค่า Time.timeScale = 1.0f เสมอเมื่อถูกทำลาย
+
+2. Trigger(float duration, float hitTimeScale) / TriggerHitStop(float duration, float hitTimeScale)
+   - สั่งชะลอหรือหยุดเวลาชั่วขณะ (Hit-stop) เมื่อการโจมตีปะทะเป้าหมาย เพื่อเพิ่มน้ำหนักและความสะใจในการต่อสู้
+
+3. HitStopRoutine(float duration, float hitTimeScale)
+   - Coroutine นับเวลาจริงแบบไม่ขึ้นกับ TimeScale (WaitForSecondsRealtime) แล้วคืนค่าความเร็วเวลาของเกมกลับเป็น 1.0f เมื่อครบกำหนด
+===============================================================================
+*/

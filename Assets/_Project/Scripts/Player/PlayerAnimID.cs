@@ -15,3 +15,14 @@ public static class PlayerAnimID
     public const string STATE_ATTACK = "Attack";
     public const string STATE_EXECUTION = "Standing Melee Run Jump Attack";
 }
+
+/*
+===============================================================================
+[คำอธิบายโค้ดและฟังก์ชันทั้งหมดในไฟล์ PlayerAnimID.cs]
+
+
+1. PlayerAnimID (Static Class)
+   - แปลงชื่อ Parameter ทั้งหมดของ Animator (เช่น Speed, IsGrounded, Jump, Dodge, Attack, Hurt, Dead, Execute, InCombat) เป็นค่าตัวเลข Hash ล่วงหน้าด้วย Animator.StringToHash
+   - ช่วยลดการใช้ String ซ้ำๆ ในทุกเฟรมและเพิ่มประสิทธิภาพการทำงานของ Animator
+===============================================================================
+*/

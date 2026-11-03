@@ -1,7 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.AI;
 using TMPro;
 
 [System.Serializable]
@@ -13,8 +12,8 @@ public class WaveData
 }
 
 /// <summary>
-/// WaveSpawner + Bounded Arena + Automatic Prop Collider Fitter & Anti-Climb Blocker
-/// Does NOT use or require any "Obstacle" Tag or Layer.
+/// WaveSpawner (Clean Collider Edition + Rank E -> S Atmosphere Switcher + GameTextMasterConfig Integration)
+/// - Pulls all stage banners, boss approaching warnings, and stage clear banners directly from GameTextMasterConfig!
 /// </summary>
 public class WaveSpawner : MonoBehaviour
 {
@@ -24,26 +23,17 @@ public class WaveSpawner : MonoBehaviour
 
     private GameObject gruntPrefab => NormalPrefab;
 
-    [Header("Phase 4: The Bounded Arena (BoxCollider)")]
+    [Header("Spawn Locations (Uses Spawn Points or Optional Bounds)")]
+    [SerializeField] private Transform[] spawnPoints;
     [SerializeField] private BoxCollider arenaBoundsCollider;
-    [SerializeField] private Vector3 defaultArenaSize = new Vector3(28f, 6f, 28f);
     [SerializeField] private float arenaInnerMargin = 2.0f;
-    [SerializeField] private bool autoCreateInvisibleWalls = true;
-    [SerializeField] private bool autoSpawnPlayerAtEdge = true;
-    [SerializeField] private bool randomizePlayerStartEdge = false;
 
-    [Header("Prop Collider Auto-Fit & Anti-Climb Blocker")]
-    [Tooltip("Automatically fits tight BoxColliders to props inside Props Root Parent and extends their top height upward so the player cannot step onto them")]
-    [SerializeField] private bool autoFitAndBlockClimbOnProps = true;
-    [Tooltip("Parent GameObject containing scene props (e.g. Props_Container). Keeps props on their existing Default layer without needing an Obstacle tag/layer.")]
-    [SerializeField] private Transform propsRootParent;
-    [Tooltip("Footprint tightness multiplier (0.95 = fits tightly around the prop mesh without invisible edge snagging)")]
-    [Range(0.75f, 1.05f)]
-    [SerializeField] private float propFootprintFitRatio = 0.95f;
-    [Tooltip("Minimum world height of prop colliders so the player can never step on top of low props")]
-    [SerializeField] private float minAntiClimbColliderHeight = 3.5f;
+    [Header("1. Rank Atmosphere & Background Progression (Rank E -> Rank S)")]
+    [SerializeField] private GameObject[] rankEnvironmentSets;
+    [SerializeField] private bool applyRankAtmosphereLighting = true;
+    [SerializeField] private Light directionalLight;
 
-    [Header("Phase 5: Continuous Spawner (Trickle Flow)")]
+    [Header("Continuous Spawner (Trickle Flow)")]
     [SerializeField] private bool autoStartWaves = true;
     [SerializeField] private bool useContinuousTrickleFlow = true;
     [SerializeField] private float trickleSpawnInterval = 2.2f;
@@ -55,9 +45,6 @@ public class WaveSpawner : MonoBehaviour
     [SerializeField] private float timeBetweenWaves = 2.0f;
     [SerializeField] private List<WaveData> waves = new List<WaveData>();
 
-    [Header("Legacy Spawn Points (Optional Fallback)")]
-    [SerializeField] private Transform[] spawnPoints;
-
     [Header("UI Feedback (Optional)")]
     [SerializeField] private TextMeshProUGUI waveText;
     [SerializeField] private GameObject victoryPanel;
@@ -68,17 +55,10 @@ public class WaveSpawner : MonoBehaviour
     private bool isStageCleared = false;
     private int currentWaveIndex = 0;
 
-    private void Awake()
-    {
-        SetupBoundedArena();
-        if (autoFitAndBlockClimbOnProps)
-        {
-            FitAndBlockClimbOnSceneProps();
-        }
-    }
-
     private void Start()
     {
+        ApplyRankEnvironmentAndAtmosphere();
+
         if (waves.Count == 0)
         {
             waves.Add(new WaveData { waveName = "Phase 1", NormalCount = 3, eliteCount = 0 });
@@ -88,11 +68,6 @@ public class WaveSpawner : MonoBehaviour
 
         if (victoryPanel != null)
             victoryPanel.SetActive(false);
-
-        if (autoSpawnPlayerAtEdge)
-        {
-            AutoSpawnPlayerAtArenaEdge();
-        }
 
         if (autoStartWaves)
         {
@@ -107,271 +82,97 @@ public class WaveSpawner : MonoBehaviour
         }
     }
 
-    // =========================================================================
-    // PROP COLLIDER AUTO-FITTER & ANTI-CLIMB PILLAR GENERATOR (NO OBSTACLE TAG/LAYER)
-    // =========================================================================
-
-    /// <summary>
-    /// Right-click WaveSpawner in the Inspector and select "Auto-Fit Prop Colliders & Block Climbing"
-    /// to fit colliders in Editor mode and see the green collider bounds immediately!
-    /// </summary>
-    [ContextMenu("Auto-Fit Prop Colliders & Block Climbing")]
-    public void FitAndBlockClimbOnSceneProps()
+    public void ApplyRankEnvironmentAndAtmosphere()
     {
-        var targetRenderers = new List<Renderer>();
+        int stageIdx = GameProgressionManager.Instance != null ? GameProgressionManager.Instance.SelectedStageIndex : 0;
 
-        if (propsRootParent == null)
+        if (rankEnvironmentSets != null && rankEnvironmentSets.Length > 0)
         {
-            GameObject foundContainer = GameObject.Find("Props_Container") ?? GameObject.Find("Props");
-            if (foundContainer != null)
+            int activeEnvIdx = Mathf.Clamp(stageIdx, 0, rankEnvironmentSets.Length - 1);
+            for (int i = 0; i < rankEnvironmentSets.Length; i++)
             {
-                propsRootParent = foundContainer.transform;
-            }
-        }
-
-        if (propsRootParent != null)
-        {
-            targetRenderers.AddRange(propsRootParent.GetComponentsInChildren<Renderer>(true));
-        }
-
-        int fittedCount = 0;
-        foreach (var rend in targetRenderers)
-        {
-            if (rend == null || rend is ParticleSystemRenderer) continue;
-            if (rend.GetComponentInParent<PlayerMovement>() != null || rend.GetComponentInParent<EnemyController>() != null) continue;
-
-            GameObject propObj = rend.gameObject;
-
-            if (propObj.TryGetComponent<MeshCollider>(out var meshCol))
-            {
-                meshCol.enabled = false;
-            }
-
-            BoxCollider box = propObj.GetComponent<BoxCollider>();
-            if (box == null)
-            {
-                box = propObj.AddComponent<BoxCollider>();
-            }
-
-            box.isTrigger = false;
-
-            if (propObj.TryGetComponent<MeshFilter>(out var mf) && mf.sharedMesh != null)
-            {
-                Bounds meshBounds = mf.sharedMesh.bounds;
-                float worldScaleY = Mathf.Max(0.01f, Mathf.Abs(propObj.transform.lossyScale.y));
-                float requiredLocalHeight = Mathf.Max(meshBounds.size.y, minAntiClimbColliderHeight / worldScaleY);
-
-                float heightDiff = requiredLocalHeight - meshBounds.size.y;
-                box.size = new Vector3(
-                    meshBounds.size.x * propFootprintFitRatio,
-                    requiredLocalHeight,
-                    meshBounds.size.z * propFootprintFitRatio);
-
-                box.center = new Vector3(
-                    meshBounds.center.x,
-                    meshBounds.center.y + heightDiff * 0.5f,
-                    meshBounds.center.z);
-
-                fittedCount++;
-            }
-        }
-
-        if (fittedCount > 0)
-        {
-            Debug.Log($"[WaveSpawner] Fitted tight anti-climb BoxColliders on {fittedCount} prop(s).");
-        }
-    }
-
-    // =========================================================================
-    // PHASE 4: BOUNDED ARENA, INVISIBLE WALLS, AUTO PLAYER & ENEMY SPAWN
-    // =========================================================================
-
-    private void SetupBoundedArena()
-    {
-        if (arenaBoundsCollider == null)
-        {
-            arenaBoundsCollider = GetComponent<BoxCollider>() ?? GetComponentInChildren<BoxCollider>();
-        }
-
-        if (arenaBoundsCollider == null)
-        {
-            foreach (var box in FindObjectsByType<BoxCollider>(FindObjectsSortMode.None))
-            {
-                string n = box.gameObject.name.ToLower();
-                if (n.Contains("arena") || n.Contains("bound") || n.Contains("spawner") || n.Contains("wall"))
+                if (rankEnvironmentSets[i] != null)
                 {
-                    arenaBoundsCollider = box;
+                    rankEnvironmentSets[i].SetActive(i == activeEnvIdx);
+                }
+            }
+        }
+
+        if (!applyRankAtmosphereLighting) return;
+
+        if (directionalLight == null)
+        {
+            Light[] lights = FindObjectsByType<Light>(FindObjectsSortMode.None);
+            foreach (var l in lights)
+            {
+                if (l != null && l.type == LightType.Directional)
+                {
+                    directionalLight = l;
                     break;
                 }
             }
         }
 
-        if (arenaBoundsCollider == null)
-        {
-            arenaBoundsCollider = gameObject.AddComponent<BoxCollider>();
-            arenaBoundsCollider.size = defaultArenaSize;
-            arenaBoundsCollider.center = new Vector3(0f, defaultArenaSize.y * 0.5f, 0f);
-        }
-
-        arenaBoundsCollider.isTrigger = true;
-
-        if (autoCreateInvisibleWalls)
-        {
-            CreateInvisiblePerimeterWalls(arenaBoundsCollider.bounds);
-        }
-    }
-
-    private void CreateInvisiblePerimeterWalls(Bounds bounds)
-    {
-        Transform existingWalls = transform.Find("[Arena_InvisibleWalls]");
-        if (existingWalls != null) return;
-
-        GameObject wallRoot = new GameObject("[Arena_InvisibleWalls]");
-        wallRoot.transform.SetParent(transform, true);
-        wallRoot.transform.position = Vector3.zero;
-        wallRoot.transform.rotation = Quaternion.identity;
-
-        float wallThickness = 1.0f;
-        float wallHeight = Mathf.Max(bounds.size.y, 8.0f);
-        float centerY = bounds.min.y + wallHeight * 0.5f;
-
-        CreateSingleWall(wallRoot.transform, "Wall_North",
-            new Vector3(bounds.center.x, centerY, bounds.max.z + wallThickness * 0.5f),
-            new Vector3(bounds.size.x + wallThickness * 2f, wallHeight, wallThickness));
-
-        CreateSingleWall(wallRoot.transform, "Wall_South",
-            new Vector3(bounds.center.x, centerY, bounds.min.z - wallThickness * 0.5f),
-            new Vector3(bounds.size.x + wallThickness * 2f, wallHeight, wallThickness));
-
-        CreateSingleWall(wallRoot.transform, "Wall_East",
-            new Vector3(bounds.max.x + wallThickness * 0.5f, centerY, bounds.center.z),
-            new Vector3(wallThickness, wallHeight, bounds.size.z + wallThickness * 2f));
-
-        CreateSingleWall(wallRoot.transform, "Wall_West",
-            new Vector3(bounds.min.x - wallThickness * 0.5f, centerY, bounds.center.z),
-            new Vector3(wallThickness, wallHeight, bounds.size.z + wallThickness * 2f));
-    }
-
-    private void CreateSingleWall(Transform parent, string wallName, Vector3 worldCenter, Vector3 size)
-    {
-        GameObject wall = new GameObject(wallName);
-        wall.transform.SetParent(parent, true);
-        wall.transform.position = worldCenter;
-
-        BoxCollider col = wall.AddComponent<BoxCollider>();
-        col.size = size;
-        col.isTrigger = false;
-    }
-
-    public void AutoSpawnPlayerAtArenaEdge()
-    {
-        if (arenaBoundsCollider == null) return;
-
-        GameObject player = GameObject.FindGameObjectWithTag("Player");
-        if (player == null)
-        {
-            var pm = FindAnyObjectByType<PlayerMovement>();
-            if (pm != null) player = pm.gameObject;
-        }
-        if (player == null) return;
-
-        Bounds b = arenaBoundsCollider.bounds;
-        float marginX = Mathf.Min(arenaInnerMargin, b.extents.x * 0.4f);
-        float marginZ = Mathf.Min(arenaInnerMargin, b.extents.z * 0.4f);
-
-        int edgeIndex = randomizePlayerStartEdge ? Random.Range(0, 4) : 0;
-        Vector3 spawnPos = b.center;
-
-        switch (edgeIndex)
+        Color lightColor;
+        Color ambientColor;
+        switch (Mathf.Clamp(stageIdx, 0, 5))
         {
             case 0:
-                spawnPos = new Vector3(b.center.x, b.min.y, b.min.z + marginZ);
+                lightColor = new Color(1.0f, 0.88f, 0.78f);
+                ambientColor = new Color(0.24f, 0.20f, 0.28f);
                 break;
             case 1:
-                spawnPos = new Vector3(b.center.x, b.min.y, b.max.z - marginZ);
+                lightColor = new Color(1.0f, 0.72f, 0.62f);
+                ambientColor = new Color(0.28f, 0.16f, 0.22f);
                 break;
             case 2:
-                spawnPos = new Vector3(b.min.x + marginX, b.min.y, b.center.z);
+                lightColor = new Color(0.75f, 0.78f, 1.0f);
+                ambientColor = new Color(0.16f, 0.18f, 0.30f);
                 break;
             case 3:
-                spawnPos = new Vector3(b.max.x - marginX, b.min.y, b.center.z);
+                lightColor = new Color(0.96f, 0.64f, 0.82f);
+                ambientColor = new Color(0.26f, 0.14f, 0.24f);
+                break;
+            case 4:
+                lightColor = new Color(1.0f, 0.50f, 0.58f);
+                ambientColor = new Color(0.30f, 0.10f, 0.16f);
+                break;
+            default:
+                lightColor = new Color(1.0f, 0.38f, 0.45f);
+                ambientColor = new Color(0.35f, 0.06f, 0.12f);
                 break;
         }
 
-        spawnPos.y = SampleGroundHeight(spawnPos, player.transform.position.y);
-        Vector3 arenaCenterLookTarget = new Vector3(b.center.x, spawnPos.y, b.center.z);
-
-        if (player.TryGetComponent<PlayerMovement>(out var movement))
+        if (directionalLight != null)
         {
-            movement.WarpToPositionAndLookAt(spawnPos, arenaCenterLookTarget);
+            directionalLight.color = lightColor;
         }
-        else
-        {
-            player.transform.position = spawnPos;
-            player.transform.LookAt(arenaCenterLookTarget);
-        }
+        RenderSettings.ambientLight = ambientColor;
     }
 
-    public Vector3 GetRandomSpawnPointInBounds()
+    public Vector3 GetRandomSpawnPoint()
     {
+        if (spawnPoints != null && spawnPoints.Length > 0)
+        {
+            Transform pt = spawnPoints[Random.Range(0, spawnPoints.Length)];
+            if (pt != null)
+            {
+                return pt.position + new Vector3(Random.Range(-1.0f, 1.0f), 0f, Random.Range(-1.0f, 1.0f));
+            }
+        }
+
         if (arenaBoundsCollider != null)
         {
             Bounds b = arenaBoundsCollider.bounds;
             float marginX = Mathf.Min(arenaInnerMargin, b.extents.x * 0.5f);
             float marginZ = Mathf.Min(arenaInnerMargin, b.extents.z * 0.5f);
-
-            int checkMask = ~LayerMask.GetMask("Ignore Raycast", "UI");
-
-            for (int attempt = 0; attempt < 8; attempt++)
-            {
-                float randomX = Random.Range(b.min.x + marginX, b.max.x - marginX);
-                float randomZ = Random.Range(b.min.z + marginZ, b.max.z - marginZ);
-                Vector3 candidate = new Vector3(randomX, b.min.y, randomZ);
-                candidate.y = SampleGroundHeight(candidate, transform.position.y);
-
-                // Sphere centered 1.0m above the floor with 0.45m radius avoids the floor itself while detecting any prop/wall
-                if (!Physics.CheckSphere(candidate + Vector3.up * 1.0f, 0.45f, checkMask, QueryTriggerInteraction.Ignore))
-                {
-                    return candidate;
-                }
-            }
+            float randomX = Random.Range(b.min.x + marginX, b.max.x - marginX);
+            float randomZ = Random.Range(b.min.z + marginZ, b.max.z - marginZ);
+            return new Vector3(randomX, transform.position.y, randomZ);
         }
 
-        if (spawnPoints != null && spawnPoints.Length > 0)
-        {
-            Transform pt = spawnPoints[Random.Range(0, spawnPoints.Length)];
-            if (pt != null) return pt.position;
-        }
-
-        return transform.position;
+        return transform.position + new Vector3(Random.Range(-3.0f, 3.0f), 0f, Random.Range(-3.0f, 3.0f));
     }
-
-    private float SampleGroundHeight(Vector3 pos, float fallbackY)
-    {
-        float baseFloorY = arenaBoundsCollider != null ? arenaBoundsCollider.bounds.min.y : fallbackY;
-        Vector3 rayOrigin = new Vector3(pos.x, baseFloorY + 10f, pos.z);
-        int mask = ~LayerMask.GetMask("Player", "Enemy", "Ignore Raycast", "UI");
-
-        RaycastHit[] hits = Physics.RaycastAll(rayOrigin, Vector3.down, 25f, mask, QueryTriggerInteraction.Ignore);
-        float bestY = baseFloorY;
-        float bestDiff = float.MaxValue;
-
-        for (int i = 0; i < hits.Length; i++)
-        {
-            float diff = Mathf.Abs(hits[i].point.y - baseFloorY);
-            if (diff <= 1.0f && diff < bestDiff)
-            {
-                bestDiff = diff;
-                bestY = hits[i].point.y;
-            }
-        }
-
-        return bestY;
-    }
-
-    // =========================================================================
-    // PHASE 5: CONTINUOUS TRICKLE SPAWNER & 3-5s STAGE CLEAR DELAY
-    // =========================================================================
 
     private void Update()
     {
@@ -404,7 +205,7 @@ public class WaveSpawner : MonoBehaviour
 
         int totalNormals = 0;
         int totalElites = 0;
-        string bannerTitle = "SURVIVE THE ENTITIES";
+        string bannerTitle = GameTextMasterConfig.Action_DefaultStageBanner;
 
         if (GameProgressionManager.Instance != null && GameProgressionManager.Instance.HasSelectedStageFromMap)
         {
@@ -429,11 +230,13 @@ public class WaveSpawner : MonoBehaviour
 
         if (waveText != null)
         {
-            waveText.text = bannerTitle;
+            int stageIdx = GameProgressionManager.Instance != null ? GameProgressionManager.Instance.SelectedStageIndex : 0;
+            string storySub = GameProgressionManager.GetStoryLogForStage(stageIdx);
+            waveText.text = string.Format(GameTextMasterConfig.Action_StageStartBannerFormat, bannerTitle, storySub);
             waveText.gameObject.SetActive(true);
         }
 
-        yield return new WaitForSeconds(1.8f);
+        yield return new WaitForSeconds(2.2f);
 
         if (waveText != null)
             waveText.gameObject.SetActive(false);
@@ -458,7 +261,10 @@ public class WaveSpawner : MonoBehaviour
         int spawnedElites = 0;
         if (totalElites > 0 && waveText != null)
         {
-            waveText.text = "WARNING: ELITE ENTITY APPROACHING";
+            string rankCode = GameProgressionManager.Instance != null
+                ? GameProgressionManager.GetRankLetterForStage(GameProgressionManager.Instance.SelectedStageIndex)
+                : GameTextMasterConfig.RankLetters[0];
+            waveText.text = string.Format(GameTextMasterConfig.Action_BossApproachingBannerFormat, rankCode);
             waveText.gameObject.SetActive(true);
             yield return new WaitForSeconds(1.8f);
             waveText.gameObject.SetActive(false);
@@ -525,12 +331,15 @@ public class WaveSpawner : MonoBehaviour
     {
         if (prefab == null) return;
 
-        Vector3 spawnPos = GetRandomSpawnPointInBounds();
+        Vector3 spawnPos = GetRandomSpawnPoint();
         GameObject enemy = Instantiate(prefab, spawnPos, Quaternion.identity);
 
         if (isEliteBoss && enemy.TryGetComponent<EnemyController>(out var ec))
         {
-            ec.ConfigureAsEliteOrBoss(true, "THE ENTITY (BOSS)");
+            string rankCode = GameProgressionManager.Instance != null
+                ? GameProgressionManager.GetRankLetterForStage(GameProgressionManager.Instance.SelectedStageIndex)
+                : GameTextMasterConfig.RankLetters[0];
+            ec.ConfigureAsEliteOrBoss(true, string.Format(GameTextMasterConfig.Enemy_DefaultBossNameFormat, rankCode));
         }
 
         activeEnemies.Add(enemy);
@@ -545,7 +354,15 @@ public class WaveSpawner : MonoBehaviour
 
         if (waveText != null)
         {
-            waveText.text = "STAGE CLEAR!";
+            var prog = GameProgressionManager.Instance;
+            if (prog != null && prog.LastClearWasFirstTime)
+            {
+                waveText.text = string.Format(GameTextMasterConfig.Action_StageClearFirstTimeBannerFormat, prog.LastFirstClearStarDustBonus, prog.LastFirstClearCoreBonus);
+            }
+            else
+            {
+                waveText.text = GameTextMasterConfig.Action_StageClearBanner;
+            }
             waveText.gameObject.SetActive(true);
         }
 
@@ -576,14 +393,29 @@ public class WaveSpawner : MonoBehaviour
     {
         activeEnemies.Clear();
     }
-
-    private void OnDrawGizmosSelected()
-    {
-        BoxCollider box = arenaBoundsCollider != null ? arenaBoundsCollider : GetComponent<BoxCollider>();
-        if (box != null)
-        {
-            Gizmos.color = new Color(0.2f, 1f, 0.6f, 0.4f);
-            Gizmos.DrawWireCube(box.bounds.center, box.bounds.size);
-        }
-    }
 }
+
+
+/* ============================================================================
+ * คำอธิบายการทำงานของโค้ดและฟังก์ชันทั้งหมดใน WaveSpawner.cs
+ * (ส่วนนี้เป็น Comment ล้วน 100% — คอมไพเลอร์และระบบเกมจะไม่นำไปรันเด็ดขาด)
+ * ============================================================================
+ *
+ * 1. ApplyRankEnvironmentAndAtmosphere()
+ *    - สลับชุดฉากหลัง (rankEnvironmentSets) และเปลี่ยนสีแสงไฟบรรยากาศในฉากต่อสู้ (Directional Light & Ambient Light)
+ *      ตามระดับ Rank ของด่านที่เลือก (ตั้งแต่แสงสลัวห้องเรียนร้าง Rank E ไปจนถึงสีแดงเข้มแห่งห้วงลึก Rank S)
+ *      โดยไม่ยุ่งหรือแก้ไข Collider ใดๆ ในฉาก
+ *
+ * 2. ContinuousTrickleSpawnRoutine()
+ *    - ระบบทยอยปล่อยมอนสเตอร์อย่างต่อเนื่องตามโควตาของด่านที่เลือกจาก StageMap
+ *    - รักษาจำนวนมอนสเตอร์ในฉากไม่ให้เกิน maxConcurrentEnemies และปล่อยบอสประจำ Rank ออกมาในช่วงท้าย
+ *
+ * 3. GetRandomSpawnPoint() & SpawnEnemyInArena()
+ *    - สุ่มจุดเกิดของมอนสเตอร์จากอาร์เรย์ spawnPoints (หรือภายในขอบเขต arenaBoundsCollider ถ้ากำหนดไว้)
+ *    - ตั้งค่าบอสให้เปิดระบบเกจ Stagger และแสดงชื่อบอสประจำ Rank บนหลอดเลือดด้านบนจอ
+ *
+ * 4. Update(), CleanupDeadEnemies() & StageClearDelayRoutine()
+ *    - ตรวจสอบสถานะมอนสเตอร์ในฉากทุกเฟรม เมื่อมอนสเตอร์และบอสถูกกำจัดครบตามโควตาแล้ว
+ *      จะสั่งบันทึกการผ่านด่าน (MarkCurrentStageCleared) แสดงป้าย STAGE CLEAR! พร้อมโบนัสเคลียร์ครั้งแรก
+ *      แล้วเปิดหน้าจอสรุปผลชนะ (Victory Screen)
+ * ============================================================================ */

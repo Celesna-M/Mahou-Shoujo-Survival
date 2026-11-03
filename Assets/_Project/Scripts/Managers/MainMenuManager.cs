@@ -184,3 +184,35 @@ public class MainMenuManager : MonoBehaviour
 #endif
     }
 }
+
+/*
+===============================================================================
+[คำอธิบายโค้ดและฟังก์ชันทั้งหมดในไฟล์ MainMenuManager.cs]
+1. Start()
+   - รีเซ็ต TimeScale, ปลดล็อกเมาส์, โหลดข้อมูลเซฟจาก GameProgressionManager และผูกอีเวนต์ปุ่มในหน้าเมนูหลัก
+
+2. BindUIEvents()
+   - เชื่อมโยงปุ่ม Start, Settings, Quit, Fullscreen, Reset Save และแถบเลื่อน Slider ปรับเสียง/ความไวเมาส์เข้ากับฟังก์ชันทำงาน
+
+3. OnStartGameClicked()
+   - โหลดเข้าสู่ฉากห้องพัก (The Lobby / Hub)
+
+4. OpenSettingsPanel() / CloseSettingsPanel()
+   - เปิด/ปิดหน้าต่างตั้งค่า (Settings Panel)
+
+5. OnVolumeSliderChanged(float val) / OnSensitivitySliderChanged(float val)
+   - บันทึกค่าระดับเสียงหลักและความไวเมาส์ลงใน GameProgressionManager ทันทีที่ผู้เล่นลากแถบเลื่อน
+
+6. OnToggleFullscreenClicked()
+   - สลับโหมดหน้าจอระหว่าง Fullscreen และ Windowed
+
+7. OnResetSaveDataClicked()
+   - ล้างข้อมูลเซฟทั้งหมดกลับเป็นค่าเริ่มต้น (Rank E)
+
+8. RefreshSettingsUI()
+   - อัปเดตตัวเลขเปอร์เซ็นต์เสียง ความไวเมาส์ และสถานะหน้าจอบน UI
+
+9. OnQuitGameClicked()
+   - ออกจากเกม (หรือหยุดโหมด Play ใน Unity Editor)
+===============================================================================
+*/
