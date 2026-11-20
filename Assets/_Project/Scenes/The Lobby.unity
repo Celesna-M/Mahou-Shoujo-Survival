@@ -498,6 +498,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LobbyManager
   stageMapSceneName: StageMap
+  autoRefillEnergyOnEnterHub: 1
   mainMenuSceneName: MainMenu
   fallbackActionSceneName: The Action
   startBattleButton: {fileID: 1804731415}
@@ -511,14 +512,14 @@ MonoBehaviour:
   characterScrollRect: {fileID: 2084931712}
   mouseWheelScrollSensitivity: 0.15
   characters:
-  - characterId: 
+  - characterId: HIKARI
     characterName: 
     characterRoleAndLore: 
     baseMaxHealth: 0
     baseAttackDamage: 0
     baseMoveSpeed: 0
     themeColor: {r: 0, g: 0, b: 0, a: 0}
-    cardButton: {fileID: 0}
+    cardButton: {fileID: 1427361423}
     cardBackground: {fileID: 0}
     characterPreviewObject: {fileID: 0}
   - characterId: 
@@ -528,7 +529,7 @@ MonoBehaviour:
     baseAttackDamage: 0
     baseMoveSpeed: 0
     themeColor: {r: 0, g: 0, b: 0, a: 0}
-    cardButton: {fileID: 0}
+    cardButton: {fileID: 980168616}
     cardBackground: {fileID: 0}
     characterPreviewObject: {fileID: 0}
   - characterId: 
@@ -538,7 +539,7 @@ MonoBehaviour:
     baseAttackDamage: 0
     baseMoveSpeed: 0
     themeColor: {r: 0, g: 0, b: 0, a: 0}
-    cardButton: {fileID: 0}
+    cardButton: {fileID: 916908609}
     cardBackground: {fileID: 0}
     characterPreviewObject: {fileID: 0}
   selectedCharacterNameText: {fileID: 113901188}
@@ -561,6 +562,18 @@ MonoBehaviour:
   bonusAttackPerUpgrade: 5
   milestoneFlavorText: {fileID: 0}
   milestoneAccentImages: []
+  mascotInteractButton: {fileID: 0}
+  mascotPortraitImage: {fileID: 0}
+  mascotDialogueBoxPanel: {fileID: 0}
+  mascotSpeakerNameText: {fileID: 0}
+  mascotDialogueBodyText: {fileID: 0}
+  showMascotGreetingOnEnterHub: 1
+  useTypewriterEffectOnDialogue: 1
+  typewriterCharInterval: 0.02
+  appendItemLoreUnderUpgrades: 1
+  upgrade1VitalityLoreText: {fileID: 0}
+  upgrade2StaminaLoreText: {fileID: 0}
+  upgrade3RawPowerLoreText: {fileID: 0}
   openSettingsButton: {fileID: 1487667375}
   settingsPanel: {fileID: 1400654547}
   volumeSlider: {fileID: 72456898}
@@ -3811,7 +3824,7 @@ MonoBehaviour:
   inspectorMapEnergyMaxFormat: 'RANK {0}  |  ENERGY : {1} / {2} (MAX)'
   inspectorMapHeaderCharacterStatusFormat: '{0} <color=#FFD700>[RANK {1}]</color>
 
-    <size=16>HP:
+    HP:
     {2:F0} | ATK: {3:F0} | DUST: {4} | CORE: {5} | KILLS: {6}</size>'
   inspectorMapDeployButtonReadyFormat: ENTER RANK {0} (-{1} ENERGY) >
   inspectorMapDeployButtonNoEnergyFormat: NO ENERGY (0 / {0})
@@ -3821,13 +3834,11 @@ MonoBehaviour:
     STAR DUST, +{1} CORE!]</color>'
   inspectorMapSelectedStageDetailFormat: '{0} {1} (Normal: {2} | Boss: {3})
 
-    <size=17><color=#FF99BB>{4}</color></size>'
+    <color=#FF99BB>{4}</color></size>'
   inspectorMapNotEnoughEnergyWarning: <color=#FF4444>[NOT ENOUGH ENERGY!] Wait for
     Energy recharge or refill in Lobby.</color>
   inspectorActionDefaultStageBanner: 'RANK E : ABANDONED CLASSROOM'
-  inspectorActionStageStartBannerFormat: '{0}
-
-    <size=22>{1}</size>'
+  inspectorActionStageStartBannerFormat: 
   inspectorActionBossApproachingBannerFormat: 'WARNING: RANK {0} GUARDIAN APPROACHING'
   inspectorActionStageClearBanner: STAGE CLEAR!
   inspectorActionStageClearFirstTimeBannerFormat: 'STAGE CLEAR!
@@ -3859,6 +3870,39 @@ MonoBehaviour:
     UNLOCKED RANK {0} ({1})</color>
 
     <size=17><color=#FF99BB>{2}</color></size>'
+  inspectorMascotSpeakerName: KYU-DOLL (CURSED MASCOT)
+  inspectorMascotRandomDialogues:
+  - "\u0E01\u0E25\u0E31\u0E1A\u0E21\u0E32\u0E2D\u0E35\u0E01\u0E41\u0E25\u0E49\u0E27\u0E40\u0E2B\u0E23\u0E2D?
+    \u0E27\u0E34\u0E0D\u0E0D\u0E32\u0E13\u0E02\u0E2D\u0E07\u0E40\u0E18\u0E2D\u0E22\u0E31\u0E07\u0E44\u0E21\u0E48\u0E17\u0E31\u0E19\u0E41\u0E15\u0E01\u0E2A\u0E25\u0E32\u0E22\u0E40\u0E25\u0E22\u0E19\u0E30...
+    \u0E19\u0E48\u0E32\u0E40\u0E2A\u0E35\u0E22\u0E14\u0E32\u0E22\u0E08\u0E31\u0E07"
+  - "\u0E40\u0E28\u0E29 Star Dust \u0E1E\u0E27\u0E01\u0E19\u0E31\u0E49\u0E19... \u0E23\u0E39\u0E49\u0E44\u0E2B\u0E21\u0E27\u0E48\u0E32\u0E21\u0E31\u0E19\u0E40\u0E04\u0E22\u0E40\u0E1B\u0E47\u0E19\u0E04\u0E27\u0E32\u0E21\u0E2B\u0E27\u0E31\u0E07\u0E02\u0E2D\u0E07\u0E2A\u0E32\u0E27\u0E19\u0E49\u0E2D\u0E22\u0E40\u0E27\u0E17\u0E21\u0E19\u0E15\u0E23\u0E4C\u0E04\u0E19\u0E01\u0E48\u0E2D\u0E19\u0E46
+    \u0E19\u0E48\u0E30?"
+  - "\u0E22\u0E34\u0E48\u0E07\u0E40\u0E18\u0E2D\u0E2D\u0E31\u0E1B\u0E40\u0E01\u0E23\u0E14\u0E15\u0E31\u0E27\u0E40\u0E2D\u0E07\u0E21\u0E32\u0E01\u0E40\u0E17\u0E48\u0E32\u0E44\u0E2B\u0E23\u0E48
+    \u0E41\u0E2A\u0E07\u0E2A\u0E35\u0E0A\u0E21\u0E1E\u0E39\u0E43\u0E19\u0E15\u0E31\u0E27\u0E40\u0E18\u0E2D\u0E01\u0E47\u0E22\u0E34\u0E48\u0E07\u0E01\u0E25\u0E32\u0E22\u0E40\u0E1B\u0E47\u0E19\u0E2A\u0E35\u0E40\u0E25\u0E37\u0E2D\u0E14\u0E21\u0E32\u0E01\u0E02\u0E36\u0E49\u0E19\u0E40\u0E17\u0E48\u0E32\u0E19\u0E31\u0E49\u0E19...
+    \u0E2A\u0E31\u0E07\u0E40\u0E01\u0E15\u0E2B\u0E23\u0E37\u0E2D\u0E40\u0E1B\u0E25\u0E48\u0E32?"
+  - "\u0E1B\u0E23\u0E30\u0E15\u0E39\u0E2B\u0E49\u0E2D\u0E07\u0E40\u0E23\u0E35\u0E22\u0E19\u0E1A\u0E32\u0E19\u0E19\u0E31\u0E49\u0E19\u0E44\u0E21\u0E48\u0E44\u0E14\u0E49\u0E02\u0E31\u0E07\u0E1E\u0E27\u0E01\u0E21\u0E31\u0E19\u0E44\u0E27\u0E49\u0E2B\u0E23\u0E2D\u0E01...
+    \u0E21\u0E31\u0E19\u0E02\u0E31\u0E07 '\u0E1E\u0E27\u0E01\u0E40\u0E18\u0E2D' \u0E15\u0E48\u0E32\u0E07\u0E2B\u0E32\u0E01"
+  - "Shattered Core \u0E2D\u0E38\u0E48\u0E19\u0E14\u0E35\u0E43\u0E0A\u0E48\u0E44\u0E2B\u0E21\u0E25\u0E48\u0E30?
+    \u0E01\u0E34\u0E19\u0E21\u0E31\u0E19\u0E40\u0E02\u0E49\u0E32\u0E44\u0E1B\u0E40\u0E22\u0E2D\u0E30\u0E46
+    \u0E2A\u0E34 \u0E41\u0E25\u0E49\u0E27\u0E40\u0E18\u0E2D\u0E08\u0E30\u0E01\u0E25\u0E32\u0E22\u0E40\u0E1B\u0E47\u0E19\u0E1A\u0E2D\u0E2A\u0E15\u0E31\u0E27\u0E15\u0E48\u0E2D\u0E44\u0E1B\u0E02\u0E2D\u0E07\u0E21\u0E34\u0E15\u0E34\u0E19\u0E35\u0E49\u0E40\u0E2D\u0E07"
+  - "\u0E44\u0E21\u0E48\u0E15\u0E49\u0E2D\u0E07\u0E01\u0E25\u0E31\u0E27\u0E04\u0E27\u0E32\u0E21\u0E15\u0E32\u0E22\u0E2B\u0E23\u0E2D\u0E01
+    \u0E43\u0E19\u0E25\u0E39\u0E1B\u0E21\u0E34\u0E15\u0E34\u0E19\u0E35\u0E49... \u0E41\u0E21\u0E49\u0E41\u0E15\u0E48\u0E04\u0E27\u0E32\u0E21\u0E15\u0E32\u0E22\u0E01\u0E47\u0E22\u0E31\u0E07\u0E44\u0E21\u0E48\u0E2D\u0E19\u0E38\u0E0D\u0E32\u0E15\u0E43\u0E2B\u0E49\u0E40\u0E18\u0E2D\u0E1E\u0E31\u0E01\u0E1C\u0E48\u0E2D\u0E19"
+  inspectorUpgrade1VitalityItemLore: "\u0E40\u0E28\u0E29\u0E25\u0E30\u0E2D\u0E2D\u0E07\u0E14\u0E32\u0E27\u0E17\u0E35\u0E48\u0E15\u0E01\u0E1C\u0E25\u0E36\u0E01\u0E08\u0E32\u0E01\u0E04\u0E33\u0E2D\u0E18\u0E34\u0E29\u0E10\u0E32\u0E19\u0E17\u0E35\u0E48\u0E25\u0E49\u0E21\u0E40\u0E2B\u0E25\u0E27
+    \u0E0A\u0E48\u0E27\u0E22\u0E22\u0E37\u0E14\u0E2D\u0E32\u0E22\u0E38\u0E02\u0E31\u0E22\u0E02\u0E2D\u0E07\u0E20\u0E32\u0E0A\u0E19\u0E30\u0E17\u0E35\u0E48\u0E01\u0E33\u0E25\u0E31\u0E07\u0E23\u0E49\u0E32\u0E27\u0E09\u0E32\u0E19"
+  inspectorUpgrade2StaminaItemLore: "\u0E40\u0E2A\u0E35\u0E22\u0E07\u0E2A\u0E30\u0E17\u0E49\u0E2D\u0E19\u0E02\u0E2D\u0E07\u0E04\u0E19\u0E17\u0E35\u0E48\u0E1E\u0E22\u0E32\u0E22\u0E32\u0E21\u0E27\u0E34\u0E48\u0E07\u0E2B\u0E19\u0E35\u0E08\u0E32\u0E01\u0E25\u0E39\u0E1B\u0E21\u0E34\u0E15\u0E34\u0E19\u0E35\u0E49...
+    \u0E41\u0E21\u0E49\u0E2A\u0E38\u0E14\u0E17\u0E49\u0E32\u0E22\u0E08\u0E30\u0E44\u0E21\u0E48\u0E21\u0E35\u0E43\u0E04\u0E23\u0E2B\u0E19\u0E35\u0E1E\u0E49\u0E19\u0E01\u0E47\u0E15\u0E32\u0E21"
+  inspectorUpgrade3RawPowerItemLore: "\u0E41\u0E01\u0E48\u0E19\u0E27\u0E34\u0E0D\u0E0D\u0E32\u0E13\u0E2A\u0E35\u0E21\u0E48\u0E27\u0E07\u0E04\u0E25\u0E49\u0E33\u0E17\u0E35\u0E48\u0E04\u0E27\u0E31\u0E01\u0E2D\u0E2D\u0E01\u0E21\u0E32\u0E08\u0E32\u0E01\u0E23\u0E48\u0E32\u0E07\u0E1C\u0E39\u0E49\u0E04\u0E38\u0E21\u0E21\u0E34\u0E15\u0E34
+    \u0E21\u0E31\u0E19\u0E40\u0E15\u0E49\u0E19\u0E15\u0E38\u0E1A\u0E46 \u0E41\u0E25\u0E30\u0E01\u0E23\u0E30\u0E2B\u0E32\u0E22\u0E01\u0E32\u0E23\u0E2A\u0E31\u0E07\u0E2B\u0E32\u0E23\u0E04\u0E23\u0E31\u0E49\u0E07\u0E15\u0E48\u0E2D\u0E44\u0E1B"
+  inspectorDeathScreenTauntQuotes:
+  - "\u0E2D\u0E35\u0E01\u0E2B\u0E19\u0E36\u0E48\u0E07\u0E04\u0E27\u0E32\u0E21\u0E2B\u0E27\u0E31\u0E07\u0E17\u0E35\u0E48\u0E41\u0E2B\u0E25\u0E01\u0E2A\u0E25\u0E32\u0E22..."
+  - "\u0E04\u0E33\u0E2D\u0E18\u0E34\u0E29\u0E10\u0E32\u0E19\u0E02\u0E2D\u0E07\u0E40\u0E18\u0E2D...
+    \u0E44\u0E21\u0E48\u0E21\u0E35\u0E43\u0E04\u0E23\u0E44\u0E14\u0E49\u0E22\u0E34\u0E19\u0E43\u0E19\u0E21\u0E34\u0E15\u0E34\u0E19\u0E35\u0E49\u0E2B\u0E23\u0E2D\u0E01"
+  - "\u0E42\u0E0B\u0E25\u0E40\u0E08\u0E21\u0E17\u0E35\u0E48\u0E21\u0E37\u0E14\u0E21\u0E34\u0E14...
+    \u0E01\u0E33\u0E25\u0E31\u0E07\u0E01\u0E25\u0E37\u0E19\u0E01\u0E34\u0E19\u0E0A\u0E37\u0E48\u0E2D\u0E02\u0E2D\u0E07\u0E40\u0E18\u0E2D\u0E44\u0E1B\u0E17\u0E35\u0E25\u0E30\u0E19\u0E34\u0E14"
+  - "\u0E25\u0E39\u0E1B\u0E40\u0E27\u0E25\u0E32\u0E2B\u0E21\u0E38\u0E19\u0E01\u0E25\u0E31\u0E1A\u0E2D\u0E35\u0E01\u0E04\u0E23\u0E31\u0E49\u0E07...
+    \u0E1E\u0E23\u0E49\u0E2D\u0E21\u0E1A\u0E32\u0E14\u0E41\u0E1C\u0E25\u0E17\u0E35\u0E48\u0E25\u0E36\u0E01\u0E01\u0E27\u0E48\u0E32\u0E40\u0E14\u0E34\u0E21"
+  - "\u0E41\u0E21\u0E49\u0E41\u0E15\u0E48\u0E04\u0E27\u0E32\u0E21\u0E15\u0E32\u0E22...
+    \u0E01\u0E47\u0E22\u0E31\u0E07\u0E44\u0E21\u0E48\u0E2D\u0E19\u0E38\u0E0D\u0E32\u0E15\u0E43\u0E2B\u0E49\u0E40\u0E18\u0E2D\u0E2B\u0E25\u0E38\u0E14\u0E1E\u0E49\u0E19\u0E08\u0E32\u0E01\u0E2B\u0E49\u0E2D\u0E07\u0E40\u0E23\u0E35\u0E22\u0E19\u0E19\u0E35\u0E49"
 --- !u!4 &1000595390
 Transform:
   m_ObjectHideFlags: 0
