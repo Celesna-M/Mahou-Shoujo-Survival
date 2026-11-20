@@ -6,8 +6,20 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/Scenes/SampleScene.unity
+    path: Assets/_Project/Scenes/MainMenu.unity
+    guid: 4a2bd730675a6ee4ea7e04ab9925fb2c
+  - enabled: 1
+    path: Assets/_Project/Scenes/The lobby.unity
+    guid: a78388fccd60cdd42857d982f96b49e5
+  - enabled: 1
+    path: Assets/_Project/Scenes/StageMap.unity
+    guid: 3f4dea55826229e439843c44aab8534c
+  - enabled: 1
+    path: Assets/_Project/Scenes/The Action.unity
     guid: 99c9720ab356a0642a771bea13969a05
+  - enabled: 1
+    path: Assets/_Project/Scenes/Shibuya.unity
+    guid: a2d0f136bbe9ef84da11e56f3f0650dc
   m_configObjects:
+    com.unity.dt.app-ui: {fileID: 11400000, guid: 1b1c20d82303e4b5781c3ef50ac1449f, type: 2}
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
-  m_UseUCBPForAssetBundles: 0

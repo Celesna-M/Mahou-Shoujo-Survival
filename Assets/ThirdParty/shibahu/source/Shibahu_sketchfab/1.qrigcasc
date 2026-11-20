@@ -1,0 +1,219 @@
+{
+	"Document": [
+		{
+			"Title": "Body",
+			"Sections": [
+				{
+					"Section": "Body",
+					"Names": [
+						{
+							"Bone name": "pelvis",
+							"Joint name": "Shibahu_Hips",
+							"Joint path": []
+						},
+						{
+							"Bone name": "stomach",
+							"Joint name": "Shibahu_Spine",
+							"Joint path": [
+								"Shibahu_Hips"
+							]
+						},
+						{
+							"Bone name": "chest",
+							"Joint name": "Shibahu_Spine1",
+							"Joint path": [
+								"Shibahu_Hips",
+								"Shibahu_Spine"
+							]
+						},
+						{
+							"Bone name": "neck",
+							"Joint name": "Shibahu_Neck",
+							"Joint path": [
+								"Shibahu_Hips",
+								"Shibahu_Spine",
+								"Shibahu_Spine1",
+								"Shibahu_Spine2"
+							]
+						},
+						{
+							"Bone name": "head",
+							"Joint name": "Shibahu_Head",
+							"Joint path": [
+								"Shibahu_Hips",
+								"Shibahu_Spine",
+								"Shibahu_Spine1",
+								"Shibahu_Spine2",
+								"Shibahu_Neck"
+							]
+						}
+					]
+				},
+				{
+					"Section": "Left arm",
+					"Names": [
+						{
+							"Bone name": "arm_l",
+							"Joint name": "Shibahu_LeftArm",
+							"Joint path": [
+								"Shibahu_Hips",
+								"Shibahu_Spine",
+								"Shibahu_Spine1",
+								"Shibahu_Spine2",
+								"Shibahu_LeftShoulder"
+							]
+						},
+						{
+							"Bone name": "forearm_l",
+							"Joint name": "Shibahu_LeftForeArm",
+							"Joint path": [
+								"Shibahu_Hips",
+								"Shibahu_Spine",
+								"Shibahu_Spine1",
+								"Shibahu_Spine2",
+								"Shibahu_LeftShoulder",
+								"Shibahu_LeftArm"
+							]
+						},
+						{
+							"Bone name": "hand_l",
+							"Joint name": "Shibahu_LeftHand",
+							"Joint path": [
+								"Shibahu_Hips",
+								"Shibahu_Spine",
+								"Shibahu_Spine1",
+								"Shibahu_Spine2",
+								"Shibahu_LeftShoulder",
+								"Shibahu_LeftArm",
+								"Shibahu_LeftForeArm"
+							]
+						}
+					]
+				},
+				{
+					"Section": "Right arm",
+					"Names": [
+						{
+							"Bone name": "arm_r",
+							"Joint name": "Shibahu_RightArm",
+							"Joint path": [
+								"Shibahu_Hips",
+								"Shibahu_Spine",
+								"Shibahu_Spine1",
+								"Shibahu_Spine2",
+								"Shibahu_RightShoulder"
+							]
+						},
+						{
+							"Bone name": "forearm_r",
+							"Joint name": "Shibahu_RightForeArm",
+							"Joint path": [
+								"Shibahu_Hips",
+								"Shibahu_Spine",
+								"Shibahu_Spine1",
+								"Shibahu_Spine2",
+								"Shibahu_RightShoulder",
+								"Shibahu_RightArm"
+							]
+						},
+						{
+							"Bone name": "hand_r",
+							"Joint name": "Shibahu_RightHand",
+							"Joint path": [
+								"Shibahu_Hips",
+								"Shibahu_Spine",
+								"Shibahu_Spine1",
+								"Shibahu_Spine2",
+								"Shibahu_RightShoulder",
+								"Shibahu_RightArm",
+								"Shibahu_RightForeArm"
+							]
+						}
+					]
+				},
+				{
+					"Section": "Left leg",
+					"Names": [
+						{
+							"Bone name": "thigh_l",
+							"Joint name": "Shibahu_LeftUpLeg",
+							"Joint path": [
+								"Shibahu_Hips"
+							]
+						},
+						{
+							"Bone name": "calf_l",
+							"Joint name": "Shibahu_LeftLeg",
+							"Joint path": [
+								"Shibahu_Hips",
+								"Shibahu_LeftUpLeg"
+							]
+						},
+						{
+							"Bone name": "foot_l",
+							"Joint name": "Shibahu_LeftFoot",
+							"Joint path": [
+								"Shibahu_Hips",
+								"Shibahu_LeftUpLeg",
+								"Shibahu_LeftLeg"
+							]
+						},
+						{
+							"Bone name": "toe_l",
+							"Joint name": "Shibahu_LeftToeBase",
+							"Joint path": [
+								"Shibahu_Hips",
+								"Shibahu_LeftUpLeg",
+								"Shibahu_LeftLeg",
+								"Shibahu_LeftFoot"
+							]
+						}
+					]
+				},
+				{
+					"Section": "Right leg",
+					"Names": [
+						{
+							"Bone name": "thigh_r",
+							"Joint name": "Shibahu_RightUpLeg",
+							"Joint path": [
+								"Shibahu_Hips"
+							]
+						},
+						{
+							"Bone name": "calf_r",
+							"Joint name": "Shibahu_RightLeg",
+							"Joint path": [
+								"Shibahu_Hips",
+								"Shibahu_RightUpLeg"
+							]
+						},
+						{
+							"Bone name": "foot_r",
+							"Joint name": "Shibahu_RightFoot",
+							"Joint path": [
+								"Shibahu_Hips",
+								"Shibahu_RightUpLeg",
+								"Shibahu_RightLeg"
+							]
+						},
+						{
+							"Bone name": "toe_r",
+							"Joint name": "Shibahu_RightToeBase",
+							"Joint path": [
+								"Shibahu_Hips",
+								"Shibahu_RightUpLeg",
+								"Shibahu_RightLeg",
+								"Shibahu_RightFoot"
+							]
+						}
+					]
+				}
+			]
+		}
+	],
+	"Settings": {
+		"Is align pelvis": true,
+		"Is create layers": true
+	}
+}

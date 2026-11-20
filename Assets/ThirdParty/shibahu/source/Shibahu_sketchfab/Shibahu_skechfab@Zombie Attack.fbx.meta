@@ -1,0 +1,1636 @@
+fileFormatVersion: 2
+guid: 73ef211dd399c8e4f92db9ce55cf472d
+ModelImporter:
+  serializedVersion: 24501
+  internalIDToNameTable: []
+  externalObjects: {}
+  materials:
+    materialImportMode: 2
+    materialName: 0
+    materialSearch: 1
+    materialLocation: 1
+    searchTexturesGlobally: 0
+  animations:
+    legacyGenerateAnimations: 4
+    bakeSimulation: 0
+    resampleCurves: 1
+    optimizeGameObjects: 0
+    removeConstantScaleCurves: 0
+    motionNodeName: 
+    animationImportErrors: 
+    animationImportWarnings: "\nClip 'mixamo.com' has import animation warnings that
+      might lower retargeting quality:\nNote: Activate translation DOF on avatar
+      to improve retargeting quality.\n\t'Shibahu_Ear_Right1' is inbetween humanoid
+      transforms and has rotation animation that will be discarded.\n"
+    animationRetargetingWarnings: 
+    animationDoRetargetingWarnings: 0
+    importAnimatedCustomProperties: 0
+    importConstraints: 0
+    animationCompression: 3
+    animationRotationError: 0.5
+    animationPositionError: 0.5
+    animationScaleError: 0.5
+    animationWrapMode: 0
+    extraExposedTransformPaths: []
+    extraUserProperties: []
+    clipAnimations:
+    - serializedVersion: 16
+      name: Zombie Attack
+      takeName: mixamo.com
+      internalID: -203655887218126122
+      firstFrame: 0
+      lastFrame: 157
+      wrapMode: 0
+      orientationOffsetY: 0
+      level: 0
+      cycleOffset: 0
+      loop: 0
+      hasAdditiveReferencePose: 0
+      loopTime: 0
+      loopBlend: 0
+      loopBlendOrientation: 1
+      loopBlendPositionY: 1
+      loopBlendPositionXZ: 1
+      keepOriginalOrientation: 0
+      keepOriginalPositionY: 1
+      keepOriginalPositionXZ: 0
+      heightFromFeet: 0
+      mirror: 0
+      bodyMask: 01000000010000000100000001000000010000000100000001000000010000000100000001000000010000000100000001000000
+      curves: []
+      events: []
+      transformMask: []
+      maskType: 3
+      maskSource: {instanceID: 0}
+      additiveReferencePoseFrame: 0
+    isReadable: 0
+  meshes:
+    lODScreenPercentages: []
+    globalScale: 1
+    meshCompression: 0
+    addColliders: 0
+    useSRGBMaterialColor: 1
+    sortHierarchyByName: 1
+    importPhysicalCameras: 1
+    importVisibility: 1
+    importBlendShapes: 1
+    importCameras: 1
+    importLights: 1
+    nodeNameCollisionStrategy: 1
+    fileIdsGeneration: 2
+    swapUVChannels: 0
+    generateSecondaryUV: 0
+    useFileUnits: 1
+    keepQuads: 0
+    weldVertices: 1
+    bakeAxisConversion: 0
+    preserveHierarchy: 0
+    skinWeightsMode: 0
+    maxBonesPerVertex: 4
+    minBoneWeight: 0.001
+    optimizeBones: 1
+    generateMeshLods: 0
+    meshLodGenerationFlags: 0
+    maximumMeshLod: -1
+    importUVs: -1
+    importVertexColors: 1
+    meshOptimizationFlags: -1
+    indexFormat: 0
+    secondaryUVAngleDistortion: 8
+    secondaryUVAreaDistortion: 15.000001
+    secondaryUVHardAngle: 88
+    secondaryUVMarginMethod: 1
+    secondaryUVMinLightmapResolution: 40
+    secondaryUVMinObjectScale: 1
+    secondaryUVPackMargin: 4
+    useFileScale: 1
+    strictVertexDataChecks: 0
+  tangentSpace:
+    normalSmoothAngle: 60
+    normalImportMode: 0
+    tangentImportMode: 3
+    normalCalculationMode: 4
+    legacyComputeAllNormalsFromSmoothingGroupsWhenMeshHasBlendShapes: 0
+    blendShapeNormalImportMode: 1
+    normalSmoothingSource: 0
+    calculateBlendshapeNormalsDeltaFromImportedNormals: 0
+  referencedClips: []
+  importAnimation: 1
+  humanDescription:
+    serializedVersion: 3
+    human:
+    - boneName: Shibahu_Hips
+      humanName: Hips
+      limit:
+        min: {x: 0, y: 0, z: 0}
+        max: {x: 0, y: 0, z: 0}
+        value: {x: 0, y: 0, z: 0}
+        length: 0
+        modified: 0
+    - boneName: Shibahu_LeftUpLeg
+      humanName: LeftUpperLeg
+      limit:
+        min: {x: 0, y: 0, z: 0}
+        max: {x: 0, y: 0, z: 0}
+        value: {x: 0, y: 0, z: 0}
+        length: 0
+        modified: 0
+    - boneName: Shibahu_RightUpLeg
+      humanName: RightUpperLeg
+      limit:
+        min: {x: 0, y: 0, z: 0}
+        max: {x: 0, y: 0, z: 0}
+        value: {x: 0, y: 0, z: 0}
+        length: 0
+        modified: 0
+    - boneName: Shibahu_LeftLeg
+      humanName: LeftLowerLeg
+      limit:
+        min: {x: 0, y: 0, z: 0}
+        max: {x: 0, y: 0, z: 0}
+        value: {x: 0, y: 0, z: 0}
+        length: 0
+        modified: 0
+    - boneName: Shibahu_RightLeg
+      humanName: RightLowerLeg
+      limit:
+        min: {x: 0, y: 0, z: 0}
+        max: {x: 0, y: 0, z: 0}
+        value: {x: 0, y: 0, z: 0}
+        length: 0
+        modified: 0
+    - boneName: Shibahu_LeftFoot
+      humanName: LeftFoot
+      limit:
+        min: {x: 0, y: 0, z: 0}
+        max: {x: 0, y: 0, z: 0}
+        value: {x: 0, y: 0, z: 0}
+        length: 0
+        modified: 0
+    - boneName: Shibahu_RightFoot
+      humanName: RightFoot
+      limit:
+        min: {x: 0, y: 0, z: 0}
+        max: {x: 0, y: 0, z: 0}
+        value: {x: 0, y: 0, z: 0}
+        length: 0
+        modified: 0
+    - boneName: Shibahu_Spine
+      humanName: Spine
+      limit:
+        min: {x: 0, y: 0, z: 0}
+        max: {x: 0, y: 0, z: 0}
+        value: {x: 0, y: 0, z: 0}
+        length: 0
+        modified: 0
+    - boneName: Shibahu_Spine1
+      humanName: Chest
+      limit:
+        min: {x: 0, y: 0, z: 0}
+        max: {x: 0, y: 0, z: 0}
+        value: {x: 0, y: 0, z: 0}
+        length: 0
+        modified: 0
+    - boneName: Shibahu_Neck
+      humanName: Neck
+      limit:
+        min: {x: 0, y: 0, z: 0}
+        max: {x: 0, y: 0, z: 0}
+        value: {x: 0, y: 0, z: 0}
+        length: 0
+        modified: 0
+    - boneName: Shibahu_Head
+      humanName: Head
+      limit:
+        min: {x: 0, y: 0, z: 0}
+        max: {x: 0, y: 0, z: 0}
+        value: {x: 0, y: 0, z: 0}
+        length: 0
+        modified: 0
+    - boneName: Shibahu_LeftShoulder
+      humanName: LeftShoulder
+      limit:
+        min: {x: 0, y: 0, z: 0}
+        max: {x: 0, y: 0, z: 0}
+        value: {x: 0, y: 0, z: 0}
+        length: 0
+        modified: 0
+    - boneName: Shibahu_RightShoulder
+      humanName: RightShoulder
+      limit:
+        min: {x: 0, y: 0, z: 0}
+        max: {x: 0, y: 0, z: 0}
+        value: {x: 0, y: 0, z: 0}
+        length: 0
+        modified: 0
+    - boneName: Shibahu_LeftArm
+      humanName: LeftUpperArm
+      limit:
+        min: {x: 0, y: 0, z: 0}
+        max: {x: 0, y: 0, z: 0}
+        value: {x: 0, y: 0, z: 0}
+        length: 0
+        modified: 0
+    - boneName: Shibahu_RightArm
+      humanName: RightUpperArm
+      limit:
+        min: {x: 0, y: 0, z: 0}
+        max: {x: 0, y: 0, z: 0}
+        value: {x: 0, y: 0, z: 0}
+        length: 0
+        modified: 0
+    - boneName: Shibahu_LeftForeArm
+      humanName: LeftLowerArm
+      limit:
+        min: {x: 0, y: 0, z: 0}
+        max: {x: 0, y: 0, z: 0}
+        value: {x: 0, y: 0, z: 0}
+        length: 0
+        modified: 0
+    - boneName: Shibahu_RightForeArm
+      humanName: RightLowerArm
+      limit:
+        min: {x: 0, y: 0, z: 0}
+        max: {x: 0, y: 0, z: 0}
+        value: {x: 0, y: 0, z: 0}
+        length: 0
+        modified: 0
+    - boneName: Shibahu_LeftHand
+      humanName: LeftHand
+      limit:
+        min: {x: 0, y: 0, z: 0}
+        max: {x: 0, y: 0, z: 0}
+        value: {x: 0, y: 0, z: 0}
+        length: 0
+        modified: 0
+    - boneName: Shibahu_RightHand
+      humanName: RightHand
+      limit:
+        min: {x: 0, y: 0, z: 0}
+        max: {x: 0, y: 0, z: 0}
+        value: {x: 0, y: 0, z: 0}
+        length: 0
+        modified: 0
+    - boneName: Shibahu_LeftToeBase
+      humanName: LeftToes
+      limit:
+        min: {x: 0, y: 0, z: 0}
+        max: {x: 0, y: 0, z: 0}
+        value: {x: 0, y: 0, z: 0}
+        length: 0
+        modified: 0
+    - boneName: Shibahu_RightToeBase
+      humanName: RightToes
+      limit:
+        min: {x: 0, y: 0, z: 0}
+        max: {x: 0, y: 0, z: 0}
+        value: {x: 0, y: 0, z: 0}
+        length: 0
+        modified: 0
+    - boneName: Shibahu_Ear_Left2
+      humanName: LeftEye
+      limit:
+        min: {x: 0, y: 0, z: 0}
+        max: {x: 0, y: 0, z: 0}
+        value: {x: 0, y: 0, z: 0}
+        length: 0
+        modified: 0
+    - boneName: Shibahu_Ear_Right2
+      humanName: RightEye
+      limit:
+        min: {x: 0, y: 0, z: 0}
+        max: {x: 0, y: 0, z: 0}
+        value: {x: 0, y: 0, z: 0}
+        length: 0
+        modified: 0
+    - boneName: Shibahu_HairB2
+      humanName: Jaw
+      limit:
+        min: {x: 0, y: 0, z: 0}
+        max: {x: 0, y: 0, z: 0}
+        value: {x: 0, y: 0, z: 0}
+        length: 0
+        modified: 0
+    - boneName: Shibahu_LeftHandThumb1
+      humanName: Left Thumb Proximal
+      limit:
+        min: {x: 0, y: 0, z: 0}
+        max: {x: 0, y: 0, z: 0}
+        value: {x: 0, y: 0, z: 0}
+        length: 0
+        modified: 0
+    - boneName: Shibahu_LeftHandThumb2
+      humanName: Left Thumb Intermediate
+      limit:
+        min: {x: 0, y: 0, z: 0}
+        max: {x: 0, y: 0, z: 0}
+        value: {x: 0, y: 0, z: 0}
+        length: 0
+        modified: 0
+    - boneName: Shibahu_LeftHandThumb3
+      humanName: Left Thumb Distal
+      limit:
+        min: {x: 0, y: 0, z: 0}
+        max: {x: 0, y: 0, z: 0}
+        value: {x: 0, y: 0, z: 0}
+        length: 0
+        modified: 0
+    - boneName: Shibahu_LeftHandIndex1
+      humanName: Left Index Proximal
+      limit:
+        min: {x: 0, y: 0, z: 0}
+        max: {x: 0, y: 0, z: 0}
+        value: {x: 0, y: 0, z: 0}
+        length: 0
+        modified: 0
+    - boneName: Shibahu_LeftHandIndex2
+      humanName: Left Index Intermediate
+      limit:
+        min: {x: 0, y: 0, z: 0}
+        max: {x: 0, y: 0, z: 0}
+        value: {x: 0, y: 0, z: 0}
+        length: 0
+        modified: 0
+    - boneName: Shibahu_LeftHandIndex3
+      humanName: Left Index Distal
+      limit:
+        min: {x: 0, y: 0, z: 0}
+        max: {x: 0, y: 0, z: 0}
+        value: {x: 0, y: 0, z: 0}
+        length: 0
+        modified: 0
+    - boneName: Shibahu_LeftHandMiddle1
+      humanName: Left Middle Proximal
+      limit:
+        min: {x: 0, y: 0, z: 0}
+        max: {x: 0, y: 0, z: 0}
+        value: {x: 0, y: 0, z: 0}
+        length: 0
+        modified: 0
+    - boneName: Shibahu_LeftHandMiddle2
+      humanName: Left Middle Intermediate
+      limit:
+        min: {x: 0, y: 0, z: 0}
+        max: {x: 0, y: 0, z: 0}
+        value: {x: 0, y: 0, z: 0}
+        length: 0
+        modified: 0
+    - boneName: Shibahu_LeftHandMiddle3
+      humanName: Left Middle Distal
+      limit:
+        min: {x: 0, y: 0, z: 0}
+        max: {x: 0, y: 0, z: 0}
+        value: {x: 0, y: 0, z: 0}
+        length: 0
+        modified: 0
+    - boneName: Shibahu_LeftHandRing1
+      humanName: Left Ring Proximal
+      limit:
+        min: {x: 0, y: 0, z: 0}
+        max: {x: 0, y: 0, z: 0}
+        value: {x: 0, y: 0, z: 0}
+        length: 0
+        modified: 0
+    - boneName: Shibahu_LeftHandRing2
+      humanName: Left Ring Intermediate
+      limit:
+        min: {x: 0, y: 0, z: 0}
+        max: {x: 0, y: 0, z: 0}
+        value: {x: 0, y: 0, z: 0}
+        length: 0
+        modified: 0
+    - boneName: Shibahu_LeftHandRing3
+      humanName: Left Ring Distal
+      limit:
+        min: {x: 0, y: 0, z: 0}
+        max: {x: 0, y: 0, z: 0}
+        value: {x: 0, y: 0, z: 0}
+        length: 0
+        modified: 0
+    - boneName: Shibahu_LeftHandPinky1
+      humanName: Left Little Proximal
+      limit:
+        min: {x: 0, y: 0, z: 0}
+        max: {x: 0, y: 0, z: 0}
+        value: {x: 0, y: 0, z: 0}
+        length: 0
+        modified: 0
+    - boneName: Shibahu_LeftHandPinky2
+      humanName: Left Little Intermediate
+      limit:
+        min: {x: 0, y: 0, z: 0}
+        max: {x: 0, y: 0, z: 0}
+        value: {x: 0, y: 0, z: 0}
+        length: 0
+        modified: 0
+    - boneName: Shibahu_LeftHandPinky3
+      humanName: Left Little Distal
+      limit:
+        min: {x: 0, y: 0, z: 0}
+        max: {x: 0, y: 0, z: 0}
+        value: {x: 0, y: 0, z: 0}
+        length: 0
+        modified: 0
+    - boneName: Shibahu_RightHandThumb1
+      humanName: Right Thumb Proximal
+      limit:
+        min: {x: 0, y: 0, z: 0}
+        max: {x: 0, y: 0, z: 0}
+        value: {x: 0, y: 0, z: 0}
+        length: 0
+        modified: 0
+    - boneName: Shibahu_RightHandThumb2
+      humanName: Right Thumb Intermediate
+      limit:
+        min: {x: 0, y: 0, z: 0}
+        max: {x: 0, y: 0, z: 0}
+        value: {x: 0, y: 0, z: 0}
+        length: 0
+        modified: 0
+    - boneName: Shibahu_RightHandThumb3
+      humanName: Right Thumb Distal
+      limit:
+        min: {x: 0, y: 0, z: 0}
+        max: {x: 0, y: 0, z: 0}
+        value: {x: 0, y: 0, z: 0}
+        length: 0
+        modified: 0
+    - boneName: Shibahu_RightHandIndex1
+      humanName: Right Index Proximal
+      limit:
+        min: {x: 0, y: 0, z: 0}
+        max: {x: 0, y: 0, z: 0}
+        value: {x: 0, y: 0, z: 0}
+        length: 0
+        modified: 0
+    - boneName: Shibahu_RightHandIndex2
+      humanName: Right Index Intermediate
+      limit:
+        min: {x: 0, y: 0, z: 0}
+        max: {x: 0, y: 0, z: 0}
+        value: {x: 0, y: 0, z: 0}
+        length: 0
+        modified: 0
+    - boneName: Shibahu_RightHandIndex3
+      humanName: Right Index Distal
+      limit:
+        min: {x: 0, y: 0, z: 0}
+        max: {x: 0, y: 0, z: 0}
+        value: {x: 0, y: 0, z: 0}
+        length: 0
+        modified: 0
+    - boneName: Shibahu_RightHandMiddle1
+      humanName: Right Middle Proximal
+      limit:
+        min: {x: 0, y: 0, z: 0}
+        max: {x: 0, y: 0, z: 0}
+        value: {x: 0, y: 0, z: 0}
+        length: 0
+        modified: 0
+    - boneName: Shibahu_RightHandMiddle2
+      humanName: Right Middle Intermediate
+      limit:
+        min: {x: 0, y: 0, z: 0}
+        max: {x: 0, y: 0, z: 0}
+        value: {x: 0, y: 0, z: 0}
+        length: 0
+        modified: 0
+    - boneName: Shibahu_RightHandMiddle3
+      humanName: Right Middle Distal
+      limit:
+        min: {x: 0, y: 0, z: 0}
+        max: {x: 0, y: 0, z: 0}
+        value: {x: 0, y: 0, z: 0}
+        length: 0
+        modified: 0
+    - boneName: Shibahu_RightHandRing1
+      humanName: Right Ring Proximal
+      limit:
+        min: {x: 0, y: 0, z: 0}
+        max: {x: 0, y: 0, z: 0}
+        value: {x: 0, y: 0, z: 0}
+        length: 0
+        modified: 0
+    - boneName: Shibahu_RightHandRing2
+      humanName: Right Ring Intermediate
+      limit:
+        min: {x: 0, y: 0, z: 0}
+        max: {x: 0, y: 0, z: 0}
+        value: {x: 0, y: 0, z: 0}
+        length: 0
+        modified: 0
+    - boneName: Shibahu_RightHandRing3
+      humanName: Right Ring Distal
+      limit:
+        min: {x: 0, y: 0, z: 0}
+        max: {x: 0, y: 0, z: 0}
+        value: {x: 0, y: 0, z: 0}
+        length: 0
+        modified: 0
+    - boneName: Shibahu_RightHandPinky1
+      humanName: Right Little Proximal
+      limit:
+        min: {x: 0, y: 0, z: 0}
+        max: {x: 0, y: 0, z: 0}
+        value: {x: 0, y: 0, z: 0}
+        length: 0
+        modified: 0
+    - boneName: Shibahu_RightHandPinky2
+      humanName: Right Little Intermediate
+      limit:
+        min: {x: 0, y: 0, z: 0}
+        max: {x: 0, y: 0, z: 0}
+        value: {x: 0, y: 0, z: 0}
+        length: 0
+        modified: 0
+    - boneName: Shibahu_RightHandPinky3
+      humanName: Right Little Distal
+      limit:
+        min: {x: 0, y: 0, z: 0}
+        max: {x: 0, y: 0, z: 0}
+        value: {x: 0, y: 0, z: 0}
+        length: 0
+        modified: 0
+    - boneName: Shibahu_Spine2
+      humanName: UpperChest
+      limit:
+        min: {x: 0, y: 0, z: 0}
+        max: {x: 0, y: 0, z: 0}
+        value: {x: 0, y: 0, z: 0}
+        length: 0
+        modified: 0
+    skeleton:
+    - name: Shibahu_skechfab@Zombie Attack(Clone)
+      parentName: 
+      position: {x: 0.0030776775, y: -0.069060594, z: -0.21823072}
+      rotation: {x: 0.10287252, y: 0.16708072, z: 0.0293934, w: 0.9801211}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_Hips
+      parentName: Shibahu_skechfab@Zombie Attack(Clone)
+      position: {x: 0.007368893, y: 0.8642942, z: 0.023223162}
+      rotation: {x: -0.16610572, y: -0.16020165, z: -0.006882388, w: 0.9729836}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_Spine
+      parentName: Shibahu_Hips
+      position: {x: -0, y: 0.058067996, z: 0}
+      rotation: {x: 0.020979214, y: 0.00021329724, z: -0.031201907, w: 0.9992929}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_Spine1
+      parentName: Shibahu_Spine
+      position: {x: -0, y: 0.108748, z: 0}
+      rotation: {x: 0.06500317, y: 0.01105468, z: -0.01219795, w: 0.99774927}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_Spine2
+      parentName: Shibahu_Spine1
+      position: {x: -0, y: 0.112045, z: 0}
+      rotation: {x: 0.06510637, y: 0.0100606745, z: -0.012517702, w: 0.9977491}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_Neck
+      parentName: Shibahu_Spine2
+      position: {x: -0, y: 0.163624, z: 0}
+      rotation: {x: -0.014703632, y: -0.008041022, z: 0.006373358, w: 0.9998393}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_Head
+      parentName: Shibahu_Neck
+      position: {x: -0, y: 0.047140002, z: 0}
+      rotation: {x: -0.014703695, y: -0.008041107, z: 0.006373363, w: 0.9998393}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_Ahoge1
+      parentName: Shibahu_Head
+      position: {x: 0.000326, y: 0.17664899, z: 0.045427}
+      rotation: {x: -0.17518856, y: 0.8708913, z: -0.013542637, w: 0.45899233}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_Ahoge2
+      parentName: Shibahu_Ahoge1
+      position: {x: -0.027369998, y: 0, z: 0}
+      rotation: {x: 0.018914742, y: 0.022818344, z: 0.44835272, w: 0.89336526}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_Ahoge3
+      parentName: Shibahu_Ahoge2
+      position: {x: -0.024206, y: 0, z: 0}
+      rotation: {x: -0.01718922, y: -0.030277357, z: 0.23725866, w: 0.97082245}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_Ahoge4
+      parentName: Shibahu_Ahoge3
+      position: {x: -0.032396, y: 0, z: 0}
+      rotation: {x: -0.03817951, y: -0.017871004, z: 0.22160587, w: 0.97422475}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_Ahoge5
+      parentName: Shibahu_Ahoge4
+      position: {x: -0.031601, y: 0, z: 0}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_HairA1
+      parentName: Shibahu_Head
+      position: {x: 0.039217, y: 0.153697, z: 0.067389004}
+      rotation: {x: 0.45217976, y: 0.7571929, z: 0.3404824, w: 0.3259819}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_HairA2
+      parentName: Shibahu_HairA1
+      position: {x: -0.025850998, y: 0, z: 0}
+      rotation: {x: -0.03793358, y: 0.007579244, z: 0.12213456, w: 0.9917594}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_HairA3
+      parentName: Shibahu_HairA2
+      position: {x: -0.025314, y: 0, z: 0}
+      rotation: {x: -0.021601403, y: 0.005068028, z: 0.10312012, w: 0.9944214}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_HairA4
+      parentName: Shibahu_HairA3
+      position: {x: -0.025680998, y: 0, z: 0}
+      rotation: {x: -0.012521768, y: 0.027900942, z: 0.06571872, w: 0.99736947}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_HairA5
+      parentName: Shibahu_HairA4
+      position: {x: -0.02145, y: 0, z: 0}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_HairB1
+      parentName: Shibahu_Head
+      position: {x: 0.0054619997, y: 0.15439901, z: 0.083634995}
+      rotation: {x: 0.3874262, y: 0.67694485, z: 0.33244693, w: 0.5302128}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_HairB2
+      parentName: Shibahu_HairB1
+      position: {x: -0.023601, y: 0, z: 0}
+      rotation: {x: 0.010336718, y: 0.0029161922, z: 0.124403454, w: 0.9921736}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_HairB3
+      parentName: Shibahu_HairB2
+      position: {x: -0.018947, y: 0, z: 0}
+      rotation: {x: 0.018757902, y: -0.010221125, z: 0.09494029, w: 0.99525374}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_HairB4
+      parentName: Shibahu_HairB3
+      position: {x: -0.02082, y: 0, z: 0}
+      rotation: {x: 0.09096905, y: -0.021935927, z: 0.12415738, w: 0.9878403}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_HairB5
+      parentName: Shibahu_HairB4
+      position: {x: -0.021643, y: 0, z: 0}
+      rotation: {x: 0.1189335, y: -0.08337231, z: 0.18100733, w: 0.97269744}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_HairB6
+      parentName: Shibahu_HairB5
+      position: {x: -0.021594, y: 0, z: 0}
+      rotation: {x: 0.08966353, y: -0, z: -0, w: 0.99597216}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_HairC1
+      parentName: Shibahu_Head
+      position: {x: -0.025695, y: 0.151512, z: 0.075856}
+      rotation: {x: 0.35073695, y: 0.5074326, z: 0.3826337, w: 0.6878134}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_HairC2
+      parentName: Shibahu_HairC1
+      position: {x: -0.022646, y: 0, z: 0}
+      rotation: {x: 0.02799862, y: 0.00007293006, z: 0.1730827, w: 0.9845093}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_HairC3
+      parentName: Shibahu_HairC2
+      position: {x: -0.021475, y: 0, z: 0}
+      rotation: {x: 0.0063864826, y: 0.01106347, z: 0.060216103, w: 0.9981037}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_HairC4
+      parentName: Shibahu_HairC3
+      position: {x: -0.019087, y: 0, z: 0}
+      rotation: {x: 0.00077062414, y: 0.06206632, z: 0.11776503, w: 0.9910997}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_HairC5
+      parentName: Shibahu_HairC4
+      position: {x: -0.017994, y: 0, z: 0}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_HairD1
+      parentName: Shibahu_Head
+      position: {x: -0.039217, y: 0.15369199, z: 0.067389004}
+      rotation: {x: 0.3404824, y: 0.3259819, z: 0.45217976, w: 0.7571929}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_HairD2
+      parentName: Shibahu_HairD1
+      position: {x: -0.025850998, y: 0, z: 0}
+      rotation: {x: 0.03793358, y: -0.007579244, z: 0.12213456, w: 0.9917594}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_HairD3
+      parentName: Shibahu_HairD2
+      position: {x: -0.025306, y: 0.000001, z: -0.000002}
+      rotation: {x: 0.021601403, y: -0.005068028, z: 0.10312012, w: 0.9944214}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_HairD4
+      parentName: Shibahu_HairD3
+      position: {x: -0.025686, y: 0.000001, z: 0.000001}
+      rotation: {x: 0.012521768, y: -0.027900942, z: 0.06571872, w: 0.99736947}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_HairD5
+      parentName: Shibahu_HairD4
+      position: {x: -0.021447, y: -0.000001, z: -0.000001}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_HairE1
+      parentName: Shibahu_Head
+      position: {x: -0.081099, y: 0.0863, z: 0.044205997}
+      rotation: {x: 0.18429619, y: 0.18000662, z: 0.72033733, w: 0.64400834}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_HairE2
+      parentName: Shibahu_HairE1
+      position: {x: -0.029026998, y: 0, z: 0}
+      rotation: {x: -0.0023887458, y: -0.0023061251, z: 0.032592185, w: 0.9994632}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_HairE3
+      parentName: Shibahu_HairE2
+      position: {x: -0.023541998, y: 0, z: 0}
+      rotation: {x: 0.005843768, y: 0.024166066, z: -0.099765755, w: 0.9947003}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_HairE4
+      parentName: Shibahu_HairE3
+      position: {x: -0.021126, y: 0, z: 0}
+      rotation: {x: -0.011186051, y: 0.030998949, z: -0.15134646, w: 0.98793125}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_HairE5
+      parentName: Shibahu_HairE4
+      position: {x: -0.015214999, y: 0, z: 0}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_HairF1
+      parentName: Shibahu_Head
+      position: {x: -0.093577005, y: 0.088889994, z: -0.014413}
+      rotation: {x: -0.031314284, y: -0.030373793, z: 0.70525366, w: 0.70761156}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_HairF2
+      parentName: Shibahu_HairF1
+      position: {x: -0.024551, y: 0, z: 0}
+      rotation: {x: 0.0035315282, y: -0.033047684, z: -0.0866878, w: 0.995681}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_HairF3
+      parentName: Shibahu_HairF2
+      position: {x: -0.019677, y: 0, z: 0}
+      rotation: {x: 0.012048069, y: -0.015488486, z: -0.19018579, w: 0.981552}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_HairF4
+      parentName: Shibahu_HairF3
+      position: {x: -0.019869, y: -0.001268, z: 0.000119}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_HairG1
+      parentName: Shibahu_Head
+      position: {x: -0.058764, y: 0.095445, z: -0.07711}
+      rotation: {x: -0.27976212, y: -0.27427325, z: 0.6395878, w: 0.66138864}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_HairG2
+      parentName: Shibahu_HairG1
+      position: {x: -0.025294, y: 0, z: 0}
+      rotation: {x: -0.000057724315, y: 0.0023025658, z: -0.01738146, w: 0.9998463}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_HairG3
+      parentName: Shibahu_HairG2
+      position: {x: -0.023125999, y: 0, z: 0}
+      rotation: {x: -0.0061049224, y: -0.034225512, z: -0.104190946, w: 0.99394953}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_HairG4
+      parentName: Shibahu_HairG3
+      position: {x: -0.020181999, y: 0, z: 0}
+      rotation: {x: -0.03716424, y: -0.0020616315, z: -0.22235706, w: 0.97425455}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_HairG5
+      parentName: Shibahu_HairG4
+      position: {x: -0.012693999, y: 0, z: 0}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_HairH1
+      parentName: Shibahu_Head
+      position: {x: 0.00085199997, y: 0.099041, z: -0.096097}
+      rotation: {x: -0.43149048, y: -0.5578877, z: 0.42044178, w: 0.5707942}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_HairH2
+      parentName: Shibahu_HairH1
+      position: {x: -0.020962998, y: 0, z: 0}
+      rotation: {x: 0.0018332709, y: -0.008210893, z: -0.047757935, w: 0.9988235}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_HairH3
+      parentName: Shibahu_HairH2
+      position: {x: -0.021424, y: 0, z: 0}
+      rotation: {x: 0.014782411, y: 0.00086401444, z: 0.124049895, w: 0.9921655}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_HairH4
+      parentName: Shibahu_HairH3
+      position: {x: -0.023461001, y: 0, z: 0}
+      rotation: {x: 0.024189984, y: -0.0076942476, z: 0.1978678, w: 0.9799}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_HairH5
+      parentName: Shibahu_HairH4
+      position: {x: -0.025754001, y: 0, z: 0}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_HairI1
+      parentName: Shibahu_Head
+      position: {x: 0.058764, y: 0.095442, z: -0.07711}
+      rotation: {x: 0.63958776, y: 0.66138864, z: -0.2797621, w: -0.27427322}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_HairI2
+      parentName: Shibahu_HairI1
+      position: {x: -0.025293, y: 0, z: 0}
+      rotation: {x: 0.000057724315, y: -0.0023025658, z: -0.01738146, w: 0.9998463}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_HairI3
+      parentName: Shibahu_HairI2
+      position: {x: -0.023128, y: 0, z: 0}
+      rotation: {x: 0.0061049224, y: 0.034225512, z: -0.104190946, w: 0.99394953}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_HairI4
+      parentName: Shibahu_HairI3
+      position: {x: -0.020174, y: 0.000002, z: 0}
+      rotation: {x: 0.03716424, y: 0.0020616315, z: -0.22235706, w: 0.97425455}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_HairI5
+      parentName: Shibahu_HairI4
+      position: {x: -0.012697, y: -0.000003, z: 0}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_HairJ1
+      parentName: Shibahu_Head
+      position: {x: 0.093577005, y: 0.088892, z: -0.014413}
+      rotation: {x: 0.7052537, y: 0.7076116, z: -0.03131428, w: -0.030373786}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_HairJ2
+      parentName: Shibahu_HairJ1
+      position: {x: -0.024549998, y: 0, z: 0}
+      rotation: {x: -0.0035315282, y: 0.033047684, z: -0.0866878, w: 0.995681}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_HairJ3
+      parentName: Shibahu_HairJ2
+      position: {x: -0.019678, y: 0, z: 0}
+      rotation: {x: -0.012048069, y: 0.015488486, z: -0.19018579, w: 0.981552}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_HairJ4
+      parentName: Shibahu_HairJ3
+      position: {x: -0.019869, y: -0.001269, z: -0.000119}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_HairK1
+      parentName: Shibahu_Head
+      position: {x: 0.081099, y: 0.086302005, z: 0.044205997}
+      rotation: {x: 0.72033733, y: 0.6440084, z: 0.18429616, w: 0.1800066}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_HairK2
+      parentName: Shibahu_HairK1
+      position: {x: -0.02903, y: 0, z: 0}
+      rotation: {x: 0.0023887458, y: 0.0023061251, z: 0.032592185, w: 0.9994632}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_HairK3
+      parentName: Shibahu_HairK2
+      position: {x: -0.023536999, y: -0.000001, z: 0}
+      rotation: {x: -0.005843768, y: -0.024166066, z: -0.099765755, w: 0.9947003}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_HairK4
+      parentName: Shibahu_HairK3
+      position: {x: -0.021135, y: 0, z: 0.000001}
+      rotation: {x: 0.011186051, y: -0.030998949, z: -0.15134646, w: 0.98793125}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_HairK5
+      parentName: Shibahu_HairK4
+      position: {x: -0.015213999, y: 0, z: 0}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_Hair_InA1
+      parentName: Shibahu_Head
+      position: {x: -0.071063995, y: 0.047332, z: -0.0109709995}
+      rotation: {x: -0.00018955661, y: -0.002414948, z: 0.75429314, w: 0.6565333}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_Hair_InA2
+      parentName: Shibahu_Hair_InA1
+      position: {x: -0.023087999, y: 0, z: 0}
+      rotation: {x: -0.0071663307, y: -0.033775743, z: 0.07201675, w: 0.9968056}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_Hair_InA3
+      parentName: Shibahu_Hair_InA2
+      position: {x: -0.023531, y: 0, z: 0}
+      rotation: {x: -0.001901487, y: -0.0049897702, z: 0.10803059, w: 0.99413323}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_Hair_InA4
+      parentName: Shibahu_Hair_InA3
+      position: {x: -0.025339, y: 0, z: 0}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_Hair_InB1
+      parentName: Shibahu_Head
+      position: {x: -0.054292, y: 0.052899998, z: -0.049145002}
+      rotation: {x: -0.2699836, y: -0.33066186, z: 0.65722173, w: 0.6211531}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_Hair_InB2
+      parentName: Shibahu_Hair_InB1
+      position: {x: -0.027151998, y: 0, z: 0}
+      rotation: {x: 0.0038091121, y: -0.030493177, z: 0.059537772, w: 0.99775296}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_Hair_InB3
+      parentName: Shibahu_Hair_InB2
+      position: {x: -0.030754, y: 0, z: 0}
+      rotation: {x: 0.007833803, y: -0.019997083, z: 0.055492453, w: 0.99822813}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_Hair_InB4
+      parentName: Shibahu_Hair_InB3
+      position: {x: -0.023392, y: 0, z: 0}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_Hair_InC1
+      parentName: Shibahu_Head
+      position: {x: -0, y: 0.059414, z: -0.079588994}
+      rotation: {x: -0.4911426, y: -0.5087032, z: 0.4911426, w: 0.5087032}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_Hair_InC2
+      parentName: Shibahu_Hair_InC1
+      position: {x: -0.024583, y: 0, z: 0}
+      rotation: {x: 0, y: 0, z: 0.06063305, w: 0.9981601}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_Hair_InC3
+      parentName: Shibahu_Hair_InC2
+      position: {x: -0.021745998, y: 0, z: 0}
+      rotation: {x: 0, y: 0, z: 0.070965596, w: 0.9974788}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_Hair_InC4
+      parentName: Shibahu_Hair_InC3
+      position: {x: -0.030987998, y: 0, z: 0}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_Hair_InD1
+      parentName: Shibahu_Head
+      position: {x: 0.054292, y: 0.052902002, z: -0.049145002}
+      rotation: {x: 0.65722173, y: 0.6211531, z: -0.2699836, w: -0.3306619}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_Hair_InD2
+      parentName: Shibahu_Hair_InD1
+      position: {x: -0.027155, y: 0, z: 0}
+      rotation: {x: -0.0038091121, y: 0.030493177, z: 0.059537772, w: 0.99775296}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_Hair_InD3
+      parentName: Shibahu_Hair_InD2
+      position: {x: -0.030749999, y: -0.000001, z: 0.000001}
+      rotation: {x: -0.007833803, y: 0.019997083, z: 0.055492453, w: 0.99822813}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_Hair_InD4
+      parentName: Shibahu_Hair_InD3
+      position: {x: -0.023396999, y: 0.000001, z: -0.000001}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_Hair_InE1
+      parentName: Shibahu_Head
+      position: {x: 0.071063, y: 0.047332, z: -0.0109709995}
+      rotation: {x: 0.75429314, y: 0.6565333, z: -0.00018959785, w: -0.0024149956}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_Hair_InE2
+      parentName: Shibahu_Hair_InE1
+      position: {x: -0.023085998, y: 0, z: 0}
+      rotation: {x: 0.0071663307, y: 0.033775743, z: 0.07201675, w: 0.9968056}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_Hair_InE3
+      parentName: Shibahu_Hair_InE2
+      position: {x: -0.023531, y: 0, z: 0}
+      rotation: {x: 0.001901487, y: 0.0049897702, z: 0.10803059, w: 0.99413323}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_Hair_InE4
+      parentName: Shibahu_Hair_InE3
+      position: {x: -0.025344998, y: 0.000003, z: -0.000001}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_Ear_Left1
+      parentName: Shibahu_Head
+      position: {x: -0.064985, y: 0.155758, z: 0.021898}
+      rotation: {x: 0.6419965, y: -0.15391338, z: -0.31534582, w: 0.68169516}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_Ear_Left2
+      parentName: Shibahu_Ear_Left1
+      position: {x: -0.015473, y: 0, z: 0}
+      rotation: {x: 0.024249595, y: -0.036122736, z: -0.04958366, w: 0.9978219}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_Ear_Left3
+      parentName: Shibahu_Ear_Left2
+      position: {x: -0.015396, y: 0, z: 0}
+      rotation: {x: 0.055074334, y: -0.009900966, z: -0.13499929, w: 0.98926437}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_Ear_Left4
+      parentName: Shibahu_Ear_Left3
+      position: {x: -0.016918, y: 0, z: 0}
+      rotation: {x: -0.031254362, y: 0.018913968, z: -0.047518376, w: 0.99820215}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_Ear_Left5
+      parentName: Shibahu_Ear_Left4
+      position: {x: -0.020901999, y: 0, z: 0}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_Ear_Right1
+      parentName: Shibahu_Head
+      position: {x: 0.064985, y: 0.15576199, z: 0.021898}
+      rotation: {x: -0.32254073, y: 0.6902526, z: 0.62835205, w: -0.15713857}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_Ear_Right2
+      parentName: Shibahu_Ear_Right1
+      position: {x: -0.015473, y: 0, z: 0}
+      rotation: {x: -0.009949027, y: 0.04658619, z: -0.046838753, w: 0.99776596}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_Ear_Right3
+      parentName: Shibahu_Ear_Right2
+      position: {x: -0.01539, y: 0.000001, z: -0.000006}
+      rotation: {x: -0.043093923, y: 0.0225092, z: -0.13076934, w: 0.99022}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_Ear_Right4
+      parentName: Shibahu_Ear_Right3
+      position: {x: -0.016918, y: 0, z: 0}
+      rotation: {x: 0.040830266, y: -0.004436879, z: -0.043013215, w: 0.99823}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_Ear_Right5
+      parentName: Shibahu_Ear_Right4
+      position: {x: -0.020901999, y: 0, z: -0.000001}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_Dogtag1
+      parentName: Shibahu_Head
+      position: {x: 0.071237996, y: 0.149799, z: 0.026849998}
+      rotation: {x: 0.5072092, y: 0.86108726, z: -0.030677048, w: 0.01806958}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_Dogtag2
+      parentName: Shibahu_Dogtag1
+      position: {x: -0.031647, y: 0, z: 0}
+      rotation: {x: -0.010262264, y: 0.0253909, z: 0.12171742, w: 0.9921869}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_Dogtag3
+      parentName: Shibahu_Dogtag2
+      position: {x: -0.02637, y: 0, z: 0}
+      rotation: {x: -0.0013727554, y: 0.0071759876, z: 0.072956905, w: 0.9973083}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_Dogtag4
+      parentName: Shibahu_Dogtag3
+      position: {x: -0.02867, y: 0, z: 0}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_LeftShoulder
+      parentName: Shibahu_Spine2
+      position: {x: -0.039320998, y: 0.098268, z: 0}
+      rotation: {x: 0.0071706893, y: -0.044113524, z: -0.048097037, w: 0.9978423}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_LeftArm
+      parentName: Shibahu_LeftShoulder
+      position: {x: -0.069708996, y: -0.028202, z: 0}
+      rotation: {x: 0.009896387, y: 0.03174764, z: 0.087851495, w: 0.99557835}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_LeftForeArm
+      parentName: Shibahu_LeftArm
+      position: {x: -0.20644899, y: 0.000010000001, z: 0}
+      rotation: {x: -0.01313277, y: 0.0017701013, z: -0.01453309, w: 0.9998065}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_LeftHand
+      parentName: Shibahu_LeftForeArm
+      position: {x: -0.20811099, y: 0, z: 0}
+      rotation: {x: 0.19960509, y: 0.050437924, z: -0.15892884, w: 0.9655856}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_LeftHandThumb1
+      parentName: Shibahu_LeftHand
+      position: {x: -0.025142, y: -0.0075919996, z: 0.020731}
+      rotation: {x: -0.30573663, y: 0.3614277, z: -0.004572294, w: 0.88083726}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_LeftHandThumb2
+      parentName: Shibahu_LeftHandThumb1
+      position: {x: -0.022981, y: 0, z: 0}
+      rotation: {x: 0.051794846, y: -0.020958593, z: 0.035566967, w: 0.9978041}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_LeftHandThumb3
+      parentName: Shibahu_LeftHandThumb2
+      position: {x: -0.01914, y: 0, z: 0}
+      rotation: {x: -0.10898631, y: -0.024314296, z: -0.00980204, w: 0.9936975}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_LeftHandThumb4
+      parentName: Shibahu_LeftHandThumb3
+      position: {x: -0.023187, y: 0, z: 0}
+      rotation: {x: 0.09399624, y: 0.000002244796, z: -0.000013360123, w: 0.99557257}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_LeftHandIndex1
+      parentName: Shibahu_LeftHand
+      position: {x: -0.07217199, y: -0.009748, z: 0.017966}
+      rotation: {x: -0.0978315, y: 0.079257175, z: 0.10362222, w: 0.98661536}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_LeftHandIndex2
+      parentName: Shibahu_LeftHandIndex1
+      position: {x: -0.026098, y: -0.000002, z: 0.000284}
+      rotation: {x: 0.009246381, y: 0.002947865, z: 0.03445561, w: 0.99935913}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_LeftHandIndex3
+      parentName: Shibahu_LeftHandIndex2
+      position: {x: -0.021064999, y: 0, z: 0}
+      rotation: {x: -0.0018112416, y: -0.0015392047, z: 0.025985535, w: 0.99965954}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_LeftHandIndex4
+      parentName: Shibahu_LeftHandIndex3
+      position: {x: -0.015863, y: 0, z: 0}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_LeftHandMiddle1
+      parentName: Shibahu_LeftHand
+      position: {x: -0.073445, y: -0.0055159996, z: 0.0056}
+      rotation: {x: -0.021075692, y: 0.056709908, z: 0.0389301, w: 0.99740875}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_LeftHandMiddle2
+      parentName: Shibahu_LeftHandMiddle1
+      position: {x: -0.027720999, y: 0, z: 0}
+      rotation: {x: -0.011630856, y: -0.0016521213, z: 0.019917956, w: 0.9997326}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_LeftHandMiddle3
+      parentName: Shibahu_LeftHandMiddle2
+      position: {x: -0.025643, y: 0, z: 0}
+      rotation: {x: -0.0055352584, y: -0.0030736504, z: 0.03562726, w: 0.9993452}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_LeftHandMiddle4
+      parentName: Shibahu_LeftHandMiddle3
+      position: {x: -0.020515999, y: 0, z: 0}
+      rotation: {x: 0.000029670597, y: -0, z: -0, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_LeftHandRing1
+      parentName: Shibahu_LeftHand
+      position: {x: -0.071444996, y: -0.006774, z: -0.0076099997}
+      rotation: {x: -0.0214215, y: -0.011006072, z: -0.023156334, w: 0.99944174}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_LeftHandRing2
+      parentName: Shibahu_LeftHandRing1
+      position: {x: -0.028308, y: 0, z: 0}
+      rotation: {x: -0.006895409, y: -0.0029485538, z: 0.0321613, w: 0.9994546}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_LeftHandRing3
+      parentName: Shibahu_LeftHandRing2
+      position: {x: -0.023222, y: 0, z: 0}
+      rotation: {x: -0.0034483655, y: -0.0025046277, z: 0.027437305, w: 0.9996145}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_LeftHandRing4
+      parentName: Shibahu_LeftHandRing3
+      position: {x: -0.018248, y: 0, z: 0}
+      rotation: {x: 0, y: 0.000031415926, z: -0, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_LeftHandPinky1
+      parentName: Shibahu_LeftHand
+      position: {x: -0.068298, y: -0.011434999, z: -0.020481998}
+      rotation: {x: 0.024778003, y: -0.036822494, z: 0.028458895, w: 0.9986092}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_LeftHandPinky2
+      parentName: Shibahu_LeftHandPinky1
+      position: {x: -0.026003, y: 0, z: 0}
+      rotation: {x: -0.005584248, y: -0.0030904706, z: 0.03151368, w: 0.99948305}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_LeftHandPinky3
+      parentName: Shibahu_LeftHandPinky2
+      position: {x: -0.015061, y: 0, z: 0}
+      rotation: {x: -0.0028327226, y: -0.0018832444, z: 0.019415578, w: 0.99980575}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_LeftHandPinky4
+      parentName: Shibahu_LeftHandPinky3
+      position: {x: -0.017345, y: 0, z: 0}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_LeftArmSub
+      parentName: Shibahu_LeftForeArm
+      position: {x: -0.0016519999, y: -0.0020579998, z: -0.051549}
+      rotation: {x: -0, y: -0.7071068, z: 0, w: 0.7071068}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_Bust_Left1
+      parentName: Shibahu_Spine2
+      position: {x: -0.045918003, y: 0.012327, z: 0.032295}
+      rotation: {x: 0.0010193727, y: 0.65249705, z: 0.01368997, w: 0.7576669}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_Bust_Left2
+      parentName: Shibahu_Bust_Left1
+      position: {x: -0.102272, y: 0, z: 0}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_Bust_Right1
+      parentName: Shibahu_Spine2
+      position: {x: 0.045918003, y: 0.012327, z: 0.032295}
+      rotation: {x: 0.00000015845391, y: 0.757479, z: 0.016929634, w: 0.65264}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_Bust_Right2
+      parentName: Shibahu_Bust_Right1
+      position: {x: -0.102271, y: 0, z: 0}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_JacketA1
+      parentName: Shibahu_Spine2
+      position: {x: -0.101581, y: -0.035366, z: 0.094308004}
+      rotation: {x: 0.075705335, y: 0.09424995, z: 0.7224593, w: 0.68076295}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_JacketA2
+      parentName: Shibahu_JacketA1
+      position: {x: -0.049666, y: 0, z: 0}
+      rotation: {x: 0.00007805891, y: -0.011605463, z: -0.052671276, w: 0.99854445}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_JacketA3
+      parentName: Shibahu_JacketA2
+      position: {x: -0.046504002, y: 0, z: 0}
+      rotation: {x: 0.0014420947, y: -0.015301219, z: -0.034539215, w: 0.99928516}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_JacketA4
+      parentName: Shibahu_JacketA3
+      position: {x: -0.032527, y: 0, z: 0}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_JacketB1
+      parentName: Shibahu_Spine2
+      position: {x: -0.11024, y: -0.036373, z: 0.051542}
+      rotation: {x: 0.07282322, y: 0.04729263, z: 0.67200035, w: 0.7354426}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_JacketB2
+      parentName: Shibahu_JacketB1
+      position: {x: -0.042996995, y: 0, z: 0}
+      rotation: {x: 0.00007805891, y: -0.011605463, z: -0.052671276, w: 0.99854445}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_JacketB3
+      parentName: Shibahu_JacketB2
+      position: {x: -0.046504002, y: 0, z: 0}
+      rotation: {x: 0.0014420947, y: -0.015301219, z: -0.034539215, w: 0.99928516}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_JacketB4
+      parentName: Shibahu_JacketB3
+      position: {x: -0.032527, y: 0, z: 0}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_JacketC1
+      parentName: Shibahu_Spine2
+      position: {x: -0.10779899, y: -0.038984, z: 0.004598}
+      rotation: {x: -0.0054648677, y: -0.025174143, z: 0.64604247, w: 0.7628667}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_JacketC2
+      parentName: Shibahu_JacketC1
+      position: {x: -0.042996995, y: 0, z: 0}
+      rotation: {x: 0.00007805891, y: -0.011605463, z: -0.052671276, w: 0.99854445}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_JacketC3
+      parentName: Shibahu_JacketC2
+      position: {x: -0.046504002, y: 0, z: 0}
+      rotation: {x: 0.0014420947, y: -0.015301219, z: -0.034539215, w: 0.99928516}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_JacketC4
+      parentName: Shibahu_JacketC3
+      position: {x: -0.032527, y: 0, z: 0}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_JacketD1
+      parentName: Shibahu_Spine2
+      position: {x: -0.083309, y: -0.03545, z: -0.048554}
+      rotation: {x: -0.2742477, y: -0.30140176, z: 0.5982635, w: 0.68994635}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_JacketD2
+      parentName: Shibahu_JacketD1
+      position: {x: -0.042996995, y: 0, z: 0}
+      rotation: {x: 0.00007805891, y: -0.011605463, z: -0.052671276, w: 0.99854445}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_JacketD3
+      parentName: Shibahu_JacketD2
+      position: {x: -0.044591997, y: 0, z: 0}
+      rotation: {x: 0.0014420947, y: -0.015301219, z: -0.034539215, w: 0.99928516}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_JacketD4
+      parentName: Shibahu_JacketD3
+      position: {x: -0.032527, y: 0, z: 0}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_JacketE1
+      parentName: Shibahu_Spine2
+      position: {x: -0, y: -0.038218, z: -0.085565}
+      rotation: {x: -0.433942, y: -0.55829597, z: 0.433942, w: 0.55829597}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_JacketE2
+      parentName: Shibahu_JacketE1
+      position: {x: -0.037506998, y: 0, z: 0}
+      rotation: {x: 0, y: 0, z: 0.00075223687, w: 0.99999976}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_JacketE3
+      parentName: Shibahu_JacketE2
+      position: {x: -0.039553, y: 0, z: 0}
+      rotation: {x: 0, y: -0, z: -0.030772276, w: 0.99952644}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_JacketE4
+      parentName: Shibahu_JacketE3
+      position: {x: -0.029203, y: 0, z: 0}
+      rotation: {x: 0.03833358, y: 0.0024459236, z: 0.05362795, w: 0.9978219}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_JacketF1
+      parentName: Shibahu_Spine2
+      position: {x: 0.083309, y: -0.035453, z: -0.048554}
+      rotation: {x: 0.5982635, y: 0.68994635, z: -0.27424774, w: -0.30140176}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_JacketF2
+      parentName: Shibahu_JacketF1
+      position: {x: -0.042993, y: 0.000001, z: 0}
+      rotation: {x: -0.00007805891, y: 0.011605463, z: -0.052671276, w: 0.99854445}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_JacketF3
+      parentName: Shibahu_JacketF2
+      position: {x: -0.044594, y: 0, z: 0}
+      rotation: {x: -0.0014420947, y: 0.015301219, z: -0.034539215, w: 0.99928516}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_JacketF4
+      parentName: Shibahu_JacketF3
+      position: {x: -0.032527, y: 0, z: 0}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_JacketG1
+      parentName: Shibahu_Spine2
+      position: {x: 0.10779899, y: -0.038983, z: 0.004598}
+      rotation: {x: 0.64604247, y: 0.7628667, z: -0.0054648723, w: -0.025174148}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_JacketG2
+      parentName: Shibahu_JacketG1
+      position: {x: -0.042993996, y: 0.000001, z: 0}
+      rotation: {x: -0.00007805891, y: 0.011605463, z: -0.052671276, w: 0.99854445}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_JacketG3
+      parentName: Shibahu_JacketG2
+      position: {x: -0.046504002, y: 0, z: 0}
+      rotation: {x: -0.0014420947, y: 0.015301219, z: -0.034539215, w: 0.99928516}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_JacketG4
+      parentName: Shibahu_JacketG3
+      position: {x: -0.03253, y: -0.000001, z: 0}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_JacketH1
+      parentName: Shibahu_Spine2
+      position: {x: 0.11024, y: -0.036373, z: 0.051542}
+      rotation: {x: 0.67200035, y: 0.7354426, z: 0.07282322, w: 0.04729263}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_JacketH2
+      parentName: Shibahu_JacketH1
+      position: {x: -0.043000996, y: 0, z: 0}
+      rotation: {x: -0.00007805891, y: 0.011605463, z: -0.052671276, w: 0.99854445}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_JacketH3
+      parentName: Shibahu_JacketH2
+      position: {x: -0.046496, y: 0.000002, z: 0.000001}
+      rotation: {x: -0.0014420947, y: 0.015301219, z: -0.034539215, w: 0.99928516}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_JacketH4
+      parentName: Shibahu_JacketH3
+      position: {x: -0.03253, y: 0, z: 0}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_JacketI1
+      parentName: Shibahu_Spine2
+      position: {x: 0.101581, y: -0.035363, z: 0.094308004}
+      rotation: {x: 0.7224593, y: 0.68076295, z: 0.07570537, w: 0.09424999}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_JacketI2
+      parentName: Shibahu_JacketI1
+      position: {x: -0.049673, y: 0.000001, z: 0}
+      rotation: {x: -0.00007805891, y: 0.011605463, z: -0.052671276, w: 0.99854445}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_JacketI3
+      parentName: Shibahu_JacketI2
+      position: {x: -0.0465, y: 0, z: 0}
+      rotation: {x: -0.0014420947, y: 0.015301219, z: -0.034539215, w: 0.99928516}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_JacketI4
+      parentName: Shibahu_JacketI3
+      position: {x: -0.032525, y: 0, z: 0}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_RightShoulder
+      parentName: Shibahu_Spine2
+      position: {x: 0.039320998, y: 0.098267, z: 0}
+      rotation: {x: 0.9975572, y: 0.05591504, z: 0.039988246, w: -0.012413502}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_RightArm
+      parentName: Shibahu_RightShoulder
+      position: {x: 0.069708996, y: 0.028202, z: 0}
+      rotation: {x: -0.041778184, y: -0.019291637, z: 0.038479943, w: 0.9981993}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_RightForeArm
+      parentName: Shibahu_RightArm
+      position: {x: 0.20644899, y: -0.000008999999, z: 0}
+      rotation: {x: -0.0088583315, y: 0.0020774745, z: -0.00915809, w: 0.9999167}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_RightHand
+      parentName: Shibahu_RightForeArm
+      position: {x: 0.20811, y: -0.000002, z: 0}
+      rotation: {x: 0.23176573, y: 0.035418972, z: -0.021557158, w: 0.9718876}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_RightHandThumb1
+      parentName: Shibahu_RightHand
+      position: {x: 0.025143001, y: 0.0075919996, z: -0.020731}
+      rotation: {x: -0.25375915, y: 0.40876904, z: 0.00011374051, w: 0.8766495}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_RightHandThumb2
+      parentName: Shibahu_RightHandThumb1
+      position: {x: 0.022981, y: 0, z: 0}
+      rotation: {x: -0.026137104, y: -0.020763231, z: -0.010815506, w: 0.9993843}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_RightHandThumb3
+      parentName: Shibahu_RightHandThumb2
+      position: {x: 0.01914, y: 0, z: 0}
+      rotation: {x: -0.0100500025, y: 0.030770654, z: 0.009672898, w: 0.99942917}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_RightHandThumb4
+      parentName: Shibahu_RightHandThumb3
+      position: {x: 0.023185998, y: 0, z: 0}
+      rotation: {x: 0.09399624, y: 0.000002244796, z: -0.000013360123, w: 0.99557257}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_RightHandIndex1
+      parentName: Shibahu_RightHand
+      position: {x: 0.072173, y: 0.009749, z: -0.017966}
+      rotation: {x: -0.00867283, y: 0.014781222, z: -0.038266756, w: 0.9991206}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_RightHandIndex2
+      parentName: Shibahu_RightHandIndex1
+      position: {x: 0.026098, y: 0.000002, z: -0.000284}
+      rotation: {x: 0.008427658, y: 0.0034852715, z: 0.023945965, w: 0.99967164}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_RightHandIndex3
+      parentName: Shibahu_RightHandIndex2
+      position: {x: 0.021064999, y: 0.000001, z: 0}
+      rotation: {x: -0.001981127, y: -0.0028378067, z: 0.039979674, w: 0.99919456}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_RightHandIndex4
+      parentName: Shibahu_RightHandIndex3
+      position: {x: 0.015863, y: -0.000001, z: 0}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_RightHandMiddle1
+      parentName: Shibahu_RightHand
+      position: {x: 0.073443994, y: 0.0055159996, z: -0.0056}
+      rotation: {x: -0.01790933, y: 0.01564598, z: -0.03976808, w: 0.9989259}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_RightHandMiddle2
+      parentName: Shibahu_RightHandMiddle1
+      position: {x: 0.027720999, y: 0, z: 0}
+      rotation: {x: -0.0112583, y: -0.0013902488, z: 0.01740769, w: 0.9997842}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_RightHandMiddle3
+      parentName: Shibahu_RightHandMiddle2
+      position: {x: 0.025643, y: -0.000001, z: 0}
+      rotation: {x: -0.0055715484, y: -0.0020610269, z: 0.023997888, w: 0.99969435}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_RightHandMiddle4
+      parentName: Shibahu_RightHandMiddle3
+      position: {x: 0.020515999, y: 0.000001, z: 0}
+      rotation: {x: 0.000029670597, y: -0, z: -0, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_RightHandRing1
+      parentName: Shibahu_RightHand
+      position: {x: 0.071444, y: 0.006774, z: 0.0076099997}
+      rotation: {x: -0.020377906, y: 0.004631285, z: 0.11082399, w: 0.9936203}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_RightHandRing2
+      parentName: Shibahu_RightHandRing1
+      position: {x: 0.028308, y: 0, z: 0}
+      rotation: {x: -0.0067339693, y: -0.0040579364, z: 0.040517733, w: 0.9991479}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_RightHandRing3
+      parentName: Shibahu_RightHandRing2
+      position: {x: 0.023222, y: 0, z: 0}
+      rotation: {x: -0.0033982897, y: -0.003712745, z: 0.04098469, w: 0.9991472}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_RightHandRing4
+      parentName: Shibahu_RightHandRing3
+      position: {x: 0.018248, y: 0, z: 0}
+      rotation: {x: 0, y: 0.000031415926, z: -0, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_RightHandPinky1
+      parentName: Shibahu_RightHand
+      position: {x: 0.068298, y: 0.011436, z: 0.020481998}
+      rotation: {x: -0.028832769, y: 0.016605621, z: 0.10919088, w: 0.99346375}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_RightHandPinky2
+      parentName: Shibahu_RightHandPinky1
+      position: {x: 0.026003, y: -0.000001, z: 0}
+      rotation: {x: -0.0058761947, y: -0.001744991, z: 0.01905939, w: 0.99979955}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_RightHandPinky3
+      parentName: Shibahu_RightHandPinky2
+      position: {x: 0.015061, y: 0, z: 0}
+      rotation: {x: -0.002807299, y: -0.002281153, z: 0.024623884, w: 0.9996903}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_RightHandPinky4
+      parentName: Shibahu_RightHandPinky3
+      position: {x: 0.017345, y: 0, z: 0}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_RightArmSub
+      parentName: Shibahu_RightForeArm
+      position: {x: 0.0016539999, y: 0.0020589998, z: 0.051549}
+      rotation: {x: -0, y: -0.7071068, z: 0, w: 0.7071068}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_LeftUpLeg
+      parentName: Shibahu_Hips
+      position: {x: -0.060251996, y: -0.035, z: 0}
+      rotation: {x: -0.04394203, y: -0.16550569, z: -0.094962716, w: 0.98064214}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_LeftLeg
+      parentName: Shibahu_LeftUpLeg
+      position: {x: -0, y: -0.305179, z: 0.004966}
+      rotation: {x: 0.29204717, y: -0.13795938, z: -0.055359412, w: 0.944781}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_LeftFoot
+      parentName: Shibahu_LeftLeg
+      position: {x: -0, y: -0.41441298, z: -0.019776}
+      rotation: {x: -0.28020945, y: 0.049237426, z: 0.23046254, w: 0.93056184}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_LeftToeBase
+      parentName: Shibahu_LeftFoot
+      position: {x: -0, y: -0.08106499, z: 0.073994994}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_RightUpLeg
+      parentName: Shibahu_Hips
+      position: {x: 0.060251996, y: -0.034999, z: 0}
+      rotation: {x: 0.9887715, y: 0.021586327, z: -0.1430952, w: 0.037266824}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_RightLeg
+      parentName: Shibahu_RightUpLeg
+      position: {x: -0, y: 0.30517998, z: -0.004966}
+      rotation: {x: 0.29952198, y: -0.061749667, z: -0.035971094, w: 0.9514093}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_RightFoot
+      parentName: Shibahu_RightLeg
+      position: {x: -0, y: 0.41441298, z: 0.019776}
+      rotation: {x: -0.30294323, y: 0.00007385014, z: 0.15555626, w: 0.9402275}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_RightToeBase
+      parentName: Shibahu_RightFoot
+      position: {x: -0, y: 0.08106399, z: -0.073994994}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_LeftLegSub
+      parentName: Shibahu_Hips
+      position: {x: -0.060251996, y: -0.035, z: -0.002105}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_RightLegSub
+      parentName: Shibahu_Hips
+      position: {x: 0.060251996, y: -0.034999, z: -0.002105}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_Tail1
+      parentName: Shibahu_Hips
+      position: {x: -0, y: 0.075987, z: -0.08905599}
+      rotation: {x: 0.3129202, y: -0.63409853, z: -0.3129202, w: 0.63409853}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_Tail2
+      parentName: Shibahu_Tail1
+      position: {x: -0.060451, y: 0, z: 0}
+      rotation: {x: 0, y: 0, z: 0.14560215, w: 0.9893432}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_Tail3
+      parentName: Shibahu_Tail2
+      position: {x: -0.084805, y: 0, z: 0}
+      rotation: {x: 0, y: 0, z: 0.24272029, w: 0.9700963}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_Tail4
+      parentName: Shibahu_Tail3
+      position: {x: -0.085337, y: 0, z: 0}
+      rotation: {x: 0, y: 0, z: 0.38703206, w: 0.9220663}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_Tail5
+      parentName: Shibahu_Tail4
+      position: {x: -0.083464004, y: 0, z: 0}
+      rotation: {x: 0, y: 0, z: 0.30046526, w: 0.95379275}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_Tail6
+      parentName: Shibahu_Tail5
+      position: {x: -0.078577, y: 0, z: 0}
+      rotation: {x: 0, y: 0, z: 0.39335793, w: 0.91938543}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_Tail7
+      parentName: Shibahu_Tail6
+      position: {x: -0.07045, y: 0, z: 0}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_Belt1
+      parentName: Shibahu_Hips
+      position: {x: -0.011113, y: -0.028842999, z: 0.092915}
+      rotation: {x: 0.55966115, y: 0.22694682, z: 0.1627876, w: 0.78024024}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_Belt2
+      parentName: Shibahu_Belt1
+      position: {x: -0.028921999, y: 0, z: 0}
+      rotation: {x: 0.098138355, y: 0.28111118, z: 0.11270994, w: 0.94796723}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Shibahu_Belt3
+      parentName: Shibahu_Belt2
+      position: {x: -0.036756, y: 0, z: 0}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    armTwist: 0.5
+    foreArmTwist: 0.5
+    upperLegTwist: 0.5
+    legTwist: 0.5
+    armStretch: 0.05
+    legStretch: 0.05
+    feetSpacing: 0
+    globalScale: 1
+    rootMotionBoneName: 
+    hasTranslationDoF: 0
+    hasExtraRoot: 0
+    skeletonHasParents: 1
+  lastHumanDescriptionAvatarSource: {instanceID: 0}
+  autoGenerateAvatarMappingIfUnspecified: 1
+  animationType: 3
+  humanoidOversampling: 1
+  avatarSetup: 1
+  addHumanoidExtraRootOnlyWhenUsingAvatar: 1
+  importBlendShapeDeformPercent: 1
+  remapMaterialsIfMaterialImportModeIsNone: 0
+  additionalBone: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
