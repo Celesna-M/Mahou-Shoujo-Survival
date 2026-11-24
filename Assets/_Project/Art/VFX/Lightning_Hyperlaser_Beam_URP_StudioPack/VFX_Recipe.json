@@ -1,0 +1,139 @@
+{
+  "vfxName": "Lightning_HyperLaser_Beam",
+  "archetype": "Beam",
+  "variant": "HyperLaser",
+  "element": "Lightning",
+  "blendMode": "Additive",
+  "totalDuration": 2.8,
+  "loop": true,
+  "coreColorHDR": {
+    "r": 0.0533,
+    "g": 0.1318,
+    "b": 0.4424,
+    "a": 1
+  },
+  "edgeColorHDR": {
+    "r": 0,
+    "g": 3.2941,
+    "b": 5,
+    "a": 1
+  },
+  "distortionStrength": 0.52,
+  "dissolveThreshold": 0,
+  "sharpness": 0.99,
+  "fresnelPower": 6,
+  "fresnelIntensity": 3,
+  "uvScrollX": 1.1,
+  "uvScrollY": -0.9,
+  "scale": 1,
+  "particleCount": 110,
+  "shaderName": "Custom/URP_StylizedVFX",
+  "tracks": [
+    {
+      "id": "charge",
+      "label": "1. Charge / Muzzle",
+      "startDelay": 0,
+      "duration": 0.616
+    },
+    {
+      "id": "core",
+      "label": "2. Core / Main VFX",
+      "startDelay": 0.535,
+      "duration": 2.003
+    },
+    {
+      "id": "trail",
+      "label": "3. Trail / Secondary",
+      "startDelay": 0.588,
+      "duration": 1.954
+    },
+    {
+      "id": "impact",
+      "label": "4. Impact / Dissipate",
+      "startDelay": 0.7,
+      "duration": 1.845
+    }
+  ],
+  "curves": {
+    "scaleCurve": [
+      {
+        "time": 0,
+        "value": 0
+      },
+      {
+        "time": 0.1853,
+        "value": 2
+      },
+      {
+        "time": 0.248,
+        "value": 1.0061
+      },
+      {
+        "time": 0.7506,
+        "value": 0.9939
+      },
+      {
+        "time": 1,
+        "value": 0.7
+      }
+    ],
+    "velocityCurve": [
+      {
+        "time": 0,
+        "value": 0
+      },
+      {
+        "time": 0.1879,
+        "value": 2
+      },
+      {
+        "time": 0.4961,
+        "value": 1.4788
+      },
+      {
+        "time": 1,
+        "value": 1.5273
+      }
+    ],
+    "alphaDissolveCurve": [
+      {
+        "time": 0,
+        "value": 0
+      },
+      {
+        "time": 0.1956,
+        "value": 1
+      },
+      {
+        "time": 0.4437,
+        "value": 0.7515
+      },
+      {
+        "time": 0.8171,
+        "value": 0.5273
+      },
+      {
+        "time": 1,
+        "value": 0
+      }
+    ],
+    "hdrGlowCurve": [
+      {
+        "time": 0,
+        "value": 0
+      },
+      {
+        "time": 0.3452,
+        "value": 2
+      },
+      {
+        "time": 0.601,
+        "value": 2
+      },
+      {
+        "time": 1,
+        "value": 0
+      }
+    ]
+  }
+}

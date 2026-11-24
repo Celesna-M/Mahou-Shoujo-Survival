@@ -13,13 +13,13 @@ MonoBehaviour:
   m_Name: NewCombatSkillPattern
   m_EditorClassIdentifier: Assembly-CSharp::CombatSkillPattern_SO
   patternID: PAT_01
-  displayName: New Skill Pattern
-  deliveryCategory: 0
+  displayName: Lighting Beam
+  deliveryCategory: 1
   patternPreset: 0
   allowedArchetypes: -1
   animatorTriggerName: 
   animatorSpeedMultiplier: 1
-  windupOrDelayDuration: 0.25
+  windupOrDelayDuration: 0.55
   activeDuration: 1.6
   damageTickInterval: 0.2
   count: 1
@@ -50,9 +50,9 @@ MonoBehaviour:
   subPatternOnHit: {fileID: 0}
   customProjectilePrefab: {fileID: 0}
   telegraphWarningVFXPrefab: {fileID: 0}
-  muzzleCastVFXPrefab: {fileID: 0}
-  mainBodyVFXPrefab: {fileID: 0}
-  impactVFXPrefab: {fileID: 0}
+  muzzleCastVFXPrefab: {fileID: 3000487611303679844, guid: c1e9b4c0960b6b14fa338caee268642a, type: 3}
+  mainBodyVFXPrefab: {fileID: 3708239971918037817, guid: e05e77a08fbc1524dbab0c7c1b72929c, type: 3}
+  impactVFXPrefab: {fileID: 2861291742944651824, guid: a6368ee4e335b094cab22c2f313fb91a, type: 3}
   splashWaveVFXPrefab: {fileID: 0}
   useWhiteBlueLightningVFX: 1
   themeColor: {r: 0.35, g: 0.85, b: 1, a: 1}

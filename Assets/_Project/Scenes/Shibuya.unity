@@ -6029,6 +6029,10 @@ PrefabInstance:
       propertyPath: useWhiteBlueLightningVFX
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 2209801983773978521, guid: 581511342c46ee04492bd0d9a7f73063, type: 3}
+      propertyPath: heavyFinisherDamageMultiplier
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 3281303724090074601, guid: 581511342c46ee04492bd0d9a7f73063, type: 3}
       propertyPath: animator
       value: 

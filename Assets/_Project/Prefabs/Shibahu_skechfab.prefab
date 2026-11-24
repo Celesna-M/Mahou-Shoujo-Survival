@@ -1277,19 +1277,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 15a8d5a28c79f6a4e9ef55f7ddf40a2b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyController
-  isEliteOrBoss: 0
-  enemyDisplayName: ENTITY
-  maxHealth: 100
+  maxHealth: 150
   moveSpeed: 3.5
   rotationSpeed: 10
+  openHitboxEventNames:
+  - hite
+  closeHitboxEventNames:
+  - end
   destroyDelayOnDeath: 0
-  useDirectMoveTowards: 1
-  attackRange: 1
-  attackDamage: 12
-  attackCooldown: 1.6
-  hitboxes:
-  - {fileID: 8894893675243853426}
-  - {fileID: 2726847990121874410}
+  isEliteOrBoss: 0
+  enemyDisplayName: ENTITY
   maxStagger: 100
   staggerDamageMultiplier: 1.15
   stunDuration: 5
@@ -1297,8 +1294,56 @@ MonoBehaviour:
   shatteredCoreDropChance: 20
   shatteredCoreDropAmount: 1
   dropItemPrefab: {fileID: 0}
+  enableStageRankScaling: 1
+  hpMultiplierPerRank: 0.28
+  damageMultiplierPerRank: 0.18
+  rewardMultiplierPerRank: 0.25
+  enableAttackTelegraph: 1
+  attackTelegraphDuration: 0.8
+  attackTelegraphColor: {r: 1, g: 0.55, b: 0.1, a: 1}
+  audioSource: {fileID: 0}
+  attackWindupSfx: {fileID: 0}
+  attackHitPlayerSfx: {fileID: 0}
+  hurtSfx: {fileID: 0}
+  stunBreakSfx: {fileID: 0}
+  enableKnockbackOnHit: 1
+  knockbackDistance: 0.45
+  rangedAimTelegraphDuration: 1
+  rangedPreferredDistance: 8.5
+  enableBossThreeAttackPatterns: 1
+  bossDashSpeed: 14
+  bossAoERadius: 4.2
+  bossAoEWarningDuration: 1
+  enableBossPhase2Enrage: 1
+  bossPhase2SpeedMultiplier: 1.2
+  isRangedEnemy: 0
+  enemyFirePoint: {fileID: 0}
+  enemyProjectilePrefab: {fileID: 0}
+  enemyRangedPattern: {fileID: 0}
+  enemyMuzzleVFXPrefab: {fileID: 0}
+  enemyImpactVFXPrefab: {fileID: 0}
+  enemyProjectileSpeed: 16
+  enemyProjectileVfxColor: {r: 1, g: 0.22, b: 0.45, a: 1}
+  alwaysChasePlayer: 1
+  visionRange: 25
+  attackRange: 1.9
+  minBodySeparationDistance: 1.15
+  attackHitReachBonus: 0.85
+  activeHitWindowDuration: 0.25
+  attackCooldown: 1.6
+  attackDamage: 12
+  enableRandomTaunt: 0
+  minTauntInterval: 7
+  maxTauntInterval: 12
+  tauntChance: 20
+  tauntDuration: 2
+  lostSightBehavior: 0
+  patrolPoints: []
   animator: {fileID: 4641665743560075219}
   enemyRenderer: {fileID: 0}
+  hitboxes:
+  - {fileID: 8894893675243853426}
+  - {fileID: 2726847990121874410}
 --- !u!95 &4641665743560075219 stripped
 Animator:
   m_CorrespondingSourceObject: {fileID: 5866666021909216657, guid: 2736dc4556809ca4db0b3e3172769f05, type: 3}
