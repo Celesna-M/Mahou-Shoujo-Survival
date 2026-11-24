@@ -170,6 +170,7 @@ public class EnemyController : MonoBehaviour, IDamageable
 
     // Runtime Fields
     private NavMeshAgent agent;
+    private AnimVFXController animVfxController;
     private Collider[] bodyColliders;
     private Transform playerTransform;
     private PlayerHealth playerHealth;
@@ -253,6 +254,11 @@ public class EnemyController : MonoBehaviour, IDamageable
         currentHealth = maxHealth;
         currentStagger = isEliteOrBoss ? maxStagger : 0f;
         spawnPosition = transform.position;
+
+        VFXAnchorRig vfxRig = GetComponent<VFXAnchorRig>() ?? gameObject.AddComponent<VFXAnchorRig>();
+        vfxRig.RefreshBoneAnchors(animator);
+        animVfxController = GetComponent<AnimVFXController>() ?? gameObject.AddComponent<AnimVFXController>();
+        animVfxController.RefreshAnchorRig(vfxRig);
 
         SetupAnimationEventForwarder();
         SetupWeaponHitboxAndPreventSolidBonePush();
@@ -985,6 +991,17 @@ public class EnemyController : MonoBehaviour, IDamageable
         ExecuteCloseHitbox();
     }
 
+    // Root-Animator VFX Animation Event Forwarders (for enemies whose Animator sits on the same GameObject as EnemyController)
+    public void PlayVFX(string key) => animVfxController?.PlayByKey(key);
+    public void PlayVFXPrefab(UnityEngine.Object prefabObj)
+    {
+        if (prefabObj is GameObject prefabGo)
+            animVfxController?.PlayDirectPrefab(prefabGo);
+    }
+    public void PlayVFXEvent(AnimationEvent evt) => animVfxController?.PlayFromAnimationEvent(evt);
+    public void StopVFX(string key) => animVfxController?.StopByKey(key);
+    public void StopAllVFX() => animVfxController?.CancelInterruptibleVFX();
+
     
     /// <summary>
     /// สำหรับมอนสเตอร์สายตีไกล (isRangedEnemy = true): ยิงกระสุนเวทพร้อมเรียก Muzzle VFX และ Impact VFX ใส่ผู้เล่น
@@ -1306,6 +1323,7 @@ public class EnemyController : MonoBehaviour, IDamageable
 
         SetRangedAimLineVisible(false);
         ExecuteCloseHitbox();
+        animVfxController?.CancelInterruptibleVFX();
         StopMovement();
 
         if (animator != null)
@@ -1374,6 +1392,7 @@ public class EnemyController : MonoBehaviour, IDamageable
         currentState = null;
         SetRangedAimLineVisible(false);
         ExecuteCloseHitbox();
+        animVfxController?.StopAllActiveVFX();
 
         if (GameProgressionManager.Instance != null)
         {

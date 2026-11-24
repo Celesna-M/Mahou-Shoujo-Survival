@@ -127,3 +127,10 @@ When the PM has a large backlog of uncommitted local changes in a Unity project,
 - **Clarity:** Explain C# logic clearly so the PM understands the system flow without needing to memorize syntax.
 
 - **Language:** Respond in the same language the PM uses (Thai or English). Keep code comments and Unity technical terms in English.
+
+---
+
+## SESSION MEMORY PROTOCOL (`memory.md`)
+
+- **Auto-Resume on "start" (or Session Start):** Whenever the PM says **"start"** (or begins a new session), you MUST immediately read `memory.md` in the project root and reply with a concise status briefing summarizing where the project left off, recent files/decisions, and the top pending tasks ready to resume.
+- **Auto-Save on "end":** Whenever the PM says **"end"** (or indicates the session is ending), you MUST update `memory.md` in the project root before concluding—summarizing all work completed in the session, files created/modified, key decisions, pending Unity Editor/QA steps, and appending a row to the Session History Log so the next session can resume seamlessly.

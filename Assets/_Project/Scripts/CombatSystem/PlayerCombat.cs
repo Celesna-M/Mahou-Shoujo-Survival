@@ -80,6 +80,7 @@ public class PlayerCombat : MonoBehaviour
     private PlayerMovement playerMovement;
     private PlayerStateMachine stateMachine;
     private PlayerLockOn cachedLockOn;
+    private AnimVFXController animVfxController;
     private CharacterController controller;
     private Animator animator;
 
@@ -138,6 +139,7 @@ public class PlayerCombat : MonoBehaviour
         playerMovement = GetComponent<PlayerMovement>() ?? GetComponentInParent<PlayerMovement>() ?? GetComponentInChildren<PlayerMovement>();
         stateMachine = GetComponent<PlayerStateMachine>() ?? gameObject.AddComponent<PlayerStateMachine>();
         cachedLockOn = GetComponent<PlayerLockOn>() ?? GetComponentInParent<PlayerLockOn>();
+        animVfxController = GetComponent<AnimVFXController>() ?? gameObject.AddComponent<AnimVFXController>();
         controller = GetComponent<CharacterController>() ?? GetComponentInParent<CharacterController>();
 
         if (impulseSource == null) impulseSource = GetComponent<CinemachineImpulseSource>();
@@ -342,6 +344,7 @@ public class PlayerCombat : MonoBehaviour
 
     private void OnDodgePerformed(InputAction.CallbackContext context)
     {
+        animVfxController?.CancelInterruptibleVFX();
         if (isAttacking || isUsingSkill) CancelCombat();
     }
 
@@ -867,6 +870,7 @@ public class PlayerCombat : MonoBehaviour
 
     public void CancelCombat()
     {
+        animVfxController?.CancelInterruptibleVFX();
         CancelInvoke(nameof(ResetAttack));
         if (activeSkillCoroutine != null)
         {

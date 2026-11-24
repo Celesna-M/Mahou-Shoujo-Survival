@@ -119,9 +119,16 @@ public class PlayerCharacterLoader : MonoBehaviour
             }
         }
 
-        // 2. Auto-attach & refresh Universal VFXAnchorRig on Player_Root so all VFX spawn at exact positions
+        // 2. Auto-attach & refresh Universal VFXAnchorRig + AnimVFXController on Player_Root so all VFX spawn at exact positions
         var vfxRig = GetComponent<VFXAnchorRig>() ?? gameObject.AddComponent<VFXAnchorRig>();
         vfxRig.RefreshBoneAnchors(activeAnimator);
+
+        var animVfx = GetComponent<AnimVFXController>() ?? gameObject.AddComponent<AnimVFXController>();
+        animVfx.RefreshAnchorRig(vfxRig);
+        if (data.animVFXLibrary != null)
+        {
+            animVfx.SetLibrary(data.animVFXLibrary);
+        }
 
         // 3. Wire Animator, Renderer, Stats & VFX into all shared shell components on Player_Root
         var movement = GetComponent<PlayerMovement>();

@@ -38,6 +38,8 @@ public class CharacterData_SO : ScriptableObject
     public CombatSkillPattern_SO activeSkillPattern;
 
     [Header("6. Character VFX Setup (Legacy / Fallback Compatible)")]
+    [Tooltip("ตาราง VFX Animation Event ประจำตัวละคร (ใช้กับ PlayVFX(\"Key\") ใน Animation Clip)")]
+    public AnimVFXLibrary_SO animVFXLibrary;
     [Tooltip("ติ๊กเปิดเพื่อใช้เอฟเฟกต์ 3D สายฟ้าสีขาว-น้ำเงินจาก UniversalVFXManager ตอนยิงและตอนระเบิดอัตโนมัติ")]
     public bool useWhiteBlueLightningVFX = false;
     [Tooltip("VFX เฉพาะตัวตอนยิง/ปล่อยสกิล")]

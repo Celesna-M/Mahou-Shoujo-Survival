@@ -65,7 +65,19 @@ public class PlayerStateMachine : MonoBehaviour
     public PlayerMovement Movement => playerMovement;
     public PlayerCombat Combat => playerCombat;
     public PlayerHealth Health => playerHealth;
-    public Camera MainCamera => mainCam != null ? mainCam : (mainCam = Camera.main);
+    public Camera MainCamera => mainCam != null
+        ? mainCam
+        : (mainCam = (PersistentPlayerCameraRig.Instance != null && PersistentPlayerCameraRig.Instance.MainCamera != null)
+            ? PersistentPlayerCameraRig.Instance.MainCamera
+            : Camera.main);
+
+    /// <summary>
+    /// Updates the cached MainCamera reference when the persistent camera rig binds to a newly spawned player.
+    /// </summary>
+    public void SetMainCamera(Camera cam)
+    {
+        if (cam != null) mainCam = cam;
+    }
 
     public event Action<PlayerStateType, PlayerStateType> OnStateChanged;
 
@@ -74,7 +86,9 @@ public class PlayerStateMachine : MonoBehaviour
         playerMovement = GetComponent<PlayerMovement>();
         playerCombat = GetComponent<PlayerCombat>();
         playerHealth = GetComponent<PlayerHealth>();
-        mainCam = Camera.main;
+        mainCam = (PersistentPlayerCameraRig.Instance != null && PersistentPlayerCameraRig.Instance.MainCamera != null)
+            ? PersistentPlayerCameraRig.Instance.MainCamera
+            : Camera.main;
 
         currentState = locomotionState;
         currentStateType = PlayerStateType.Locomotion;

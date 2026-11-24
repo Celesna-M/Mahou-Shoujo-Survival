@@ -41,6 +41,9 @@ public class UniversalVFXManager : MonoBehaviour
 
     // Object Pools (Zero Instantiate/Destroy spikes)
     private readonly Dictionary<EntityId, ObjectPool<MagicProjectile>> projectilePools = new Dictionary<EntityId, ObjectPool<MagicProjectile>>();
+    private readonly Dictionary<EntityId, ObjectPool<PooledVFXInstance>> vfxPools = new Dictionary<EntityId, ObjectPool<PooledVFXInstance>>(32);
+    private readonly List<PooledVFXInstance> activePooledVFX = new List<PooledVFXInstance>(64);
+    private Transform vfxPoolRoot;
     private ObjectPool<CombatBeamExecutor> beamPool;
     private ObjectPool<CombatAreaSkillExecutor> areaPool;
 
@@ -84,6 +87,13 @@ public class UniversalVFXManager : MonoBehaviour
 
     private void InitializeExecutorPools()
     {
+        if (vfxPoolRoot == null)
+        {
+            GameObject poolRootGo = new GameObject("Pooled_VFX_Root");
+            poolRootGo.transform.SetParent(transform, false);
+            vfxPoolRoot = poolRootGo.transform;
+        }
+
         beamPool = new ObjectPool<CombatBeamExecutor>(
             createFunc: () =>
             {
@@ -146,11 +156,66 @@ public class UniversalVFXManager : MonoBehaviour
         return pool;
     }
 
+    private ObjectPool<PooledVFXInstance> GetOrCreateVFXPool(GameObject prefab)
+    {
+        EntityId key = prefab.GetEntityId();
+        if (!vfxPools.TryGetValue(key, out ObjectPool<PooledVFXInstance> pool))
+        {
+            GameObject capturedPrefab = prefab;
+            Transform capturedRoot = vfxPoolRoot != null ? vfxPoolRoot : transform;
+
+            ObjectPool<PooledVFXInstance> createdPool = null;
+            createdPool = new ObjectPool<PooledVFXInstance>(
+                createFunc: () =>
+                {
+                    GameObject go = Instantiate(capturedPrefab, capturedRoot);
+                    go.SetActive(false);
+                    PooledVFXInstance wrapper = go.GetComponent<PooledVFXInstance>() ?? go.AddComponent<PooledVFXInstance>();
+                    wrapper.BindPool(capturedRoot, inst => createdPool.Release(inst));
+                    return wrapper;
+                },
+                actionOnGet: inst =>
+                {
+                    if (inst != null) inst.EnsureCachedComponents();
+                },
+                actionOnRelease: inst =>
+                {
+                    if (inst != null && inst.gameObject != null)
+                        inst.gameObject.SetActive(false);
+                },
+                actionOnDestroy: inst =>
+                {
+                    if (inst != null && inst.gameObject != null)
+                        Destroy(inst.gameObject);
+                },
+                collectionCheck: false,
+                defaultCapacity: Mathf.Max(4, defaultPoolCapacity / 3),
+                maxSize: maxPoolSize);
+
+            vfxPools[key] = createdPool;
+            pool = createdPool;
+        }
+        return pool;
+    }
+
     private void Update()
     {
+        float dt = Time.deltaTime;
+
+        if (activePooledVFX.Count > 0)
+        {
+            for (int i = activePooledVFX.Count - 1; i >= 0; i--)
+            {
+                PooledVFXInstance inst = activePooledVFX[i];
+                if (inst == null || !inst.IsInUse || inst.TickLifetime(dt))
+                {
+                    activePooledVFX.RemoveAt(i);
+                }
+            }
+        }
+
         if (scheduledShots.Count == 0) return;
 
-        float dt = Time.deltaTime;
         for (int i = scheduledShots.Count - 1; i >= 0; i--)
         {
             ScheduledShot shot = scheduledShots[i];
@@ -513,22 +578,97 @@ public class UniversalVFXManager : MonoBehaviour
         }
     }
 
-    private static GameObject InstantiateAndPlayPrefab(GameObject prefab, Vector3 pos, Quaternion rot, float scale, float destroyDelay)
+    /// <summary>
+    /// Rents and activates a pooled VFX prefab with full alignment, follow mode, auto-lifetime, and interrupt tracking.
+    /// Zero Instantiate/Destroy spikes during combat and animation events.
+    /// </summary>
+    public static PooledVFXInstance SpawnPooledVFX(
+        GameObject prefab,
+        Vector3 worldPos,
+        Quaternion worldRot,
+        float scale = 1.0f,
+        VFXFollowMode followMode = VFXFollowMode.WorldSpace,
+        Transform followTarget = null,
+        Transform actorRoot = null,
+        Vector3 localPosOffset = default,
+        Quaternion eulerOffset = default,
+        bool snapToGround = false,
+        float overrideDuration = 0f,
+        string key = null,
+        bool cancelOnInterrupt = false)
     {
-        GameObject vfx = Instantiate(prefab, pos, rot);
-        if (Mathf.Abs(scale - 1.0f) > 0.01f)
-            vfx.transform.localScale *= Mathf.Max(0.1f, scale);
+        if (prefab == null) return null;
 
-        vfx.SetActive(true);
-        ParticleSystem[] systems = vfx.GetComponentsInChildren<ParticleSystem>(true);
-        for (int i = 0; i < systems.Length; i++)
+        if (eulerOffset.x == 0f && eulerOffset.y == 0f && eulerOffset.z == 0f && eulerOffset.w == 0f)
+            eulerOffset = Quaternion.identity;
+
+        float fallbackDelay = Instance != null ? Instance.defaultAutoDestroyDelay : 2.5f;
+
+        if (Instance != null)
         {
-            systems[i].gameObject.SetActive(true);
-            systems[i].Play(true);
+            ObjectPool<PooledVFXInstance> pool = Instance.GetOrCreateVFXPool(prefab);
+            PooledVFXInstance inst = pool.Get();
+            if (inst == null) return null;
+
+            inst.Activate(
+                worldPos,
+                worldRot,
+                scale,
+                followMode,
+                followTarget,
+                actorRoot,
+                localPosOffset,
+                eulerOffset,
+                snapToGround,
+                overrideDuration,
+                fallbackDelay,
+                key,
+                cancelOnInterrupt);
+
+            Instance.activePooledVFX.Add(inst);
+            return inst;
         }
 
-        Destroy(vfx, Mathf.Max(0.5f, destroyDelay));
-        return vfx;
+        // Fallback if UniversalVFXManager is absent in a test scene
+        GameObject rawGo = Instantiate(prefab, worldPos, worldRot);
+        PooledVFXInstance fallbackInst = rawGo.GetComponent<PooledVFXInstance>() ?? rawGo.AddComponent<PooledVFXInstance>();
+        fallbackInst.BindPool(null, null);
+        fallbackInst.Activate(
+            worldPos,
+            worldRot,
+            scale,
+            followMode,
+            followTarget,
+            actorRoot,
+            localPosOffset,
+            eulerOffset,
+            snapToGround,
+            overrideDuration > 0.01f ? overrideDuration : fallbackDelay,
+            fallbackDelay,
+            key,
+            cancelOnInterrupt);
+        Destroy(rawGo, Mathf.Max(0.5f, overrideDuration > 0.01f ? overrideDuration : fallbackDelay));
+        return fallbackInst;
+    }
+
+    private static GameObject InstantiateAndPlayPrefab(GameObject prefab, Vector3 pos, Quaternion rot, float scale, float destroyDelay)
+    {
+        PooledVFXInstance pooled = SpawnPooledVFX(
+            prefab,
+            pos,
+            rot,
+            scale,
+            VFXFollowMode.WorldSpace,
+            null,
+            null,
+            Vector3.zero,
+            Quaternion.identity,
+            false,
+            0f,
+            null,
+            false);
+
+        return pooled != null ? pooled.gameObject : null;
     }
 
     private static GameObject SpawnProceduralBurst(VFXEventType type, Vector3 pos, Color color, float scale)

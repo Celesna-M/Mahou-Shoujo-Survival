@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 #if ENABLE_INPUT_SYSTEM
 using UnityEngine.InputSystem;
@@ -64,6 +65,11 @@ public class PlayerMovement : MonoBehaviour
     private bool externalInvincible;
     private float initialGroundY;
 
+    /// <summary>
+    /// Fired when any player character initializes in a stage so PersistentPlayerCameraRig can auto-bind to it.
+    /// </summary>
+    public static event Action<Transform> OnPlayerSpawned;
+
     public bool IsInvincible => externalInvincible || (isDodging && (dodgeDuration - dodgeTimer) <= iFrameDuration);
     public bool IsDodging => isDodging;
     public bool CanMove { get; set; } = true;
@@ -73,6 +79,18 @@ public class PlayerMovement : MonoBehaviour
     public bool IsGrounded => true;
     public Animator Animator => animator;
     public InputSystem_Actions InputActions => inputActions;
+
+    /// <summary>
+    /// Updates the camera transform reference used for movement direction and anti-clipping.
+    /// Called automatically by PersistentPlayerCameraRig when binding to a newly spawned player.
+    /// </summary>
+    public void SetCameraTransform(Transform camTransform)
+    {
+        if (camTransform != null)
+        {
+            cameraTransform = camTransform;
+        }
+    }
 
     private void Awake()
     {
@@ -86,7 +104,9 @@ public class PlayerMovement : MonoBehaviour
         if (animator == null)
             animator = GetComponentInChildren<Animator>(true);
 
-        if (cameraTransform == null && Camera.main != null)
+        if (PersistentPlayerCameraRig.Instance != null && PersistentPlayerCameraRig.Instance.MainCamera != null)
+            cameraTransform = PersistentPlayerCameraRig.Instance.MainCamera.transform;
+        else if (cameraTransform == null && Camera.main != null)
             cameraTransform = Camera.main.transform;
 
         if (GameProgressionManager.Instance != null)
@@ -164,6 +184,11 @@ public class PlayerMovement : MonoBehaviour
                 Physics.IgnoreCollision(controller, col, true);
             }
         }
+    }
+
+    private void Start()
+    {
+        OnPlayerSpawned?.Invoke(transform);
     }
 
     private void OnEnable()

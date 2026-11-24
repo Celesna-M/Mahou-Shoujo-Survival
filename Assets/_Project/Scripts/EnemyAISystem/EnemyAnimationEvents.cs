@@ -7,6 +7,7 @@ using UnityEngine;
 public class EnemyAnimationEvents : MonoBehaviour
 {
     private EnemyController enemyController;
+    private AnimVFXController animVfxController;
 
     private void Awake()
     {
@@ -14,11 +15,13 @@ public class EnemyAnimationEvents : MonoBehaviour
         {
             enemyController = GetComponentInParent<EnemyController>();
         }
+        ResolveVfxController();
     }
 
     public void Initialize(EnemyController controller)
     {
         enemyController = controller;
+        ResolveVfxController();
     }
 
     private EnemyController GetEnemy()
@@ -28,12 +31,46 @@ public class EnemyAnimationEvents : MonoBehaviour
         return enemyController;
     }
 
+    private AnimVFXController ResolveVfxController()
+    {
+        if (animVfxController == null)
+        {
+            animVfxController = (enemyController != null ? enemyController.GetComponent<AnimVFXController>() : null)
+                             ?? GetComponentInParent<AnimVFXController>()
+                             ?? GetComponent<AnimVFXController>();
+        }
+        return animVfxController;
+    }
+
     // Default Enemy Events: hite / end
     public void hite(int hitIndex = 0) => GetEnemy()?.hite(hitIndex);
     public void end() => GetEnemy()?.end();
 
     // Custom Event Handler for any extra event names added to the Inspector List
     public void OnCustomEnemyAnimEvent(string eventName) => GetEnemy()?.OnCustomEnemyAnimEvent(eventName);
+
+    // =========================================================================
+    // POOLED VFX ANIMATION EVENTS (Key / Direct Prefab / Full AnimationEvent)
+    // =========================================================================
+
+    /// <summary>Spawns a pooled VFX mapped to 'key' in the Enemy's AnimVFXController / AnimVFXLibrary_SO.</summary>
+    public void PlayVFX(string key) => ResolveVfxController()?.PlayByKey(key);
+
+    /// <summary>Spawns a direct VFX Prefab dragged into the Animation Event's Object parameter.</summary>
+    public void PlayVFXPrefab(UnityEngine.Object prefabObj)
+    {
+        if (prefabObj is GameObject prefabGo)
+            ResolveVfxController()?.PlayDirectPrefab(prefabGo);
+    }
+
+    /// <summary>Full multi-parameter VFX event (String=Key/CustomAnchor, Object=Prefab, Int=VFXSpawnAnchor, Float=Scale).</summary>
+    public void PlayVFXEvent(AnimationEvent evt) => ResolveVfxController()?.PlayFromAnimationEvent(evt);
+
+    /// <summary>Stops an active looping/attached VFX by key and returns it to the pool.</summary>
+    public void StopVFX(string key) => ResolveVfxController()?.StopByKey(key);
+
+    /// <summary>Stops all active interruptible VFX on this enemy and returns them to the pool.</summary>
+    public void StopAllVFX() => ResolveVfxController()?.CancelInterruptibleVFX();
 }
 
 /* ============================================================================

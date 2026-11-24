@@ -16,6 +16,7 @@ public class PlayerAnimationEvents : MonoBehaviour
     [SerializeField] private List<string> closeHitboxEventNames = new List<string> { "end" };
 
     private PlayerCombat playerCombat;
+    private AnimVFXController animVfxController;
     private Animator animator;
 
     private void Reset()
@@ -42,6 +43,9 @@ public class PlayerAnimationEvents : MonoBehaviour
     {
         if (playerCombat == null)
             playerCombat = GetComponentInParent<PlayerCombat>() ?? GetComponent<PlayerCombat>() ?? GetComponentInChildren<PlayerCombat>();
+
+        if (animVfxController == null)
+            animVfxController = GetComponentInParent<AnimVFXController>() ?? GetComponent<AnimVFXController>() ?? GetComponentInChildren<AnimVFXController>();
 
         if (animator == null)
             animator = GetComponent<Animator>() ?? GetComponentInChildren<Animator>();
@@ -146,6 +150,48 @@ public class PlayerAnimationEvents : MonoBehaviour
     {
         if (playerCombat == null) FindCombatComponents();
         playerCombat?.TriggerSkillImpactFromAnim();
+    }
+
+    // =========================================================================
+    // POOLED VFX ANIMATION EVENTS (Key / Direct Prefab / Full AnimationEvent)
+    // =========================================================================
+
+    /// <summary>Spawns a pooled VFX mapped to 'key' in CharacterData_SO's AnimVFXLibrary_SO or local overrides.</summary>
+    public void PlayVFX(string key)
+    {
+        if (animVfxController == null) FindCombatComponents();
+        animVfxController?.PlayByKey(key);
+    }
+
+    /// <summary>Spawns a direct VFX Prefab dragged into the Animation Event's Object parameter.</summary>
+    public void PlayVFXPrefab(UnityEngine.Object prefabObj)
+    {
+        if (prefabObj is GameObject prefabGo)
+        {
+            if (animVfxController == null) FindCombatComponents();
+            animVfxController?.PlayDirectPrefab(prefabGo);
+        }
+    }
+
+    /// <summary>Full multi-parameter VFX event (String=Key/CustomAnchor, Object=Prefab, Int=VFXSpawnAnchor, Float=Scale).</summary>
+    public void PlayVFXEvent(AnimationEvent evt)
+    {
+        if (animVfxController == null) FindCombatComponents();
+        animVfxController?.PlayFromAnimationEvent(evt);
+    }
+
+    /// <summary>Stops an active looping/attached VFX by key and returns it to the pool.</summary>
+    public void StopVFX(string key)
+    {
+        if (animVfxController == null) FindCombatComponents();
+        animVfxController?.StopByKey(key);
+    }
+
+    /// <summary>Stops all active interruptible VFX on the player and returns them to the pool.</summary>
+    public void StopAllVFX()
+    {
+        if (animVfxController == null) FindCombatComponents();
+        animVfxController?.CancelInterruptibleVFX();
     }
 }
 

@@ -57,11 +57,38 @@ public class PlayerLockOn : MonoBehaviour
     private void Awake()
     {
         playerMovement = GetComponent<PlayerMovement>();
-        mainCamera = Camera.main;
+        mainCamera = (PersistentPlayerCameraRig.Instance != null && PersistentPlayerCameraRig.Instance.MainCamera != null)
+            ? PersistentPlayerCameraRig.Instance.MainCamera
+            : Camera.main;
 
         if (lockOnUIMarker != null)
         {
             lockOnUIMarker.gameObject.SetActive(false);
+        }
+    }
+
+    /// <summary>
+    /// Re-links this PlayerLockOn instance to the persistent cross-stage camera rig.
+    /// Called automatically by PersistentPlayerCameraRig when a player spawns in a new stage.
+    /// </summary>
+    public void BindCameraRig(
+        Camera cam,
+        CinemachineCamera freeLook,
+        CinemachineCamera lockOn,
+        CinemachineTargetGroup group)
+    {
+        if (cam != null) mainCamera = cam;
+        if (freeLook != null) freeLookCamera = freeLook;
+        if (lockOn != null) lockOnCamera = lockOn;
+        if (group != null) targetGroup = group;
+
+        if (IsLockedOn)
+        {
+            UnlockTarget();
+        }
+        else if (lockOnCamera != null)
+        {
+            lockOnCamera.gameObject.SetActive(false);
         }
     }
 
