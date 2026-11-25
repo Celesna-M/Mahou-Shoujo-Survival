@@ -1,0 +1,48 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f1a2b3c4d5e647899a1b2c3d4e5f6011, type: 3}
+  m_Name: NewCharacterData
+  m_EditorClassIdentifier: Assembly-CSharp::CharacterData_SO
+  characterID: CHAR_01
+  characterDisplayName: HIKARI
+  combatArchetype: 0
+  roleDescription: Balanced Striker | Fast melee combos & responsive dodge cancel.
+  characterPrefab: {fileID: 8455360906228233874, guid: 2cbe49c1f7fa4e04d8c1780f91a849dd, type: 3}
+  animatorControllerOverride: {fileID: 0}
+  modelLocalOffset: {x: 0, y: 0, z: 0}
+  modelLocalScale: {x: 1, y: 1, z: 1}
+  vnPortraitNormal: {fileID: 0}
+  vnPortraitAngry: {fileID: 0}
+  themeColor: {r: 0.92, g: 0.28, b: 0.58, a: 1}
+  baseMaxHP: 110
+  baseATK: 24
+  moveSpeed: 5.2
+  attackCooldown: 0.25
+  heavyFinisherDamageMultiplier: 1.4
+  rangedFinisherProjectileCount: 3
+  rangedFinisherTotalDamageMultiplier: 1.65
+  staggerBonusMultiplier: 1
+  skillCooldown: 5.5
+  skillDamageMultiplier: 2.4
+  skillDuration: 0.9
+  meleeSkillAoERadius: 4.6
+  rangedBeamDuration: 1
+  rangedBeamTickInterval: 0.2
+  rangedBeamRange: 18
+  rangedBeamWidth: 0.85
+  comboSkillPatterns: []
+  activeSkillPattern: {fileID: 0}
+  animVFXLibrary: {fileID: 11400000, guid: af8bb98388bbcd84eb2429308b5a800c, type: 2}
+  useWhiteBlueLightningVFX: 0
+  customMuzzleVFXPrefab: {fileID: 0}
+  customImpactVFXPrefab: {fileID: 0}
+  customActiveSkillVFXPrefab: {fileID: 0}

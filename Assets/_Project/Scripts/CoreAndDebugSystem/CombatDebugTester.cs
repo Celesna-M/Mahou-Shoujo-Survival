@@ -46,8 +46,8 @@ public class CombatDebugTester : MonoBehaviour
     [Header("=== MASTER HUB SWITCHES ===")]
     [Tooltip("Keep this Central Master Config alive across all 4 scenes (MainMenu, The lobby, StageMap, The Action)")]
     [SerializeField] private bool persistAcrossAllScenes = true;
-    [Tooltip("Enforce the Master Config values below onto Player, Enemies, Spawner, Lobby, and StageMap (excludes all Area & Collider settings)")]
-    [SerializeField] private bool enforceMasterConfig = true;
+    [Tooltip("Enforce the Master Config values below onto Player, Enemies, Spawner, Lobby, and StageMap. Disabled by default so CharacterData_SO, CombatSkillPattern_SO, and Enemy Prefabs are the true Single Source of Truth!")]
+    [SerializeField] private bool enforceMasterConfig = false;
     [Tooltip("If true, uses Global Player Base Stats below for all characters. If false, uses the per-character stats from Character Roster.")]
     [SerializeField] private bool useSingleGlobalPlayerBaseStats = false;
     [Tooltip("Show the top-left [TEST HUB] button and allow opening the in-game test menu with [~] or [F10]")]
@@ -70,9 +70,9 @@ public class CombatDebugTester : MonoBehaviour
     [SerializeField] private bool infiniteStamina = false;
     [SerializeField] private bool oneHitKillEnemies = false;
     [Range(20f, 2000f)]
-    [SerializeField] private float globalPlayerBaseMaxHp = 100f;
+    [SerializeField] private float globalPlayerBaseMaxHp = 110f;
     [Range(5f, 500f)]
-    [SerializeField] private float globalPlayerBaseAttack = 25f;
+    [SerializeField] private float globalPlayerBaseAttack = 24f;
     [Range(1.5f, 16f)]
     [SerializeField] private float globalPlayerMoveSpeed = 5.2f;
     [Range(0.01f, 0.3f)]
@@ -129,7 +129,7 @@ public class CombatDebugTester : MonoBehaviour
     [SerializeField] private bool freezeAllEnemiesAI = false;
 
     [Range(10f, 2000f)]
-    [SerializeField] private float normalEnemyMaxHealth = 100f;
+    [SerializeField] private float normalEnemyMaxHealth = 95f;
     [Range(0.5f, 12f)]
     [SerializeField] private float normalEnemyMoveSpeed = 3.5f;
     [Range(1f, 30f)]
@@ -137,7 +137,7 @@ public class CombatDebugTester : MonoBehaviour
     [Range(0.8f, 5.0f)]
     [SerializeField] private float normalEnemyAttackRange = 1.9f;
     [Range(1f, 300f)]
-    [SerializeField] private float normalEnemyAttackDamage = 12f;
+    [SerializeField] private float normalEnemyAttackDamage = 14f;
     [Range(0.3f, 5.0f)]
     [SerializeField] private float normalEnemyAttackCooldown = 1.6f;
     [Range(0, 200)]
@@ -153,7 +153,7 @@ public class CombatDebugTester : MonoBehaviour
     [Header("5. Elite / Boss Enemy Master Config")]
     [SerializeField] private string eliteBossDisplayName = "RANK GUARDIAN (BOSS)";
     [Range(50f, 10000f)]
-    [SerializeField] private float eliteBossMaxHealth = 300f;
+    [SerializeField] private float eliteBossMaxHealth = 650f;
     [Range(0.5f, 12f)]
     [SerializeField] private float eliteBossMoveSpeed = 4.0f;
     [Range(1f, 30f)]
@@ -161,15 +161,15 @@ public class CombatDebugTester : MonoBehaviour
     [Range(1.0f, 6.0f)]
     [SerializeField] private float eliteBossAttackRange = 2.2f;
     [Range(1f, 500f)]
-    [SerializeField] private float eliteBossAttackDamage = 20f;
+    [SerializeField] private float eliteBossAttackDamage = 24f;
     [Range(0.3f, 5.0f)]
     [SerializeField] private float eliteBossAttackCooldown = 1.8f;
     [Range(20f, 1000f)]
-    [SerializeField] private float eliteBossMaxStagger = 100f;
+    [SerializeField] private float eliteBossMaxStagger = 240f;
     [Range(0.2f, 5.0f)]
-    [SerializeField] private float eliteBossStaggerDamageMultiplier = 1.15f;
+    [SerializeField] private float eliteBossStaggerDamageMultiplier = 1.0f;
     [Range(1.0f, 15.0f)]
-    [SerializeField] private float eliteBossStunDuration = 5.0f;
+    [SerializeField] private float eliteBossStunDuration = 4.5f;
     [Range(0, 500)]
     [SerializeField] private int eliteBossStarDustReward = 50;
     [Range(0f, 100f)]
@@ -238,7 +238,7 @@ public class CombatDebugTester : MonoBehaviour
     [Range(1, 20)]
     [SerializeField] private int baseAttackCoreCost = 1;
     [Range(1f, 100f)]
-    [SerializeField] private float bonusAttackPerUpgrade = 5f;
+    [SerializeField] private float bonusAttackPerUpgrade = 4f;
 
     [Tooltip("First-Clear Milestone Rewards")]
     [Range(10, 1000)]
@@ -407,29 +407,29 @@ public class CombatDebugTester : MonoBehaviour
                     characterId = "CHAR_01",
                     characterName = "01 : HIKARI - BRAWLER STRIKER",
                     characterRoleAndLore = "Balanced Striker | High mobility and fast melee combos.",
-                    baseMaxHealth = 100f,
-                    baseAttackDamage = 25f,
-                    baseMoveSpeed = 5.2f,
+                    baseMaxHealth = 110f,
+                    baseAttackDamage = 24f,
+                    baseMoveSpeed = 5.3f,
                     themeColor = new Color(0.92f, 0.28f, 0.58f, 1f)
                 },
                 new MasterCharacterConfig
                 {
                     characterId = "CHAR_02",
                     characterName = "02 : AKANE - CRIMSON BREAKER",
-                    characterRoleAndLore = "Heavy Breaker | Crushes enemy stagger gauges with heavy blows.",
-                    baseMaxHealth = 90f,
-                    baseAttackDamage = 34f,
-                    baseMoveSpeed = 5.0f,
+                    characterRoleAndLore = "Heavy Breaker | Tanky bruiser that crushes enemy stagger gauges.",
+                    baseMaxHealth = 140f,
+                    baseAttackDamage = 30f,
+                    baseMoveSpeed = 4.8f,
                     themeColor = new Color(0.90f, 0.24f, 0.28f, 1f)
                 },
                 new MasterCharacterConfig
                 {
                     characterId = "CHAR_03",
-                    characterName = "03 : SHIRO - AEGIS GUARDIAN",
-                    characterRoleAndLore = "Aegis Tank | High base health built for surviving relentless swarms.",
-                    baseMaxHealth = 140f,
-                    baseAttackDamage = 22f,
-                    baseMoveSpeed = 4.7f,
+                    characterName = "03 : SHIRO - ARCANE CASTER",
+                    characterRoleAndLore = "Ranged Caster | Glass-cannon mage with homing shots & hyper-beam skill.",
+                    baseMaxHealth = 95f,
+                    baseAttackDamage = 20f,
+                    baseMoveSpeed = 5.1f,
                     themeColor = new Color(0.28f, 0.52f, 0.92f, 1f)
                 }
             };
@@ -587,7 +587,6 @@ public class CombatDebugTester : MonoBehaviour
                     nodes[i].stageDescription = masterStages[i].stageDescription;
                     nodes[i].normalEnemyCount = masterStages[i].normalEnemyCount;
                     nodes[i].eliteBossCount = masterStages[i].eliteBossCount;
-                    nodes[i].energyCost = masterStages[i].energyCost;
                 }
             }
             stageMap.SendMessage("RefreshHeaderStatus", SendMessageOptions.DontRequireReceiver);
@@ -781,6 +780,12 @@ public class CombatDebugTester : MonoBehaviour
             {
                 SetField(ec, "currentHealth", normalEnemyMaxHealth);
             }
+        }
+
+        // Preserve Stage Rank Scaling even when debug Master Config override is manually enabled
+        if (resetFullHpAndStagger && GameProgressionManager.Instance != null && GameProgressionManager.Instance.SelectedStageIndex > 0)
+        {
+            ec.ApplyStageRankScaling(GameProgressionManager.Instance.SelectedStageIndex);
         }
     }
 
@@ -1082,11 +1087,14 @@ public class CombatDebugTester : MonoBehaviour
         GUILayout.Label("<b>[INSTANT SCENE SWITCHER]</b>");
         GUILayout.BeginHorizontal();
         if (GUILayout.Button("1. MainMenu")) { Time.timeScale = 1f; SceneManager.LoadScene("MainMenu"); }
-        if (GUILayout.Button("2. The lobby")) { Time.timeScale = 1f; SceneManager.LoadScene("The lobby"); }
+        if (GUILayout.Button("2. The Lobby")) { Time.timeScale = 1f; SceneManager.LoadScene("The Lobby"); }
         GUILayout.EndHorizontal();
         GUILayout.BeginHorizontal();
         if (GUILayout.Button("3. StageMap")) { Time.timeScale = 1f; SceneManager.LoadScene("StageMap"); }
         if (GUILayout.Button("4. The Action")) { Time.timeScale = 1f; SceneManager.LoadScene("The Action"); }
+        GUILayout.EndHorizontal();
+        GUILayout.BeginHorizontal();
+        if (GUILayout.Button("5. Shibuya")) { Time.timeScale = 1f; SceneManager.LoadScene("Shibuya"); }
         GUILayout.EndHorizontal();
     }
 

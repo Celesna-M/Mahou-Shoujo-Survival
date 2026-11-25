@@ -1277,7 +1277,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 15a8d5a28c79f6a4e9ef55f7ddf40a2b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyController
-  maxHealth: 150
+  maxHealth: 95
   moveSpeed: 3.5
   rotationSpeed: 10
   openHitboxEventNames:
@@ -1296,7 +1296,7 @@ MonoBehaviour:
   dropItemPrefab: {fileID: 0}
   enableStageRankScaling: 1
   hpMultiplierPerRank: 0.28
-  damageMultiplierPerRank: 0.18
+  damageMultiplierPerRank: 0.16
   rewardMultiplierPerRank: 0.25
   enableAttackTelegraph: 1
   attackTelegraphDuration: 0.8
@@ -1331,7 +1331,7 @@ MonoBehaviour:
   attackHitReachBonus: 0.85
   activeHitWindowDuration: 0.25
   attackCooldown: 1.6
-  attackDamage: 12
+  attackDamage: 14
   enableRandomTaunt: 0
   minTauntInterval: 7
   maxTauntInterval: 12

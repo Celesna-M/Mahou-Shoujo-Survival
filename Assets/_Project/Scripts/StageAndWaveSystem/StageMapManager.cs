@@ -11,25 +11,49 @@ using UnityEngine.InputSystem;
 [System.Serializable]
 public class StageNodeData
 {
+    [Tooltip("Short rank or stage badge shown on the map node button (e.g., RANK E).")]
     public string nodeCode = "RANK E";
+
+    [Tooltip("Full stage title displayed in the stage detail header.")]
     public string stageTitle = "RANK E : ABANDONED CLASSROOM";
+
     [TextArea(2, 3)]
+    [Tooltip("Stage description displayed in the stage detail panel.")]
     public string stageDescription = "Trapped in a derelict classroom. Break the static seal to escape outside.";
+
     [TextArea(1, 2)]
+    [Tooltip("Story log line shown under the stage description.")]
     public string stageStoryLine = "STORY [RANK E] : Woke up inside an empty classroom. Dark static seals every window.";
+
+    [Tooltip("Exact Unity Scene name (must be enabled in Build Settings) loaded when deploying this stage.")]
     public string sceneToLoad = "The Action";
+
+    [Tooltip("Optional StageData_SO for data-driven waves, lighting, and VN triggers. Leave empty to use scene defaults.")]
+    public StageData_SO stageData;
+
+    [Tooltip("When enabled, this node stays visible and previewable on the map but cannot be deployed yet.")]
+    public bool isComingSoon = false;
+
+    [Tooltip("Normal enemies spawned when no StageData_SO wave list is used.")]
     public int normalEnemyCount = 5;
+
+    [Tooltip("Elite/Boss enemies spawned when no StageData_SO wave list is used.")]
     public int eliteBossCount = 1;
-    public int energyCost = 1;
 
     [Header("UI Node References")]
-    [Tooltip("Drag the StageNode Button (or Image GameObject) from Map_Content_Long here. Auto-detected by name if left empty.")]
+    [Tooltip("Drag the StageNode Button from Map_Content_Long here. Auto-detected by trimmed name if left empty.")]
     public Button nodeButton;
+
+    [Tooltip("Node background Image for selection/status tinting. Auto-cached from nodeButton if left empty.")]
     public Image nodeBackground;
+
+    [Tooltip("Optional child TMP label on the node button. Auto-cached from nodeButton if left empty.")]
+    public TextMeshProUGUI nodeLabelText;
 }
 
 /// <summary>
-/// Handles both clicking a Stage Node AND dragging the Unrestricted ScrollRect smoothly without blocking either.
+/// Handles single-click selection, double-click stage deployment, and drag passthrough to the parent ScrollRect
+/// without duplicate Button.onClick firing.
 /// </summary>
 public class MapNodeClickAndDragHandler : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IBeginDragHandler, IDragHandler, IEndDragHandler, IScrollHandler
 {
@@ -39,7 +63,7 @@ public class MapNodeClickAndDragHandler : MonoBehaviour, IPointerDownHandler, IP
 
     private Vector2 pointerDownPos;
     private bool isDraggingMap;
-    private float lastClickTime;
+    private float lastClickTime = -10f;
     private const float DragPixelThreshold = 12f;
     private const float DoubleClickWindow = 0.32f;
 
@@ -52,13 +76,14 @@ public class MapNodeClickAndDragHandler : MonoBehaviour, IPointerDownHandler, IP
 
     public void OnPointerDown(PointerEventData eventData)
     {
+        if (eventData.button != PointerEventData.InputButton.Left) return;
         pointerDownPos = eventData.position;
         isDraggingMap = false;
     }
 
     public void OnPointerUp(PointerEventData eventData)
     {
-        if (isDraggingMap) return;
+        if (eventData.button != PointerEventData.InputButton.Left || isDraggingMap) return;
 
         float moveDist = Vector2.Distance(pointerDownPos, eventData.position);
         if (moveDist <= DragPixelThreshold && mapManager != null)
@@ -99,43 +124,71 @@ public class MapNodeClickAndDragHandler : MonoBehaviour, IPointerDownHandler, IP
 }
 
 /// <summary>
-/// Scene 3: Stage & Rank Progression Map Manager
-/// - Unrestricted ScrollRect + Clamped Boundary
-/// - 100% Clickable Stage Nodes
-/// - All Stage Detail Auto-Texts ([FIRST-CLEAR BONUS], (Normal | Boss), and STORY [RANK X]) are editable or toggleable right in this Inspector!
+/// Scene 3: Stage & Rank Progression Map Manager (Single Source of Truth, Zero-GC Edition)
+/// - Inspector StageNodeData (+ optional StageData_SO) controls stage titles, descriptions, story lines, and target scenes.
+/// - Supports Active sequential stages (The Action -> Shibuya) alongside visible Coming Soon preview nodes.
+/// - Event-driven UI refresh via GameProgressionManager.OnProgressionChanged (no per-frame UI allocations).
 /// </summary>
 public class StageMapManager : MonoBehaviour
 {
-    [Header("Scene Navigation (4-Scene Flow)")]
-    [SerializeField] private string lobbySceneName = "The lobby";
+    [Header("Scene Navigation")]
+    [Tooltip("Exact Lobby scene name in Build Settings.")]
+    [SerializeField] private string lobbySceneName = "The Lobby";
+
+    [Tooltip("Fallback combat scene if a node's sceneToLoad is blank or unavailable.")]
     [SerializeField] private string defaultActionSceneName = "The Action";
 
-    [Header("1. Unrestricted Map Panning & Boundary Limits (ขอบเขตการเลื่อนแผนที่)")]
+    [Header("1. Unrestricted Map Panning & Boundary Limits")]
+    [Tooltip("Allow dragging/scrolling the map horizontally.")]
     [SerializeField] private bool allowHorizontalPan = true;
-    [SerializeField] private bool allowVerticalPan = true;
+
+    [Tooltip("Allow dragging/scrolling the map vertically.")]
+    [SerializeField] private bool allowVerticalPan = false;
+
+    [Tooltip("Automatically expand pan bounds to encompass all StageNode positions.")]
     [SerializeField] private bool autoExpandBoundsFromNodes = true;
+
+    [Tooltip("Extra pan margin around the outermost StageNodes.")]
     [SerializeField] private float nodeBoundaryPadding = 240f;
+
     [SerializeField] private float minMapPanX = -950f;
     [SerializeField] private float maxMapPanX = 950f;
     [SerializeField] private float minMapPanY = -220f;
     [SerializeField] private float maxMapPanY = 220f;
+
+    [Tooltip("Horizontal pan speed when scrolling the mouse wheel.")]
     [SerializeField] private float mouseWheelScrollSpeed = 180f;
 
-    [Header("2. Clickable Stage Nodes Settings (การกดโหนดด่าน)")]
-    [SerializeField] private bool unlockAllNodesForPrototype = true;
+    [Header("2. Stage Unlock & Node Interaction Settings")]
+    [Tooltip("Developer toggle: bypasses sequential stage locks for non-Coming-Soon nodes.")]
+    [SerializeField] private bool unlockAllNodesForPrototype = false;
+
+    [Tooltip("Allow double-clicking an unlocked stage node to enter immediately.")]
     [SerializeField] private bool doubleClickNodeToEnterStage = true;
+
+    [Tooltip("Allow clicking an already-selected unlocked node again to enter immediately.")]
     [SerializeField] private bool clickSelectedNodeAgainToEnter = false;
+
+    [Tooltip("Automatically format each StageNode button's TMP text from nodeCode + Coming Soon/Lock status.")]
+    [SerializeField] private bool autoSyncNodeLabels = true;
+
+    [Tooltip("Scale multiplier applied to the currently selected stage node.")]
     [SerializeField] private float selectedNodeScale = 1.18f;
 
-    [Header("3. Stage Detail Auto-Text Format (แก้ข้อความที่สร้างเองตรงนี้ได้เลย)")]
-    [Tooltip("Show/Hide the yellow [FIRST-CLEAR BONUS: ...] / [CLEARED] prefix in Selected Stage Detail")]
+    [Header("3. Stage Detail Auto-Text Format")]
+    [Tooltip("Show [FIRST-CLEAR BONUS] / [CLEARED] prefix for playable stages.")]
     [SerializeField] private bool showFirstClearBonusTag = true;
-    [Tooltip("Show/Hide the (Normal: X | Boss: Y) suffix in Selected Stage Detail")]
+
+    [Tooltip("Show (Normal: X | Boss: Y) suffix for playable stages.")]
     [SerializeField] private bool showEnemyCountInDetail = true;
-    [Tooltip("Show/Hide the pink STORY [RANK X] second line in Selected Stage Detail")]
+
+    [Tooltip("Show the colored STORY line below the stage description.")]
     [SerializeField] private bool showStoryLineInDetail = true;
+
     [SerializeField] private string firstClearBadgeFormat = "<color=#FFD700>[FIRST-CLEAR BONUS: +{0} STAR DUST, +{1} CORE!]</color>";
     [SerializeField] private string clearedBadgeText = "<color=#40FF80>[CLEARED - REPEAT RUN]</color>";
+    [SerializeField] private string comingSoonBadgeText = "<color=#B89CFF>[COMING SOON - IN DEVELOPMENT]</color>";
+    [SerializeField] private string lockedBadgeFormat = "<color=#FF6B8A>[LOCKED - CLEAR RANK {0} FIRST]</color>";
     [SerializeField] private string enemyCountSuffixFormat = "(Normal: {0} | Boss: {1})";
     [SerializeField] private string storyLineColorFormat = "<size=17><color=#FF99BB>{0}</color></size>";
 
@@ -150,7 +203,7 @@ public class StageMapManager : MonoBehaviour
     [SerializeField] private TextMeshProUGUI selectedStageTitleText;
     [SerializeField] private TextMeshProUGUI selectedStageDetailText;
 
-    [Header("Stage Nodes List (แก้ชื่อด่าน, คำอธิบาย, และบรรทัด STORY ของแต่ละด่านตรงนี้)")]
+    [Header("Stage Nodes List (Single Source of Truth)")]
     [SerializeField] private List<StageNodeData> stageNodes = new List<StageNodeData>();
 
     [Header("Settings Panel (Available in StageMap Scene)")]
@@ -165,7 +218,16 @@ public class StageMapManager : MonoBehaviour
     [SerializeField] private Button resetSaveDataButton;
     [SerializeField] private Button closeSettingsButton;
 
+    private static readonly Color LockedDeployButtonColor = new Color(0.30f, 0.30f, 0.35f, 0.90f);
+    private static readonly Color ComingSoonDeployButtonColor = new Color(0.28f, 0.24f, 0.38f, 0.90f);
+    private static readonly Color LockedNodeColor = new Color(0.22f, 0.22f, 0.28f, 0.85f);
+    private static readonly Color ComingSoonNodeColor = new Color(0.24f, 0.20f, 0.34f, 0.82f);
+    private static readonly Color ClearedNodeColor = new Color(0.18f, 0.55f, 0.45f, 0.95f);
+    private static readonly Color UnlockedNodeColor = new Color(0.32f, 0.24f, 0.58f, 0.95f);
+
     private int currentSelectedNodeIndex = 0;
+    private Image deployStageButtonImage;
+    private bool isSubscribedToProgression;
 
     private void Reset()
     {
@@ -175,6 +237,10 @@ public class StageMapManager : MonoBehaviour
     private void Awake()
     {
         EnsureDefaultStageNodes();
+        if (deployStageButton != null)
+        {
+            deployStageButton.TryGetComponent(out deployStageButtonImage);
+        }
     }
 
     private void Start()
@@ -183,7 +249,8 @@ public class StageMapManager : MonoBehaviour
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
 
-        GameProgressionManager.Instance.LoadFromPrefs();
+        var prog = GameProgressionManager.Instance;
+        prog.LoadFromPrefs();
 
         if (mapScrollRect == null)
         {
@@ -195,18 +262,30 @@ public class StageMapManager : MonoBehaviour
             mapContentRect = mapScrollRect.content;
         }
 
+        if (deployStageButton != null && deployStageButtonImage == null)
+        {
+            deployStageButton.TryGetComponent(out deployStageButtonImage);
+        }
+
         AutoFindAndBindStageNodeButtons();
         ConfigureUnrestrictedScrollRectAndBounds();
         BindMapButtonListeners();
         BindSettingsPanelListeners();
+        SubscribeToProgressionEvents();
 
         if (settingsPanel != null)
+        {
             settingsPanel.SetActive(false);
+        }
 
-        int defaultNode = Mathf.Clamp(GameProgressionManager.Instance.HighestUnlockedStageIndex, 0, Mathf.Max(0, stageNodes.Count - 1));
-        SelectStageNode(defaultNode);
-        RefreshHeaderStatus();
+        int initialNode = ResolveInitialSelectedNodeIndex(prog);
+        SelectStageNode(initialNode);
         RefreshSettingsUI();
+    }
+
+    private void OnDestroy()
+    {
+        UnsubscribeFromProgressionEvents();
     }
 
     private void OnValidate()
@@ -234,12 +313,59 @@ public class StageMapManager : MonoBehaviour
             return;
 
         HandleMouseWheelPan();
-        RefreshHeaderStatus();
     }
 
     private void LateUpdate()
     {
         ClampMapContentPositionWithinBounds();
+    }
+
+    private void SubscribeToProgressionEvents()
+    {
+        if (isSubscribedToProgression) return;
+        GameProgressionManager.Instance.OnProgressionChanged += HandleProgressionChanged;
+        isSubscribedToProgression = true;
+    }
+
+    private void UnsubscribeFromProgressionEvents()
+    {
+        if (!isSubscribedToProgression) return;
+        var prog = FindAnyObjectByType<GameProgressionManager>();
+        if (prog != null)
+        {
+            prog.OnProgressionChanged -= HandleProgressionChanged;
+        }
+        isSubscribedToProgression = false;
+    }
+
+    private void HandleProgressionChanged()
+    {
+        RefreshHeaderStatus();
+        RefreshStageNodesVisualState();
+    }
+
+    private int ResolveInitialSelectedNodeIndex(GameProgressionManager prog)
+    {
+        if (stageNodes == null || stageNodes.Count == 0) return 0;
+
+        if (prog != null && prog.HasSelectedStageFromMap)
+        {
+            int previousIdx = Mathf.Clamp(prog.SelectedStageIndex, 0, stageNodes.Count - 1);
+            if (IsStageNodePlayable(previousIdx))
+            {
+                return previousIdx;
+            }
+        }
+
+        int highestPlayable = 0;
+        for (int i = 0; i < stageNodes.Count; i++)
+        {
+            if (IsStageNodePlayable(i))
+            {
+                highestPlayable = i;
+            }
+        }
+        return highestPlayable;
     }
 
     // =========================================================================
@@ -377,7 +503,7 @@ public class StageMapManager : MonoBehaviour
 
     private void HandleMouseWheelPan()
     {
-        if (mapContentRect == null) return;
+        if (mapContentRect == null || !allowHorizontalPan) return;
 
 #if ENABLE_INPUT_SYSTEM
         if (Mouse.current != null)
@@ -400,44 +526,36 @@ public class StageMapManager : MonoBehaviour
 
     private void AutoFindAndBindStageNodeButtons()
     {
-        string[] candidateNames =
-        {
-            "StageNode_01", "StageNode_02", "StageNode_03",
-            "StageNode_04", "StageNode_05", "StageNode_06"
-        };
+        Button[] childButtons = mapContentRect != null
+            ? mapContentRect.GetComponentsInChildren<Button>(true)
+            : System.Array.Empty<Button>();
 
+        // Pass 1: Match by trimmed GameObject name (StageNode_01 .. StageNode_XX) so trailing spaces never mis-bind order.
         for (int i = 0; i < stageNodes.Count; i++)
         {
-            if (stageNodes[i].nodeButton == null && i < candidateNames.Length)
-            {
-                GameObject foundObj = null;
-                if (mapContentRect != null)
-                {
-                    Transform t = mapContentRect.Find(candidateNames[i]);
-                    if (t != null) foundObj = t.gameObject;
-                }
-                if (foundObj == null)
-                {
-                    foundObj = GameObject.Find(candidateNames[i]);
-                }
+            if (stageNodes[i].nodeButton != null) continue;
 
-                if (foundObj != null)
+            string expectedName = $"StageNode_{i + 1:00}";
+            for (int b = 0; b < childButtons.Length; b++)
+            {
+                Button candidate = childButtons[b];
+                if (candidate == null) continue;
+                if (candidate.gameObject.name.Trim() == expectedName)
                 {
-                    Button btn = foundObj.GetComponent<Button>();
-                    if (btn == null) btn = foundObj.AddComponent<Button>();
-                    stageNodes[i].nodeButton = btn;
+                    stageNodes[i].nodeButton = candidate;
+                    break;
                 }
             }
         }
 
-        if (mapContentRect != null)
+        // Pass 2: Fallback assignment for any remaining unassigned nodes, ordered left-to-right by anchoredPosition.x.
+        if (childButtons.Length > 0)
         {
-            Button[] childButtons = mapContentRect.GetComponentsInChildren<Button>(true);
-            int assignIdx = 0;
-            for (int b = 0; b < childButtons.Length && assignIdx < stageNodes.Count; b++)
+            List<Button> unassignedButtons = new List<Button>();
+            for (int b = 0; b < childButtons.Length; b++)
             {
                 Button candidate = childButtons[b];
-                if (candidate == deployStageButton || candidate == backToLobbyButton || candidate == openSettingsButton)
+                if (candidate == null || candidate == deployStageButton || candidate == backToLobbyButton || candidate == openSettingsButton)
                     continue;
 
                 bool alreadyUsed = false;
@@ -452,33 +570,46 @@ public class StageMapManager : MonoBehaviour
 
                 if (!alreadyUsed)
                 {
-                    while (assignIdx < stageNodes.Count && stageNodes[assignIdx].nodeButton != null)
-                        assignIdx++;
+                    unassignedButtons.Add(candidate);
+                }
+            }
 
-                    if (assignIdx < stageNodes.Count)
-                    {
-                        stageNodes[assignIdx].nodeButton = candidate;
-                        assignIdx++;
-                    }
+            unassignedButtons.Sort((a, b) =>
+            {
+                float ax = a.TryGetComponent<RectTransform>(out var rta) ? rta.anchoredPosition.x : 0f;
+                float bx = b.TryGetComponent<RectTransform>(out var rtb) ? rtb.anchoredPosition.x : 0f;
+                return ax.CompareTo(bx);
+            });
+
+            int fallbackIdx = 0;
+            for (int i = 0; i < stageNodes.Count && fallbackIdx < unassignedButtons.Count; i++)
+            {
+                if (stageNodes[i].nodeButton == null)
+                {
+                    stageNodes[i].nodeButton = unassignedButtons[fallbackIdx++];
                 }
             }
         }
 
+        // Cache Image + TMP label and attach MapNodeClickAndDragHandler (single click/drag input source).
         for (int i = 0; i < stageNodes.Count; i++)
         {
             Button btn = stageNodes[i].nodeButton;
             if (btn == null) continue;
 
             btn.interactable = true;
+            btn.onClick.RemoveAllListeners();
 
             if (stageNodes[i].nodeBackground == null)
-                stageNodes[i].nodeBackground = btn.GetComponent<Image>();
+                btn.TryGetComponent(out stageNodes[i].nodeBackground);
 
             if (stageNodes[i].nodeBackground != null)
                 stageNodes[i].nodeBackground.raycastTarget = true;
 
-            var handler = btn.GetComponent<MapNodeClickAndDragHandler>();
-            if (handler == null)
+            if (stageNodes[i].nodeLabelText == null)
+                stageNodes[i].nodeLabelText = btn.GetComponentInChildren<TextMeshProUGUI>(true);
+
+            if (!btn.TryGetComponent<MapNodeClickAndDragHandler>(out var handler))
                 handler = btn.gameObject.AddComponent<MapNodeClickAndDragHandler>();
 
             handler.Initialize(this, mapScrollRect, i);
@@ -498,16 +629,6 @@ public class StageMapManager : MonoBehaviour
             backToLobbyButton.onClick.RemoveAllListeners();
             backToLobbyButton.onClick.AddListener(OnBackToLobbyClicked);
         }
-
-        for (int i = 0; i < stageNodes.Count; i++)
-        {
-            int capturedIndex = i;
-            if (stageNodes[i].nodeButton != null)
-            {
-                stageNodes[i].nodeButton.onClick.RemoveAllListeners();
-                stageNodes[i].nodeButton.onClick.AddListener(() => SelectStageNode(capturedIndex));
-            }
-        }
     }
 
     public void OnStageNodeClicked(int index, bool isDoubleClick)
@@ -517,7 +638,7 @@ public class StageMapManager : MonoBehaviour
 
         if ((isDoubleClick && doubleClickNodeToEnterStage) || (wasAlreadySelected && clickSelectedNodeAgainToEnter))
         {
-            if (IsStageNodeUnlocked(index))
+            if (IsStageNodePlayable(index))
             {
                 DeploySelectedStage();
             }
@@ -533,71 +654,64 @@ public class StageMapManager : MonoBehaviour
             new StageNodeData
             {
                 nodeCode = "RANK E",
-                stageTitle = "RANK E : ABANDONED CLASSROOM",
+                stageTitle = "STAGE 01 : ABANDONED CLASSROOM",
                 stageDescription = "Trapped in a derelict classroom. Break the static seal to escape outside.",
                 stageStoryLine = "STORY [RANK E] : Woke up inside an empty classroom. Dark static seals every window.",
-                sceneToLoad = defaultActionSceneName,
+                sceneToLoad = "The Action",
+                isComingSoon = false,
                 normalEnemyCount = 5,
-                eliteBossCount = 1,
-                energyCost = 1
+                eliteBossCount = 1
             },
             new StageNodeData
             {
                 nodeCode = "RANK D",
-                stageTitle = "RANK D : DERELICT CITY STREET",
-                stageDescription = "Ruined city streets beneath a blood-red sky.",
-                stageStoryLine = "STORY [RANK D] : Beyond the school gate, the city streets are frozen under a blood-red sky.",
-                sceneToLoad = defaultActionSceneName,
+                stageTitle = "STAGE 02 : SHIBUYA CROSSROADS",
+                stageDescription = "Empty city intersection under a crimson sky. Defeat the stalking entities patrolling the crossing.",
+                stageStoryLine = "STORY [RANK D] : Beyond the school gate, Shibuya stands frozen beneath a blood-red sky.",
+                sceneToLoad = "Shibuya",
+                isComingSoon = false,
                 normalEnemyCount = 7,
-                eliteBossCount = 1,
-                energyCost = 1
+                eliteBossCount = 1
             },
             new StageNodeData
             {
                 nodeCode = "RANK C",
-                stageTitle = "RANK C : SHATTERED SUBWAY LINE",
+                stageTitle = "STAGE 03 : SHATTERED SUBWAY LINE",
                 stageDescription = "Underground tracks echoing with the whispers of fallen Magical Girls.",
                 stageStoryLine = "STORY [RANK C] : Deep in the subway tunnels, the entities whisper fragments of our forgotten names.",
                 sceneToLoad = defaultActionSceneName,
+                isComingSoon = true,
                 normalEnemyCount = 9,
-                eliteBossCount = 1,
-                energyCost = 1
+                eliteBossCount = 1
             },
             new StageNodeData
             {
                 nodeCode = "RANK B",
-                stageTitle = "RANK B : FACELESS PLAZA",
+                stageTitle = "STAGE 04 : FACELESS PLAZA",
                 stageDescription = "Collapsed commercial center swarming with aggressive entities.",
                 stageStoryLine = "STORY [RANK B] : My Soul Gem burns darker with every battle. The loop is beginning to fracture.",
                 sceneToLoad = defaultActionSceneName,
+                isComingSoon = true,
                 normalEnemyCount = 11,
-                eliteBossCount = 1,
-                energyCost = 1
+                eliteBossCount = 1
             },
             new StageNodeData
             {
                 nodeCode = "RANK A",
-                stageTitle = "RANK A : CRIMSON SANCTUM",
+                stageTitle = "STAGE 05 : CRIMSON SANCTUM",
                 stageDescription = "Deep dimensional corridor guarded by Twin Elite Entities.",
                 stageStoryLine = "STORY [RANK A] : At the end of the crimson corridor, the source of the anomaly pulses ahead.",
                 sceneToLoad = defaultActionSceneName,
+                isComingSoon = true,
                 normalEnemyCount = 12,
-                eliteBossCount = 2,
-                energyCost = 1
-            },
-            new StageNodeData
-            {
-                nodeCode = "RANK S",
-                stageTitle = "RANK S : CORE OF THE ABYSS [FINAL]",
-                stageDescription = "The heart of the dimensional loop where the Abyss Sovereign awaits.",
-                stageStoryLine = "STORY [RANK S] : The Abyss Core is breached. I am no longer prey trapped in this dimension.",
-                sceneToLoad = defaultActionSceneName,
-                normalEnemyCount = 15,
-                eliteBossCount = 2,
-                energyCost = 2
+                eliteBossCount = 2
             }
         };
     }
+
+    // =========================================================================
+    // 3. SETTINGS PANEL
+    // =========================================================================
 
     private void BindSettingsPanelListeners()
     {
@@ -688,9 +802,15 @@ public class StageMapManager : MonoBehaviour
 
     public void OnResetSaveDataClicked()
     {
-        GameProgressionManager.Instance.ResetAllSaveData();
+        var prog = GameProgressionManager.Instance;
+        prog.ResetAllSaveData();
+
+        if (volumeSlider != null)
+            volumeSlider.SetValueWithoutNotify(prog.MasterVolume);
+        if (sensitivitySlider != null)
+            sensitivitySlider.SetValueWithoutNotify(prog.MouseSensitivity);
+
         RefreshSettingsUI();
-        RefreshHeaderStatus();
         SelectStageNode(0);
     }
 
@@ -705,13 +825,35 @@ public class StageMapManager : MonoBehaviour
             fullscreenStatusText.text = Screen.fullScreen ? "FULLSCREEN" : "WINDOWED";
     }
 
+    // =========================================================================
+    // 4. STAGE STATUS, SELECTION & DEPLOYMENT
+    // =========================================================================
+
+    public bool IsStageNodeComingSoon(int index)
+    {
+        if (stageNodes == null || index < 0 || index >= stageNodes.Count) return true;
+        return stageNodes[index].isComingSoon;
+    }
+
+    public bool IsStageNodeUnlocked(int index)
+    {
+        if (IsStageNodeComingSoon(index)) return false;
+        if (unlockAllNodesForPrototype) return true;
+        return index <= GameProgressionManager.Instance.HighestUnlockedStageIndex;
+    }
+
+    public bool IsStageNodePlayable(int index)
+    {
+        return !IsStageNodeComingSoon(index) && IsStageNodeUnlocked(index);
+    }
+
     private void RefreshHeaderStatus()
     {
         var prog = GameProgressionManager.Instance;
 
         if (energyStatusText != null)
         {
-            energyStatusText.text = $"RANK {prog.CurrentRankLetter}  |  FREE PLAY";
+            energyStatusText.text = $"RANK {prog.CurrentRankLetter}  |  STAGE SELECT";
         }
 
         if (headerCharacterStatusText != null)
@@ -724,28 +866,33 @@ public class StageMapManager : MonoBehaviour
         if (deployStageButton != null && stageNodes != null && stageNodes.Count > 0)
         {
             int idx = Mathf.Clamp(currentSelectedNodeIndex, 0, stageNodes.Count - 1);
-            int cost = stageNodes[idx].energyCost;
+            bool comingSoon = IsStageNodeComingSoon(idx);
             bool isUnlocked = IsStageNodeUnlocked(idx);
-            bool hasEnergy = prog.HasEnoughEnergy(cost);
+            bool canDeploy = !comingSoon && isUnlocked;
 
-            deployStageButton.interactable = isUnlocked && hasEnergy;
+            deployStageButton.interactable = canDeploy;
 
-            if (deployStageButton.TryGetComponent<Image>(out var deployImg))
+            if (deployStageButtonImage != null)
             {
-                deployImg.color = isUnlocked ? prog.GetProgressionUiThemeColor() : new Color(0.3f, 0.3f, 0.35f, 0.9f);
+                if (comingSoon)
+                    deployStageButtonImage.color = ComingSoonDeployButtonColor;
+                else if (!isUnlocked)
+                    deployStageButtonImage.color = LockedDeployButtonColor;
+                else
+                    deployStageButtonImage.color = prog.GetProgressionUiThemeColor();
             }
 
             if (deployButtonLabelText != null)
             {
                 string rankCode = GameProgressionManager.GetRankLetterForStage(idx);
-                if (!isUnlocked)
+                if (comingSoon)
+                {
+                    deployButtonLabelText.text = "COMING SOON";
+                }
+                else if (!isUnlocked)
                 {
                     string prevRank = GameProgressionManager.GetRankLetterForStage(Mathf.Max(0, idx - 1));
                     deployButtonLabelText.text = $"LOCKED (CLEAR RANK {prevRank} FIRST)";
-                }
-                else if (!hasEnergy)
-                {
-                    deployButtonLabelText.text = $"NO ENERGY (0 / {prog.MaxEnergy})";
                 }
                 else
                 {
@@ -755,16 +902,6 @@ public class StageMapManager : MonoBehaviour
         }
     }
 
-    public bool IsStageNodeUnlocked(int index)
-    {
-        if (unlockAllNodesForPrototype) return true;
-        return index <= GameProgressionManager.Instance.HighestUnlockedStageIndex;
-    }
-
-    // =========================================================================
-    // HERE IS WHERE THAT EXACT STAGE DETAIL TEXT IS BUILT (SelectStageNode)
-    // =========================================================================
-
     public void SelectStageNode(int index)
     {
         if (stageNodes == null || stageNodes.Count == 0) return;
@@ -772,6 +909,8 @@ public class StageMapManager : MonoBehaviour
 
         StageNodeData selected = stageNodes[currentSelectedNodeIndex];
         var prog = GameProgressionManager.Instance;
+        bool comingSoon = IsStageNodeComingSoon(currentSelectedNodeIndex);
+        bool unlocked = IsStageNodeUnlocked(currentSelectedNodeIndex);
 
         if (selectedStageTitleText != null)
         {
@@ -780,10 +919,19 @@ public class StageMapManager : MonoBehaviour
 
         if (selectedStageDetailText != null)
         {
-            string finalDetail = "";
+            string finalDetail = string.Empty;
 
-            // 1. Optional [FIRST-CLEAR BONUS: ...] or [CLEARED] prefix
-            if (showFirstClearBonusTag)
+            // 1. Status badge prefix ([COMING SOON], [LOCKED], [FIRST-CLEAR BONUS], or [CLEARED])
+            if (comingSoon)
+            {
+                finalDetail += comingSoonBadgeText + " ";
+            }
+            else if (!unlocked)
+            {
+                string prevRank = GameProgressionManager.GetRankLetterForStage(Mathf.Max(0, currentSelectedNodeIndex - 1));
+                finalDetail += string.Format(lockedBadgeFormat, prevRank) + " ";
+            }
+            else if (showFirstClearBonusTag)
             {
                 bool clearedBefore = prog.IsStageClearedBefore(currentSelectedNodeIndex);
                 if (clearedBefore)
@@ -798,16 +946,16 @@ public class StageMapManager : MonoBehaviour
                 }
             }
 
-            // 2. Stage Description (from Stage Nodes list in Inspector)
+            // 2. Stage Description
             finalDetail += selected.stageDescription;
 
-            // 3. Optional (Normal: 5 | Boss: 1) suffix
-            if (showEnemyCountInDetail)
+            // 3. Optional (Normal: X | Boss: Y) suffix for playable stages
+            if (!comingSoon && showEnemyCountInDetail && !string.IsNullOrEmpty(enemyCountSuffixFormat))
             {
                 finalDetail += " " + string.Format(enemyCountSuffixFormat, selected.normalEnemyCount, selected.eliteBossCount);
             }
 
-            // 4. Optional pink STORY [RANK E] second line
+            // 4. Optional STORY line
             if (showStoryLineInDetail)
             {
                 string story = !string.IsNullOrEmpty(selected.stageStoryLine)
@@ -816,7 +964,10 @@ public class StageMapManager : MonoBehaviour
 
                 if (!string.IsNullOrEmpty(story))
                 {
-                    finalDetail += "\n" + string.Format(storyLineColorFormat, story);
+                    string formattedStory = !string.IsNullOrEmpty(storyLineColorFormat)
+                        ? string.Format(storyLineColorFormat, story)
+                        : story;
+                    finalDetail += "\n" + formattedStory;
                 }
             }
 
@@ -835,37 +986,56 @@ public class StageMapManager : MonoBehaviour
         for (int i = 0; i < stageNodes.Count; i++)
         {
             StageNodeData node = stageNodes[i];
-            Image bg = node.nodeBackground != null
-                ? node.nodeBackground
-                : (node.nodeButton != null ? node.nodeButton.GetComponent<Image>() : null);
-
             if (node.nodeButton != null)
                 node.nodeButton.interactable = true;
 
-            if (bg == null) continue;
-
+            bool comingSoon = IsStageNodeComingSoon(i);
             bool unlocked = IsStageNodeUnlocked(i);
             bool isSelected = (i == currentSelectedNodeIndex);
-            bool isCleared = prog.IsStageClearedBefore(i);
+            bool isCleared = !comingSoon && prog.IsStageClearedBefore(i);
+
+            if (autoSyncNodeLabels && node.nodeLabelText != null)
+            {
+                string code = string.IsNullOrEmpty(node.nodeCode)
+                    ? $"RANK {GameProgressionManager.GetRankLetterForStage(i)}"
+                    : node.nodeCode;
+
+                if (comingSoon)
+                    node.nodeLabelText.text = $"{code}\n<size=14>SOON</size>";
+                else if (!unlocked)
+                    node.nodeLabelText.text = $"{code}\n<size=14>LOCKED</size>";
+                else if (isCleared)
+                    node.nodeLabelText.text = $"{code}\n<size=14>CLEAR</size>";
+                else
+                    node.nodeLabelText.text = code;
+            }
+
+            Image bg = node.nodeBackground;
+            if (bg == null) continue;
 
             if (isSelected)
             {
-                bg.color = milestoneAccent;
+                bg.color = comingSoon ? new Color(0.55f, 0.45f, 0.78f, 1f) : milestoneAccent;
                 bg.transform.localScale = Vector3.one * selectedNodeScale;
+            }
+            else if (comingSoon)
+            {
+                bg.color = ComingSoonNodeColor;
+                bg.transform.localScale = Vector3.one * 0.94f;
             }
             else if (!unlocked)
             {
-                bg.color = new Color(0.22f, 0.22f, 0.28f, 0.85f);
+                bg.color = LockedNodeColor;
                 bg.transform.localScale = Vector3.one * 0.95f;
             }
             else if (isCleared)
             {
-                bg.color = new Color(0.18f, 0.55f, 0.45f, 0.95f);
+                bg.color = ClearedNodeColor;
                 bg.transform.localScale = Vector3.one;
             }
             else
             {
-                bg.color = new Color(0.32f, 0.24f, 0.58f, 0.95f);
+                bg.color = UnlockedNodeColor;
                 bg.transform.localScale = Vector3.one;
             }
         }
@@ -875,67 +1045,63 @@ public class StageMapManager : MonoBehaviour
     {
         if (stageNodes == null || stageNodes.Count == 0)
         {
-            SceneManager.LoadScene(defaultActionSceneName);
+            LoadSceneSafe(defaultActionSceneName, lobbySceneName);
             return;
         }
 
         int idx = Mathf.Clamp(currentSelectedNodeIndex, 0, stageNodes.Count - 1);
-        if (!IsStageNodeUnlocked(idx))
+        if (!IsStageNodePlayable(idx))
         {
             return;
         }
 
         StageNodeData selected = stageNodes[idx];
+        var prog = GameProgressionManager.Instance;
 
-        // GDD Core Pillar #3 (Zero Energy Limit): เข้าเล่นด่านได้ทันทีไม่หักพลังงาน
+        if (selected.stageData != null)
+        {
+            prog.SetActiveStageData(selected.stageData, idx);
+        }
+        else
+        {
+            prog.SelectStage(
+                idx,
+                selected.stageTitle,
+                selected.normalEnemyCount,
+                selected.eliteBossCount,
+                0
+            );
+        }
 
-        GameProgressionManager.Instance.SelectStage(
-            idx,
-            selected.stageTitle,
-            selected.normalEnemyCount,
-            selected.eliteBossCount,
-            selected.energyCost
-        );
+        string targetScene = string.IsNullOrWhiteSpace(selected.sceneToLoad)
+            ? defaultActionSceneName
+            : selected.sceneToLoad.Trim();
 
-        string targetScene = string.IsNullOrEmpty(selected.sceneToLoad) ? defaultActionSceneName : selected.sceneToLoad;
-        SceneManager.LoadScene(targetScene);
+        LoadSceneSafe(targetScene, defaultActionSceneName);
     }
 
     public void OnBackToLobbyClicked()
     {
-        SceneManager.LoadScene(lobbySceneName);
+        LoadSceneSafe(lobbySceneName, "The Lobby");
+    }
+
+    private static void LoadSceneSafe(string targetScene, string fallbackScene)
+    {
+        Time.timeScale = 1.0f;
+
+        if (!string.IsNullOrEmpty(targetScene) && Application.CanStreamedLevelBeLoaded(targetScene))
+        {
+            SceneManager.LoadScene(targetScene);
+            return;
+        }
+
+        if (!string.IsNullOrEmpty(fallbackScene) && fallbackScene != targetScene && Application.CanStreamedLevelBeLoaded(fallbackScene))
+        {
+            Debug.LogWarning($"[StageMapManager] Scene '{targetScene}' is not in Build Settings. Falling back to '{fallbackScene}'.");
+            SceneManager.LoadScene(fallbackScene);
+            return;
+        }
+
+        Debug.LogError($"[StageMapManager] Cannot load scene '{targetScene}' (and fallback '{fallbackScene}' is unavailable). Add it to File > Build Profiles / Build Settings.");
     }
 }
-
-
-/* ============================================================================
- * คำอธิบายการทำงานของโค้ดและฟังก์ชันทั้งหมดใน StageMapManager.cs
- * (ส่วนนี้เป็น Comment ล้วน 100% — คอมไพเลอร์และระบบเกมจะไม่นำไปรันเด็ดขาด)
- * ============================================================================
- *
- * 1. MapNodeClickAndDragHandler (คลาสย่อยสำหรับปุ่มโหนดด่าน)
- *    - แยกแยะระหว่าง "การคลิกเลือกโหนดด่าน" (เมาส์ขยับไม่เกิน 12 พิกเซล) กับ "การคลิกค้างลากแผนที่"
- *    - ทำให้ผู้เล่นสามารถคลิกซ้ายที่โหนดเพื่อเลือกด่าน ดับเบิลคลิกที่โหนดเพื่อเข้าด่าน หรือคลิกค้างบนโหนดแล้วลากเลื่อนแผนที่ได้ลื่นไหล
- *
- * 2. ConfigureUnrestrictedScrollRectAndBounds() & ClampMapContentPositionWithinBounds()
- *    - บังคับให้ ScrollRect ของแผนที่เป็นโหมด Unrestricted เพื่อแก้ปัญหาแผนที่ดีดกลับไปจุด (0,0)
- *    - คำนวณขอบเขตการเลื่อนซ้าย-ขวา (minMapPanX ถึง maxMapPanX) และบน-ล่าง (minMapPanY ถึง maxMapPanY)
- *      จากตำแหน่งปุ่ม StageNode ทั้งหมดโดยอัตโนมัติ และล็อกไม่ให้ลากแผนที่หลุดขอบจอใน LateUpdate()
- *
- * 3. AutoFindAndBindStageNodeButtons()
- *    - ค้นหาปุ่ม StageNode_01 ถึง StageNode_06 ในฉากมาผูกเข้ากับรายการ stageNodes อัตโนมัติ
- *    - บังคับเปิด interactable = true และ raycastTarget = true เพื่อให้กดโหนดด่านได้ครบทุกจุด 100%
- *
- * 4. SelectStageNode(int index)
- *    - อัปเดตชื่อด่านและคำอธิบายด่านเมื่อผู้เล่นคลิกเลือกโหนดบนแผนที่
- *    - นำตัวเลือกในหมวด "3. Stage Detail Auto-Text Format" บน Inspector (เช่น ป้าย [FIRST-CLEAR BONUS],
- *      จำนวน (Normal | Boss), และบรรทัดเนื้อเรื่อง STORY [RANK X]) มาประกอบแสดงผลตามที่คุณติ๊กเปิด/ปิดไว้
- *
- * 5. DeploySelectedStage()
- *    - ตรวจสอบและหักค่าพลังงาน (Play Energy) ก่อนบันทึกข้อมูลด่านที่เลือกเข้า GameProgressionManager
- *      แล้วโหลดเข้าสู่ฉากต่อสู้ (The Action)
- *
- * 6. limitToTwoMainStages & maxActiveStagesInMap (ระบบจำกัด Scope เฉพาะ 2 ด่านหลัก)
- *    - เปิดใช้งานเฉพาะ 2 ด่านหลัก (ด่าน 1: ห้องเรียนร้าง Rank E และ ด่าน 2: ถนนเมืองรกร้าง Rank D)
- *      และซ่อนปุ่มโหนดด่านที่เกิน (StageNode_03 ถึง StageNode_06) ให้อัตโนมัติโดยไม่ต้องลบออบเจกต์ในฉากทิ้ง
- * ============================================================================ */

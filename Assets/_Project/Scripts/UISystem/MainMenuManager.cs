@@ -10,8 +10,8 @@ using UnityEngine.UI;
 public class MainMenuManager : MonoBehaviour
 {
     [Header("Scene Navigation")]
-    [Tooltip("ชื่อฉาก Lobby / Hub ที่จะโหลดเมื่อกดปุ่ม START")]
-    [SerializeField] private string lobbySceneName = "The lobby";
+    [Tooltip("Exact Lobby / Hub scene name in Build Settings loaded when clicking START.")]
+    [SerializeField] private string lobbySceneName = "The Lobby";
 
     [Header("Main Menu UI Buttons (ลากปุ่มจาก Hierarchy มาใส่)")]
     [SerializeField] private Button startButton;
@@ -114,7 +114,20 @@ public class MainMenuManager : MonoBehaviour
 
     public void OnStartGameClicked()
     {
-        SceneManager.LoadScene(lobbySceneName);
+        Time.timeScale = 1.0f;
+        string target = string.IsNullOrWhiteSpace(lobbySceneName) ? "The Lobby" : lobbySceneName.Trim();
+        if (Application.CanStreamedLevelBeLoaded(target))
+        {
+            SceneManager.LoadScene(target);
+        }
+        else if (Application.CanStreamedLevelBeLoaded("The Lobby"))
+        {
+            SceneManager.LoadScene("The Lobby");
+        }
+        else
+        {
+            Debug.LogError($"[MainMenuManager] Scene '{target}' is not in Build Settings.");
+        }
     }
 
     public void OpenSettingsPanel()

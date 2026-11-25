@@ -52,6 +52,7 @@ public class PlayerMovement : MonoBehaviour
     private PlayerStamina stamina;
     private PlayerLockOn playerLockOn;
     private PlayerCombat playerCombat;
+    private PlayerHealth playerHealth;
     private PlayerStateMachine stateMachine;
     private InputSystem_Actions inputActions;
 
@@ -98,6 +99,7 @@ public class PlayerMovement : MonoBehaviour
         stamina = GetComponent<PlayerStamina>();
         playerLockOn = GetComponent<PlayerLockOn>();
         playerCombat = GetComponent<PlayerCombat>();
+        playerHealth = GetComponent<PlayerHealth>();
         stateMachine = GetComponent<PlayerStateMachine>() ?? gameObject.AddComponent<PlayerStateMachine>();
         inputActions = new InputSystem_Actions();
 
@@ -216,11 +218,21 @@ public class PlayerMovement : MonoBehaviour
 
     private void Update()
     {
+        if (Time.timeScale <= 0.01f) return;
         if (BattleHUD.Instance != null && BattleHUD.Instance.IsSettingsOpen)
             return;
 
+        if ((VNManager.Instance != null && VNManager.Instance.IsPlayingVN) || (playerHealth != null && playerHealth.IsDead))
+        {
+            moveInput = Vector2.zero;
+            ClampAboveGroundFloor();
+            UpdateAnimatorParameters(Vector3.zero);
+            return;
+        }
+
         if (playerCombat != null && playerCombat.IsUsingSkill)
         {
+            moveInput = Vector2.zero;
             ClampAboveGroundFloor();
             UpdateAnimatorParameters(Vector3.zero);
             return;
@@ -318,11 +330,7 @@ public class PlayerMovement : MonoBehaviour
 
     private void ResolveCameraCollision()
     {
-        if (cameraTransform == null)
-        {
-            if (Camera.main != null) cameraTransform = Camera.main.transform;
-            if (cameraTransform == null) return;
-        }
+        if (cameraTransform == null) return;
 
         Vector3 pivotPos = transform.position + Vector3.up * cameraPivotHeight;
         Vector3 camPos = cameraTransform.position;
@@ -386,9 +394,6 @@ public class PlayerMovement : MonoBehaviour
         Vector3 inputDir = new Vector3(moveInput.x, 0f, moveInput.y).normalized;
         if (inputDir.sqrMagnitude < 0.01f) return Vector3.zero;
 
-        if (cameraTransform == null && Camera.main != null)
-            cameraTransform = Camera.main.transform;
-
         Vector3 moveDir;
 
         if (playerLockOn != null && playerLockOn.IsLockedOn && playerLockOn.CurrentTarget != null)
@@ -442,20 +447,16 @@ public class PlayerMovement : MonoBehaviour
     public void PerformDodge()
     {
         if (isDodging || cooldownTimer > 0f) return;
+        if (Time.timeScale <= 0.01f) return;
+        if (BattleHUD.Instance != null && BattleHUD.Instance.IsSettingsOpen) return;
+        if (VNManager.Instance != null && VNManager.Instance.IsPlayingVN) return;
+        if (playerHealth != null && playerHealth.IsDead) return;
         if (stateMachine != null && !stateMachine.CanTransitionTo(PlayerStateType.Dash)) return;
 
         if (stamina != null && !stamina.TryConsumeStamina(dodgeStaminaCost)) return;
 
+        // TryTransitionTo(Dash) automatically cancels Basic Attack & interruptible VFX once Stamina & CD succeed.
         if (stateMachine != null && !stateMachine.TryTransitionTo(PlayerStateType.Dash)) return;
-
-        if (playerCombat == null) playerCombat = GetComponent<PlayerCombat>();
-        if (playerCombat != null && (playerCombat.IsAttacking || playerCombat.IsUsingSkill))
-        {
-            playerCombat.CancelCombat();
-        }
-
-        if (cameraTransform == null && Camera.main != null)
-            cameraTransform = Camera.main.transform;
 
         Vector3 inputDir = new Vector3(moveInput.x, 0f, moveInput.y).normalized;
         if (inputDir.sqrMagnitude > 0.01f)

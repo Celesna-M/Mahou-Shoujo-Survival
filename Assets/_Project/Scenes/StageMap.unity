@@ -222,7 +222,6 @@ RectTransform:
   - {fileID: 60964905}
   - {fileID: 1791302951}
   - {fileID: 785534916}
-  - {fileID: 83153575}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -230,253 +229,6 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 0}
---- !u!1 &23042385
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 23042387}
-  - component: {fileID: 23042386}
-  m_Layer: 0
-  m_Name: GameObject
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &23042386
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 23042385}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 68c55a77dbad8824f9a9868071dc914d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::GameTextMasterConfig
-  persistAcrossAllScenes: 1
-  autoApplyStaticSceneUiLabels: 1
-  inspectorStaticSceneTexts:
-  - gameObjectName: Title_Text
-    textContent: 'MAHOU SHOUJO : SURVIVAL'
-  - gameObjectName: Button_StartGame
-    textContent: START GAME
-  - gameObjectName: Button_Settings
-    textContent: SETTINGS
-  - gameObjectName: Button_QuitGame
-    textContent: QUIT GAME
-  - gameObjectName: Header_SettingsTitle
-    textContent: SETTINGS
-  - gameObjectName: Label_MasterVolume
-    textContent: MASTER VOLUME
-  - gameObjectName: Label_MouseSensitivity
-    textContent: MOUSE SENSITIVITY
-  - gameObjectName: Label_DisplayMode
-    textContent: DISPLAY MODE
-  - gameObjectName: Label_SaveOrMatch
-    textContent: SYSTEM / MATCH CONTROL
-  - gameObjectName: Button_CloseSettings
-    textContent: < RESUME / CLOSE
-  - gameObjectName: Button_ResetSaveData
-    textContent: RESET SAVE DATA
-  - gameObjectName: Button_ExitBattleToLobby
-    textContent: EXIT TO LOBBY (QUIT STAGE)
-  - gameObjectName: Button_BackMainMenu
-    textContent: < MAIN MENU
-  - gameObjectName: Button_RefillEnergy
-    textContent: +1 ENERGY (20 DUST)
-  - gameObjectName: Button_GoToStageMap
-    textContent: SELECT STAGE >
-  - gameObjectName: Button_BackToLobby
-    textContent: < BACK TO LOBBY
-  - gameObjectName: StageNode_01
-    textContent: RANK E
-  - gameObjectName: StageNode_02
-    textContent: RANK D
-  - gameObjectName: StageNode_03
-    textContent: RANK C
-  - gameObjectName: StageNode_04
-    textContent: RANK B
-  - gameObjectName: StageNode_05
-    textContent: RANK A
-  - gameObjectName: StageNode_06
-    textContent: RANK S
-  inspectorSettingsVolumeFormat: '{0}%'
-  inspectorSettingsSensitivityFormat: '{0:F1}x'
-  inspectorSettingsFullscreenOn: FULLSCREEN
-  inspectorSettingsFullscreenOff: WINDOWED
-  inspectorRankLetters:
-  - E
-  - D
-  - C
-  - B
-  - A
-  - S
-  inspectorRankZoneNames:
-  - ABANDONED CLASSROOM
-  - DERELICT CITY STREET
-  - SHATTERED SUBWAY LINE
-  - FACELESS COMMERCIAL DISTRICT
-  - CRIMSON SANCTUM CORRIDOR
-  - CORE OF THE ABYSS
-  inspectorRankStoryLogs:
-  - 'STORY [RANK E] : Woke up inside an empty classroom. Dark static seals every
-    window.'
-  - 'STORY [RANK D] : Beyond the school gate, the city streets are frozen under a
-    blood-red sky.'
-  - 'STORY [RANK C] : Deep in the subway tunnels, the entities whisper fragments
-    of our forgotten names.'
-  - 'STORY [RANK B] : My Soul Gem burns darker with every battle. The loop is beginning
-    to fracture.'
-  - 'STORY [RANK A] : At the end of the crimson corridor, the source of the anomaly
-    pulses ahead.'
-  - 'STORY [RANK S] : The Abyss Core is breached. I am no longer prey trapped in
-    this dimension.'
-  inspectorMilestoneTier1Format: "[MILESTONE TIER 1 : FRAGILE SOUL] Kills: {0} |
-    Upgrades: Lv.{1} \u2014 \"My hands are still trembling, but I must fight to survive.\""
-  inspectorMilestoneTier2Format: "[MILESTONE TIER 2 : AWAKENED CREST] Kills: {0}
-    | Upgrades: Lv.{1} \u2014 \"The Star Dust is merging with my pulse. The pink
-    light is turning sharp.\""
-  inspectorMilestoneTier3Format: "[MILESTONE TIER 3 : CRIMSON RESONANCE] Kills: {0}
-    | Upgrades: Lv.{1} \u2014 \"Shattered Cores fuel my strikes. The entities now
-    hesitate before me.\""
-  inspectorMilestoneTier4Format: "[MILESTONE TIER 4 : ABYSS SOVEREIGN] Kills: {0}
-    | Upgrades: Lv.{1} \u2014 \"Crimson light surrounds me. This dimension can no
-    longer hold me captive.\""
-  inspectorCharacterIds:
-  - CHAR_01
-  - CHAR_02
-  - CHAR_03
-  inspectorCharacterNames:
-  - '01 : HIKARI - BRAWLER STRIKER'
-  - '02 : AKANE - CRIMSON BREAKER'
-  - '03 : SHIRO - AEGIS GUARDIAN'
-  inspectorCharacterLores:
-  - Balanced Striker | High mobility and fast melee combos.
-  - Heavy Breaker | Crushes enemy stagger gauges with heavy blows.
-  - Aegis Tank | High base health built for surviving relentless swarms.
-  inspectorLobbyEnergyRechargingFormat: 'ENERGY : {0} / {1} (+1 in {2}s)'
-  inspectorLobbyEnergyMaxFormat: 'ENERGY : {0} / {1} (MAX)'
-  inspectorLobbyStarDustFormat: 'STAR DUST : {0}'
-  inspectorLobbyShatteredCoreFormat: 'SHATTERED CORE : {0}'
-  inspectorLobbyShatteredCoreWithEnergyFormat: 'SHATTERED CORE : {0}  |  ENERGY :
-    {1}/{2}'
-  inspectorLobbyCombinedCurrencyFormat: 'STAR DUST : {0}  |  CORE : {1}  |  ENERGY
-    : {2}/{3}'
-  inspectorLobbySelectedCharTitleFormat: <b>{0}</b>  <color=#FFD700>[RANK {1}]</color>
-  inspectorLobbySelectedCharLoreFormat: '{0}
-
-    <size=18><color=#FF99BB>{1}</color></size>'
-  inspectorLobbyCombinedStatsSummaryFormat: "<b>RANK {0} ({1}) \u2014 STATUS SUMMARY</b>\n-
-    VITALITY (HP) : <b><color=#40FF80>{2:F0}</color></b> <size=16>(Base {3:F0} +
-    {4:F0} [Lv.{5}])</size>\n- STAMINA EFF. : <b><color=#66E0FF>+{6:F0}/s Regen,
-    -{7:F1} Dodge Cost</color></b> <size=16>[Lv.{8}]</size>\n- RAW POWER (ATK) :
-    <b><color=#FF6699>{9:F0}</color></b> <size=16>(Base {10:F0} + {11:F0} [Lv.{12}])</size>\n<size=15><color=#FF88AA>{13}</color></size>"
-  inspectorLobbyUpgrade1VitalityFormat: '<b>1. VITALITY BOOST (+{0:F0} MAX HP)</b>
-
-    Cost:
-    {1} Star Dust  |  Lv.{2} ({3:F0} HP)'
-  inspectorLobbyUpgrade2StaminaFormat: '<b>2. STAMINA EFFICIENCY (+{0:F0} Regen /
-    -{1:F1} Dodge)</b>
-
-    Cost: {2} Star Dust  |  Lv.{3}'
-  inspectorLobbyUpgrade3RawPowerFormat: '<b>3. RAW POWER (+{0:F0} ATTACK)</b>
-
-    Cost:
-    {1} Shattered Core  |  Lv.{2} ({3:F0} ATK)'
-  inspectorStageNodeCodes:
-  - RANK E
-  - RANK D
-  - RANK C
-  - RANK B
-  - RANK A
-  - RANK S
-  inspectorStageNodeTitles:
-  - 'RANK E : ABANDONED CLASSROOM'
-  - 'RANK D : DERELICT CITY STREET'
-  - 'RANK C : SHATTERED SUBWAY LINE'
-  - 'RANK B : FACELESS PLAZA'
-  - 'RANK A : CRIMSON SANCTUM'
-  - 'RANK S : CORE OF THE ABYSS [FINAL]'
-  inspectorStageNodeDescriptions:
-  - Trapped in a derelict classroom. Break the static seal to escape outside.
-  - Ruined city streets beneath a blood-red sky.
-  - Underground tracks echoing with the whispers of fallen Magical Girls.
-  - Collapsed commercial center swarming with aggressive entities.
-  - Deep dimensional corridor guarded by Twin Elite Entities.
-  - The heart of the dimensional loop where the Abyss Sovereign awaits.
-  inspectorMapEnergyRechargingFormat: 'RANK {0}  |  ENERGY : {1} / {2} (+1 in {3}s)'
-  inspectorMapEnergyMaxFormat: 'RANK {0}  |  ENERGY : {1} / {2} (MAX)'
-  inspectorMapHeaderCharacterStatusFormat: '{0} <color=#FFD700>[RANK {1}]</color>
-
-    <size=16>HP:
-    {2:F0} | ATK: {3:F0} | DUST: {4} | CORE: {5} | KILLS: {6}</size>'
-  inspectorMapDeployButtonReadyFormat: ENTER RANK {0} (-{1} ENERGY) >
-  inspectorMapDeployButtonNoEnergyFormat: NO ENERGY (0 / {0})
-  inspectorMapSelectedStageTitleFormat: '{0}  <color=#FFD700>[RANK {1}]</color>'
-  inspectorMapStageClearedBadge: <color=#40FF80>[CLEARED - REPEAT RUN]</color>
-  inspectorMapStageFirstClearBadgeFormat: '<color=#FFD700>[FIRST-CLEAR BONUS: +{0}
-    STAR DUST, +{1} CORE!]</color>'
-  inspectorMapSelectedStageDetailFormat: '{0} {1} (Normal: {2} | Boss: {3})
-
-    <size=17><color=#FF99BB>{4}</color></size>'
-  inspectorMapNotEnoughEnergyWarning: <color=#FF4444>[NOT ENOUGH ENERGY!] Wait for
-    Energy recharge or refill in Lobby.</color>
-  inspectorActionDefaultStageBanner: 'RANK E : ABANDONED CLASSROOM'
-  inspectorActionStageStartBannerFormat: '{0}
-
-    <size=22>{1}</size>'
-  inspectorActionBossApproachingBannerFormat: 'WARNING: RANK {0} GUARDIAN APPROACHING'
-  inspectorActionStageClearBanner: STAGE CLEAR!
-  inspectorActionStageClearFirstTimeBannerFormat: 'STAGE CLEAR!
-
-    <size=24><color=#FFD700>FIRST-CLEAR
-    BONUS: +{0} DUST | +{1} CORE</color></size>'
-  inspectorEnemyDefaultNormalName: THE ENTITY
-  inspectorEnemyDefaultBossNameFormat: RANK {0} GUARDIAN (BOSS)
-  inspectorHudExecutePromptText: '[F] EXECUTE (HEAL HP)'
-  inspectorHudStarDustCounterFormat: 'STAR DUST : {0}'
-  inspectorHudShatteredCoreCounterFormat: 'CORE : {0}'
-  inspectorHudFloatingGainFormat: + [{0}] {1}{2}
-  inspectorHudIconStarDust: STAR DUST
-  inspectorHudIconShatteredCore: CORE
-  inspectorHudIconMilestone: MILESTONE
-  inspectorHudKillMilestoneSuffixFormat: ' ({0} KILLS!)'
-  inspectorVictoryHeaderFormat: "<b>STAGE CLEAR \u2014 RANK {0}</b>"
-  inspectorVictoryStarDustLineFormat: '<color=#FFE040>+ [STAR DUST] : {0} (TOTAL:
-    {1})</color>'
-  inspectorVictoryShatteredCoreLineFormat: '<color=#F259FF>+ [SHATTERED CORE] : {0}
-    (TOTAL: {1})</color>'
-  inspectorVictoryFirstClearBonusLineFormat: '
-
-    <color=#FFD700>[FIRST-CLEAR BONUS!]
-    +{0} STAR DUST | +{1} CORE</color>'
-  inspectorVictoryRankPromotionLineFormat: '
-
-    <color=#00FFAA>[RANK PROMOTION!]
-    UNLOCKED RANK {0} ({1})</color>
-
-    <size=17><color=#FF99BB>{2}</color></size>'
---- !u!4 &23042387
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 23042385}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 1150.8401, y: -0.00001, z: 2662.155}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &60964904
 GameObject:
   m_ObjectHideFlags: 0
@@ -564,143 +316,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 60964904}
   m_CullTransparentMesh: 1
---- !u!1 &83153574
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 83153575}
-  - component: {fileID: 83153576}
-  - component: {fileID: 83153577}
-  m_Layer: 5
-  m_Name: 'Text_EnergyStatus '
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!224 &83153575
-RectTransform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 83153574}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 4219000}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 60, y: 460}
-  m_SizeDelta: {x: 400, y: 50}
-  m_Pivot: {x: 0.5, y: 0.5}
---- !u!222 &83153576
-CanvasRenderer:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 83153574}
-  m_CullTransparentMesh: 1
---- !u!114 &83153577
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 83153574}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Unity.TextMeshPro::TMPro.TextMeshProUGUI
-  m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_RaycastTarget: 1
-  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
-  m_Maskable: 1
-  m_OnCullStateChanged:
-    m_PersistentCalls:
-      m_Calls: []
-  m_text: 'ENERGY : 5 / 5'
-  m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_fontSharedMaterials: []
-  m_fontMaterial: {fileID: 0}
-  m_fontMaterials: []
-  m_fontColor32:
-    serializedVersion: 2
-    rgba: 4294967295
-  m_fontColor: {r: 1, g: 1, b: 1, a: 1}
-  m_enableVertexGradient: 0
-  m_colorMode: 3
-  m_fontColorGradient:
-    topLeft: {r: 1, g: 1, b: 1, a: 1}
-    topRight: {r: 1, g: 1, b: 1, a: 1}
-    bottomLeft: {r: 1, g: 1, b: 1, a: 1}
-    bottomRight: {r: 1, g: 1, b: 1, a: 1}
-  m_fontColorGradientPreset: {fileID: 0}
-  m_spriteAsset: {fileID: 0}
-  m_tintAllSprites: 0
-  m_StyleSheet: {fileID: 0}
-  m_TextStyleHashCode: -1183493901
-  m_overrideHtmlColors: 0
-  m_faceColor:
-    serializedVersion: 2
-    rgba: 4294967295
-  m_fontSize: 36
-  m_fontSizeBase: 36
-  m_fontWeight: 400
-  m_enableAutoSizing: 0
-  m_fontSizeMin: 18
-  m_fontSizeMax: 72
-  m_fontStyle: 0
-  m_HorizontalAlignment: 2
-  m_VerticalAlignment: 512
-  m_textAlignment: 65535
-  m_characterSpacing: 0
-  m_characterHorizontalScale: 1
-  m_wordSpacing: 0
-  m_lineSpacing: 0
-  m_lineSpacingMax: 0
-  m_paragraphSpacing: 0
-  m_charWidthMaxAdj: 0
-  m_TextWrappingMode: 1
-  m_wordWrappingRatios: 0.4
-  m_overflowMode: 0
-  m_linkedTextComponent: {fileID: 0}
-  parentLinkedComponent: {fileID: 0}
-  m_enableKerning: 0
-  m_ActiveFontFeatures: 6e72656b
-  m_enableExtraPadding: 0
-  checkPaddingRequired: 0
-  m_isRichText: 1
-  m_EmojiFallbackSupport: 1
-  m_parseCtrlCharacters: 1
-  m_isOrthographic: 1
-  m_isCullingEnabled: 0
-  m_horizontalMapping: 0
-  m_verticalMapping: 0
-  m_uvLineOffset: 0
-  m_geometrySortingOrder: 0
-  m_IsTextObjectScaleStatic: 0
-  m_VertexBufferAutoSizeReduction: 0
-  m_useMaxVisibleDescender: 1
-  m_pageToDisplay: 1
-  m_margin: {x: 0, y: 0, z: 0, w: 0}
-  m_isUsingLegacyAnimationComponent: 0
-  m_isVolumetricText: 0
-  m_hasFontAssetChanged: 0
-  m_baseMaterial: {fileID: 0}
-  m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
 --- !u!1 &170998127
 GameObject:
   m_ObjectHideFlags: 0
@@ -1547,7 +1162,7 @@ GameObject:
   - component: {fileID: 600277246}
   - component: {fileID: 600277245}
   m_Layer: 5
-  m_Name: 'Button_BackToLobby '
+  m_Name: Button_BackToLobby
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1804,7 +1419,7 @@ GameObject:
   - component: {fileID: 637597949}
   - component: {fileID: 637597948}
   m_Layer: 5
-  m_Name: 'Label_MouseSensitivity  '
+  m_Name: Label_MouseSensitivity
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1943,7 +1558,7 @@ GameObject:
   - component: {fileID: 734442460}
   - component: {fileID: 734442459}
   m_Layer: 5
-  m_Name: 'Map_ScrollView '
+  m_Name: Map_ScrollView
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2843,7 +2458,7 @@ GameObject:
   - component: {fileID: 954356610}
   - component: {fileID: 954356609}
   m_Layer: 5
-  m_Name: 'Text_SelectedStageDetail '
+  m_Name: Text_SelectedStageDetail
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -3347,7 +2962,7 @@ GameObject:
   - component: {fileID: 1076487260}
   - component: {fileID: 1076487259}
   m_Layer: 5
-  m_Name: 'StageNode_01 '
+  m_Name: StageNode_01
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -3589,7 +3204,7 @@ GameObject:
   - component: {fileID: 1148191285}
   - component: {fileID: 1148191284}
   m_Layer: 5
-  m_Name: 'StageNode_04 '
+  m_Name: StageNode_04
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -4681,7 +4296,7 @@ GameObject:
   - component: {fileID: 1791302952}
   - component: {fileID: 1791302954}
   m_Layer: 5
-  m_Name: 'Button_DeployStage '
+  m_Name: Button_DeployStage
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -5350,7 +4965,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5c72e1b890a443d28f16c3e90b45a112, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::StageMapManager
-  lobbySceneName: The lobby
+  lobbySceneName: The Lobby
   defaultActionSceneName: The Action
   allowHorizontalPan: 1
   allowVerticalPan: 0
@@ -5361,9 +4976,10 @@ MonoBehaviour:
   minMapPanY: -220
   maxMapPanY: 220
   mouseWheelScrollSpeed: 180
-  unlockAllNodesForPrototype: 1
+  unlockAllNodesForPrototype: 0
   doubleClickNodeToEnterStage: 1
   clickSelectedNodeAgainToEnter: 0
+  autoSyncNodeLabels: 1
   selectedNodeScale: 1.18
   showFirstClearBonusTag: 1
   showEnemyCountInDetail: 1
@@ -5371,86 +4987,88 @@ MonoBehaviour:
   firstClearBadgeFormat: '<color=#FFD700>[FIRST-CLEAR BONUS: +{0} STAR DUST, +{1}
     CORE!]</color>'
   clearedBadgeText: <color=#40FF80>[CLEARED - REPEAT RUN]</color>
-  enemyCountSuffixFormat: 
-  storyLineColorFormat: <color=#FF99BB>{0}</color></size>
+  comingSoonBadgeText: <color=#B89CFF>[COMING SOON - IN DEVELOPMENT]</color>
+  lockedBadgeFormat: <color=#FF6B8A>[LOCKED - CLEAR RANK {0} FIRST]</color>
+  enemyCountSuffixFormat: '(Normal: {0} | Boss: {1})'
+  storyLineColorFormat: <size=17><color=#FF99BB>{0}</color></size>
   mapScrollRect: {fileID: 734442459}
   mapContentRect: {fileID: 2067548571}
   deployStageButton: {fileID: 1791302954}
   deployButtonLabelText: {fileID: 605857908}
   backToLobbyButton: {fileID: 600277245}
   headerCharacterStatusText: {fileID: 785534918}
-  energyStatusText: {fileID: 83153577}
+  energyStatusText: {fileID: 0}
   selectedStageTitleText: {fileID: 900358015}
   selectedStageDetailText: {fileID: 954356609}
   stageNodes:
-  - nodeCode: 01
-    stageTitle: 'STAGE 01 : EMPTY CROSSROADS'
-    stageDescription: "\u0E2A\u0E35\u0E48\u0E41\u0E22\u0E01\u0E44\u0E1F\u0E41\u0E14\u0E07\u0E17\u0E35\u0E48\u0E44\u0E23\u0E49\u0E1C\u0E39\u0E49\u0E04\u0E19
-      \u0E2A\u0E31\u0E0D\u0E0D\u0E32\u0E13\u0E44\u0E1F\u0E01\u0E30\u0E1E\u0E23\u0E34\u0E1A\u0E43\u0E19\u0E04\u0E27\u0E32\u0E21\u0E27\u0E48\u0E32\u0E07\u0E40\u0E1B\u0E25\u0E48\u0E32
-      (\u0E28\u0E31\u0E15\u0E23\u0E39\u0E17\u0E31\u0E48\u0E27\u0E44\u0E1B 5 | \u0E1A\u0E2D\u0E2A
-      1)"
+  - nodeCode: RANK E
+    stageTitle: 'STAGE 01 : ABANDONED CLASSROOM'
+    stageDescription: Trapped in a derelict classroom. Break the static seal to escape
+      outside.
     stageStoryLine: 'STORY [RANK E] : Woke up inside an empty classroom. Dark static
       seals every window.'
     sceneToLoad: The Action
+    stageData: {fileID: 0}
+    isComingSoon: 0
     normalEnemyCount: 5
     eliteBossCount: 1
-    energyCost: 1
-    nodeButton: {fileID: 0}
-    nodeBackground: {fileID: 0}
-  - nodeCode: 02
-    stageTitle: 'STAGE 02 : SUBWAY PLATFORM'
-    stageDescription: "\u0E0A\u0E32\u0E19\u0E0A\u0E32\u0E25\u0E32\u0E23\u0E16\u0E44\u0E1F\u0E43\u0E15\u0E49\u0E14\u0E34\u0E19\u0E17\u0E35\u0E48\u0E2B\u0E22\u0E38\u0E14\u0E40\u0E14\u0E34\u0E19\u0E23\u0E16
-      \u0E21\u0E35\u0E40\u0E2A\u0E35\u0E22\u0E07\u0E1D\u0E35\u0E40\u0E17\u0E49\u0E32\u0E2A\u0E30\u0E17\u0E49\u0E2D\u0E19\u0E08\u0E32\u0E01\u0E04\u0E27\u0E32\u0E21\u0E21\u0E37\u0E14
-      (\u0E28\u0E31\u0E15\u0E23\u0E39\u0E17\u0E31\u0E48\u0E27\u0E44\u0E1B 7 | \u0E1A\u0E2D\u0E2A
-      1)"
-    stageStoryLine: 'STORY [RANK E] : Woke up inside an empty classroom. Dark static
-      seals every window.'
-    sceneToLoad: The Action
+    nodeButton: {fileID: 1076487259}
+    nodeBackground: {fileID: 1076487260}
+    nodeLabelText: {fileID: 2070721497}
+  - nodeCode: RANK D
+    stageTitle: 'STAGE 02 : SHIBUYA CROSSROADS'
+    stageDescription: Empty city intersection under a crimson sky. Defeat the stalking
+      entities patrolling the crossing.
+    stageStoryLine: 'STORY [RANK D] : Beyond the school gate, Shibuya stands frozen
+      beneath a blood-red sky.'
+    sceneToLoad: Shibuya
+    stageData: {fileID: 0}
+    isComingSoon: 0
     normalEnemyCount: 7
     eliteBossCount: 1
-    energyCost: 1
-    nodeButton: {fileID: 0}
-    nodeBackground: {fileID: 0}
-  - nodeCode: 03
-    stageTitle: 'STAGE 03 : FACELESS MALL'
-    stageDescription: "\u0E42\u0E16\u0E07\u0E2B\u0E49\u0E32\u0E07\u0E2A\u0E23\u0E23\u0E1E\u0E2A\u0E34\u0E19\u0E04\u0E49\u0E32\u0E17\u0E35\u0E48\u0E40\u0E15\u0E47\u0E21\u0E44\u0E1B\u0E14\u0E49\u0E27\u0E22\u0E2B\u0E38\u0E48\u0E19\u0E25\u0E2D\u0E07\u0E40\u0E2A\u0E37\u0E49\u0E2D\u0E44\u0E23\u0E49\u0E2B\u0E19\u0E49\u0E32
-      (\u0E28\u0E31\u0E15\u0E23\u0E39\u0E17\u0E31\u0E48\u0E27\u0E44\u0E1B 9 | \u0E1A\u0E2D\u0E2A
-      1)"
-    stageStoryLine: 'STORY [RANK E] : Woke up inside an empty classroom. Dark static
-      seals every window.'
+    nodeButton: {fileID: 2014644221}
+    nodeBackground: {fileID: 2014644222}
+    nodeLabelText: {fileID: 1009841119}
+  - nodeCode: RANK C
+    stageTitle: 'STAGE 03 : SHATTERED SUBWAY LINE'
+    stageDescription: Underground tracks echoing with the whispers of fallen Magical
+      Girls.
+    stageStoryLine: 'STORY [RANK C] : Deep in the subway tunnels, the entities whisper
+      fragments of our forgotten names.'
     sceneToLoad: The Action
+    stageData: {fileID: 0}
+    isComingSoon: 1
     normalEnemyCount: 9
     eliteBossCount: 1
-    energyCost: 1
-    nodeButton: {fileID: 0}
-    nodeBackground: {fileID: 0}
-  - nodeCode: 04
-    stageTitle: 'STAGE 04 : SILENT CORRIDOR'
-    stageDescription: "\u0E17\u0E32\u0E07\u0E40\u0E14\u0E34\u0E19\u0E22\u0E32\u0E27\u0E17\u0E35\u0E48\u0E44\u0E1F\u0E19\u0E35\u0E2D\u0E2D\u0E19\u0E15\u0E34\u0E14\u0E46
-      \u0E14\u0E31\u0E1A\u0E46 \u0E28\u0E31\u0E15\u0E23\u0E39\u0E1A\u0E38\u0E01\u0E15\u0E48\u0E2D\u0E40\u0E19\u0E37\u0E48\u0E2D\u0E07\u0E23\u0E27\u0E14\u0E40\u0E23\u0E47\u0E27\u0E02\u0E36\u0E49\u0E19
-      (\u0E28\u0E31\u0E15\u0E23\u0E39\u0E17\u0E31\u0E48\u0E27\u0E44\u0E1B 12 | \u0E1A\u0E2D\u0E2A
-      1)"
-    stageStoryLine: 'STORY [RANK E] : Woke up inside an empty classroom. Dark static
-      seals every window.'
+    nodeButton: {fileID: 2139659991}
+    nodeBackground: {fileID: 2139659992}
+    nodeLabelText: {fileID: 170998129}
+  - nodeCode: RANK B
+    stageTitle: 'STAGE 04 : FACELESS PLAZA'
+    stageDescription: Collapsed commercial center swarming with aggressive entities.
+    stageStoryLine: 'STORY [RANK B] : My Soul Gem burns darker with every battle.
+      The loop is beginning to fracture.'
     sceneToLoad: The Action
-    normalEnemyCount: 12
+    stageData: {fileID: 0}
+    isComingSoon: 1
+    normalEnemyCount: 11
     eliteBossCount: 1
-    energyCost: 1
-    nodeButton: {fileID: 0}
-    nodeBackground: {fileID: 0}
-  - nodeCode: 05
-    stageTitle: 'STAGE 05 : ROOFTOP ABYSS [BOSS]'
-    stageDescription: "\u0E14\u0E32\u0E14\u0E1F\u0E49\u0E32\u0E15\u0E36\u0E01\u0E2A\u0E39\u0E07\u0E40\u0E2A\u0E35\u0E22\u0E14\u0E1F\u0E49\u0E32\u0E08\u0E38\u0E14\u0E2A\u0E34\u0E49\u0E19\u0E2A\u0E38\u0E14\u0E02\u0E2D\u0E07\u0E21\u0E34\u0E15\u0E34
-      \u0E1B\u0E30\u0E17\u0E30\u0E23\u0E48\u0E32\u0E07\u0E15\u0E49\u0E19\u0E02\u0E2D\u0E07
-      The Entities"
-    stageStoryLine: 'STORY [RANK E] : Woke up inside an empty classroom. Dark static
-      seals every window.'
+    nodeButton: {fileID: 1148191284}
+    nodeBackground: {fileID: 1148191285}
+    nodeLabelText: {fileID: 1194367330}
+  - nodeCode: RANK A
+    stageTitle: 'STAGE 05 : CRIMSON SANCTUM'
+    stageDescription: Deep dimensional corridor guarded by Twin Elite Entities.
+    stageStoryLine: 'STORY [RANK A] : At the end of the crimson corridor, the source
+      of the anomaly pulses ahead.'
     sceneToLoad: The Action
-    normalEnemyCount: 10
+    stageData: {fileID: 0}
+    isComingSoon: 1
+    normalEnemyCount: 12
     eliteBossCount: 2
-    energyCost: 1
-    nodeButton: {fileID: 0}
-    nodeBackground: {fileID: 0}
+    nodeButton: {fileID: 857266840}
+    nodeBackground: {fileID: 857266841}
+    nodeLabelText: {fileID: 741102721}
   openSettingsButton: {fileID: 1933538453}
   settingsPanel: {fileID: 60964904}
   volumeSlider: {fileID: 1729777122}
@@ -5470,7 +5088,7 @@ Transform:
   m_GameObject: {fileID: 1974292700}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 3092.7048, y: -0.00002, z: 11244.482}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -6071,4 +5689,3 @@ SceneRoots:
   - {fileID: 4219000}
   - {fileID: 1930488223}
   - {fileID: 1974292702}
-  - {fileID: 23042387}

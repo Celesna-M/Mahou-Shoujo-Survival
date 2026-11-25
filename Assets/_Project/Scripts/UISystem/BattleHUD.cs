@@ -757,7 +757,7 @@ public class BattleHUD : MonoBehaviour
             string coreLine = string.Format(GameTextMasterConfig.Victory_ShatteredCoreLineFormat, playerHealth.StageShatteredCoreEarned, prog.ShatteredCore);
 
             bool isEndgameClear = (prog != null && prog.ActiveStageData != null && prog.ActiveStageData.isFinalBossStage)
-                || (prog != null && prog.SelectedStageIndex >= 2);
+                || (prog != null && prog.SelectedStageIndex >= Mathf.Max(0, prog.ActiveStageCount - 1));
             string endgameLine = isEndgameClear
                 ? "\n\n<size=24><color=#FFD700><b>=== GAME CLEAR : ENDGAME UNLOCKED ===</b></color></size>\n<size=17><color=#E8D8FF>Thank you for playing Stella Clash! Stage Replay is now unlocked.</color></size>"
                 : "";
@@ -772,8 +772,8 @@ public class BattleHUD : MonoBehaviour
         EnemyController.GlobalFreezeAI = false;
         if (Application.CanStreamedLevelBeLoaded("StageMap"))
             SceneManager.LoadScene("StageMap");
-        else
-            SceneManager.LoadScene("The lobby");
+        else if (Application.CanStreamedLevelBeLoaded("The Lobby"))
+            SceneManager.LoadScene("The Lobby");
     }
 
     public void ReturnToLobby()
@@ -781,7 +781,8 @@ public class BattleHUD : MonoBehaviour
         SaveCurrency();
         Time.timeScale = 1.0f;
         EnemyController.GlobalFreezeAI = false;
-        SceneManager.LoadScene("The lobby");
+        if (Application.CanStreamedLevelBeLoaded("The Lobby"))
+            SceneManager.LoadScene("The Lobby");
     }
 
     public void ReturnToMainMenu()
@@ -791,8 +792,8 @@ public class BattleHUD : MonoBehaviour
         EnemyController.GlobalFreezeAI = false;
         if (Application.CanStreamedLevelBeLoaded("MainMenu"))
             SceneManager.LoadScene("MainMenu");
-        else
-            SceneManager.LoadScene("The lobby");
+        else if (Application.CanStreamedLevelBeLoaded("The Lobby"))
+            SceneManager.LoadScene("The Lobby");
     }
 
     private void SaveCurrency()

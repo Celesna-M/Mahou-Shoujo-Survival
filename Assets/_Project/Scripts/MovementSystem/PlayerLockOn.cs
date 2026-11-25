@@ -42,7 +42,9 @@ public class PlayerLockOn : MonoBehaviour
     [SerializeField] private CinemachineTargetGroup targetGroup;
 
     private Transform currentTarget;
+    private IDamageable currentTargetDamageable;
     private PlayerMovement playerMovement;
+    private PlayerHealth playerHealth;
     private Camera mainCamera;
 
     private readonly List<Transform> detectedTargets = new List<Transform>();
@@ -57,9 +59,16 @@ public class PlayerLockOn : MonoBehaviour
     private void Awake()
     {
         playerMovement = GetComponent<PlayerMovement>();
+        playerHealth = GetComponent<PlayerHealth>();
         mainCamera = (PersistentPlayerCameraRig.Instance != null && PersistentPlayerCameraRig.Instance.MainCamera != null)
             ? PersistentPlayerCameraRig.Instance.MainCamera
             : Camera.main;
+
+        if (enemyLayers.value == 0)
+        {
+            int enemyLayer = LayerMask.NameToLayer("Enemy");
+            enemyLayers = (enemyLayer != -1) ? (1 << enemyLayer) : ~LayerMask.GetMask("Player", "Ignore Raycast", "UI");
+        }
 
         if (lockOnUIMarker != null)
         {
@@ -115,11 +124,21 @@ public class PlayerLockOn : MonoBehaviour
 
     private void Update()
     {
+        if (Time.timeScale <= 0.01f) return;
+        if (BattleHUD.Instance != null && BattleHUD.Instance.IsSettingsOpen) return;
+        if (VNManager.Instance != null && VNManager.Instance.IsPlayingVN) return;
+
+        if (playerHealth != null && playerHealth.IsDead)
+        {
+            if (IsLockedOn) UnlockTarget();
+            return;
+        }
+
         if (switchTimer > 0f)
             switchTimer -= Time.deltaTime;
 
-        // ปุ่ม Fallback: [E] สำหรับทดสอบ
-        if (Keyboard.current != null && Keyboard.current.eKey.wasPressedThisFrame)
+        // Lock-On keyboard fallback: [Q] (Tab & Middle Click handled via InputActions; [E] is reserved exclusively for Active Skill).
+        if (Keyboard.current != null && Keyboard.current.qKey.wasPressedThisFrame)
         {
             ToggleLockOn();
         }
@@ -132,22 +151,20 @@ public class PlayerLockOn : MonoBehaviour
                 return;
             }
 
-            // อัปเดตตำแหน่งมาร์กเกอร์ UI
             UpdateUIMarkerPosition();
-
-            // ตัวละครหันหน้าหาเป้าหมาย
             RotatePlayerTowardsTarget();
-
-            // ปรับมุมกล้อง
             UpdateCameraFacing();
-
-            // สลับเป้าหมายด้วย Scroll Wheel
             HandleTargetSwitching();
         }
     }
 
     private void OnLockOnInput(InputAction.CallbackContext context)
     {
+        if (Time.timeScale <= 0.01f) return;
+        if (BattleHUD.Instance != null && BattleHUD.Instance.IsSettingsOpen) return;
+        if (VNManager.Instance != null && VNManager.Instance.IsPlayingVN) return;
+        if (playerHealth != null && playerHealth.IsDead) return;
+
         ToggleLockOn();
     }
 
@@ -225,9 +242,15 @@ public class PlayerLockOn : MonoBehaviour
 
         for (int i = 0; i < count; i++)
         {
-            Transform enemy = overlapBuffer[i].transform;
+            Collider col = overlapBuffer[i];
+            if (col == null || col.transform.root == transform.root) continue;
 
-            if (enemy.TryGetComponent<IDamageable>(out var dmg) && dmg.IsDead)
+            IDamageable dmg = col.GetComponentInParent<IDamageable>() ?? col.GetComponent<IDamageable>();
+            if (dmg == null || dmg.IsDead)
+                continue;
+
+            Transform enemy = (dmg is MonoBehaviour mb) ? mb.transform : col.transform.root;
+            if (detectedTargets.Contains(enemy))
                 continue;
 
             float distToPlayer = Vector3.Distance(transform.position, enemy.position);
@@ -262,10 +285,7 @@ public class PlayerLockOn : MonoBehaviour
 
             if (!Physics.Raycast(rayOrigin, toTarget.normalized, toTarget.magnitude, obstacleLayers))
             {
-                if (!detectedTargets.Contains(enemy))
-                {
-                    detectedTargets.Add(enemy);
-                }
+                detectedTargets.Add(enemy);
             }
         }
     }
@@ -273,6 +293,9 @@ public class PlayerLockOn : MonoBehaviour
     private void LockOnto(Transform target)
     {
         currentTarget = target;
+        currentTargetDamageable = target != null
+            ? (target.GetComponentInParent<IDamageable>() ?? target.GetComponent<IDamageable>())
+            : null;
 
         if (lockOnUIMarker != null)
         {
@@ -291,13 +314,12 @@ public class PlayerLockOn : MonoBehaviour
         {
             lockOnCamera.gameObject.SetActive(true);
         }
-
-        Debug.Log($"<color=cyan>[Lock-On] Locked: {currentTarget.name}</color>");
     }
 
     public void UnlockTarget()
     {
         currentTarget = null;
+        currentTargetDamageable = null;
 
         if (lockOnUIMarker != null)
         {
@@ -313,15 +335,13 @@ public class PlayerLockOn : MonoBehaviour
         {
             lockOnCamera.gameObject.SetActive(false);
         }
-
-        Debug.Log("<color=yellow>[Lock-On] Unlocked</color>");
     }
 
     private bool ShouldUnlockTarget()
     {
         if (currentTarget == null || !currentTarget.gameObject.activeInHierarchy) return true;
 
-        if (currentTarget.TryGetComponent<IDamageable>(out var dmg) && dmg.IsDead) return true;
+        if (currentTargetDamageable != null && currentTargetDamageable.IsDead) return true;
 
         float distance = Vector3.Distance(transform.position, currentTarget.position);
         if (distance > lockOnRadius * 1.35f) return true;

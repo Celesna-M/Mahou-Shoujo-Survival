@@ -5310,7 +5310,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CombatDebugTester
   persistAcrossAllScenes: 1
-  enforceMasterConfig: 1
+  enforceMasterConfig: 0
   useSingleGlobalPlayerBaseStats: 0
   enableInGameTestMenu: 0
   showOnScreenMenu: 0
@@ -14441,31 +14441,31 @@ PrefabInstance:
       objectReference: {fileID: 1662861436187021370}
     - target: {fileID: 7246024937977813065, guid: 2d3bf1f21b804c341bccc084ff5ed99a, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 7.3999996
+      value: -1.47225
       objectReference: {fileID: 0}
     - target: {fileID: 7246024937977813065, guid: 2d3bf1f21b804c341bccc084ff5ed99a, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 7.85
+      value: 4.304235
       objectReference: {fileID: 0}
     - target: {fileID: 7246024937977813065, guid: 2d3bf1f21b804c341bccc084ff5ed99a, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 6.67
+      value: -3.9502316
       objectReference: {fileID: 0}
     - target: {fileID: 7246024937977813065, guid: 2d3bf1f21b804c341bccc084ff5ed99a, type: 3}
       propertyPath: m_LocalRotation.w
-      value: 0.7050331
+      value: 0.9484621
       objectReference: {fileID: 0}
     - target: {fileID: 7246024937977813065, guid: 2d3bf1f21b804c341bccc084ff5ed99a, type: 3}
       propertyPath: m_LocalRotation.x
-      value: 0.20991154
+      value: 0.3168906
       objectReference: {fileID: 0}
     - target: {fileID: 7246024937977813065, guid: 2d3bf1f21b804c341bccc084ff5ed99a, type: 3}
       propertyPath: m_LocalRotation.y
-      value: -0.64923143
+      value: 0.000000023404406
       objectReference: {fileID: 0}
     - target: {fileID: 7246024937977813065, guid: 2d3bf1f21b804c341bccc084ff5ed99a, type: 3}
       propertyPath: m_LocalRotation.z
-      value: 0.19329756
+      value: -0.0000000078196445
       objectReference: {fileID: 0}
     - target: {fileID: 8169018605315059888, guid: 2d3bf1f21b804c341bccc084ff5ed99a, type: 3}
       propertyPath: m_Name
@@ -17182,7 +17182,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &4252802195509838966
 Transform:
   m_ObjectHideFlags: 0
@@ -17528,10 +17528,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerCombat
   forceRangedCasterMode: 0
-  damage: 10
+  damage: 24
   heavyFinisherDamageMultiplier: 1.4
-  attackCooldown: 0.35
-  combatExitDelay: 30
+  attackCooldown: 0.25
+  combatExitDelay: 4
   enemyLayers:
     serializedVersion: 2
     m_Bits: 256
@@ -17544,12 +17544,13 @@ MonoBehaviour:
   meleeStrikerLungeDistance: 0.55
   heavyBreakerAnimSpeed: 0.92
   heavyBreakerRadiusMultiplier: 1.65
-  heavyBreakerStaggerMultiplier: 2.2
+  heavyBreakerStaggerMultiplier: 1.6
   rangedFirePoint: {fileID: 0}
   magicProjectilePrefab: {fileID: 0}
-  rangedCasterAnimSpeed: 1.1
+  rangedCasterAnimSpeed: 1.12
   rangedProjectileSpeed: 30
   rangedFinisherProjectileCount: 3
+  rangedFinisherTotalDamageMultiplier: 1.65
   rangedSpreadAngle: 16
   rangedShotCooldown: 0.16
   useWhiteBlueLightningVFX: 0
@@ -17557,18 +17558,23 @@ MonoBehaviour:
   rangedImpactVFXPrefab: {fileID: 0}
   rangedSplashVFXPrefab: {fileID: 0}
   enableActiveSkill: 1
-  activeSkillBaseCooldown: 5
-  activeSkillDamageMultiplier: 1.85
-  activeSkillDuration: 0.55
+  activeSkillBaseCooldown: 5.5
+  activeSkillDamageMultiplier: 2.4
+  activeSkillImpactDelay: 0.18
+  activeSkillDuration: 0.9
   meleeSkillAoERadius: 4.6
-  rangedSkillBarrageCount: 5
+  meleeSkillStaggerMultiplier: 1.8
+  rangedSkillBeamDuration: 1
+  rangedSkillBeamTickInterval: 0.2
+  rangedSkillBeamRange: 18
+  rangedSkillBeamWidth: 0.85
   activeSkillVFXPrefab: {fileID: 0}
   comboPatterns: []
   activeSkillPattern: {fileID: 0}
   allowLeftClickAttack: 1
   allowRightClickSkill: 0
   dragThreshold: 14
-  autoLockCursor: 1
+  autoLockCursor: 0
   hitStopDuration: 0.05
   hitStopTimeScale: 0.1
   impulseSource: {fileID: 7272515037571875050}

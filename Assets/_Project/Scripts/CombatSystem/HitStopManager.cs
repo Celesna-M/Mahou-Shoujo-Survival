@@ -2,8 +2,8 @@ using System.Collections;
 using UnityEngine;
 
 /// <summary>
-/// จัดการระบบ Hit-stop (หน่วงเวลาสั้นๆ เมื่อโจมตีโดนศัตรู) ตาม Phase 2
-/// รองรับการเรียกใช้งานอัตโนมัติแม้ลืมวาง GameObject ในฉาก
+/// Manages brief hit-stop slow-motion on impact while staying 100% pause-safe
+/// (never unpauses the game if the Pause/Settings menu is opened during hit-stop).
 /// </summary>
 public class HitStopManager : MonoBehaviour
 {
@@ -26,6 +26,7 @@ public class HitStopManager : MonoBehaviour
     }
 
     private Coroutine hitStopCoroutine;
+    private float defaultFixedDeltaTime = 0.02f;
 
     private void Awake()
     {
@@ -35,6 +36,7 @@ public class HitStopManager : MonoBehaviour
             return;
         }
         instance = this;
+        defaultFixedDeltaTime = Time.fixedDeltaTime > 0.001f ? Time.fixedDeltaTime : 0.02f;
     }
 
     public static void Trigger(float duration = 0.05f, float timeScale = 0.1f)
@@ -47,24 +49,32 @@ public class HitStopManager : MonoBehaviour
 
     public void TriggerHitStop(float duration = 0.05f, float timeScale = 0.1f)
     {
-        // ป้องกันการรบกวนฉากจบหรือตอนผู้เล่นตายที่ปรับ Time.timeScale ค้างไว้
+        if (duration <= 0f) return;
         if (Time.timeScale <= 0.01f) return;
+        if (BattleHUD.Instance != null && BattleHUD.Instance.IsSettingsOpen) return;
 
         if (hitStopCoroutine != null)
             StopCoroutine(hitStopCoroutine);
 
-        hitStopCoroutine = StartCoroutine(DoHitStop(duration, timeScale));
+        hitStopCoroutine = StartCoroutine(DoHitStop(duration, Mathf.Clamp(timeScale, 0.02f, 1.0f)));
     }
 
-    private IEnumerator DoHitStop(float duration, float timeScale)
+    private IEnumerator DoHitStop(float duration, float hitTimeScale)
     {
-        Time.timeScale = timeScale;
-        Time.fixedDeltaTime = 0.02f * timeScale;
+        Time.timeScale = hitTimeScale;
+        Time.fixedDeltaTime = defaultFixedDeltaTime * hitTimeScale;
 
         yield return new WaitForSecondsRealtime(duration);
 
-        Time.timeScale = 1.0f;
-        Time.fixedDeltaTime = 0.02f;
+        // Only restore timescale if Pause/Settings or Death did not freeze the game during hit-stop.
+        bool isExternallyPaused = (BattleHUD.Instance != null && BattleHUD.Instance.IsSettingsOpen)
+                               || Time.timeScale <= 0.005f;
+        if (!isExternallyPaused)
+        {
+            Time.timeScale = 1.0f;
+            Time.fixedDeltaTime = defaultFixedDeltaTime;
+        }
+
         hitStopCoroutine = null;
     }
 
@@ -72,25 +82,12 @@ public class HitStopManager : MonoBehaviour
     {
         if (instance == this)
         {
-            Time.timeScale = 1.0f;
-            Time.fixedDeltaTime = 0.02f;
+            if (!(BattleHUD.Instance != null && BattleHUD.Instance.IsSettingsOpen))
+            {
+                Time.timeScale = 1.0f;
+                Time.fixedDeltaTime = defaultFixedDeltaTime;
+            }
             instance = null;
         }
     }
 }
-
-/*
-===============================================================================
-[คำอธิบายโค้ดและฟังก์ชันทั้งหมดในไฟล์ HitStopManager.cs]
-
-
-1. Awake() / OnDestroy()
-   - จัดการ Singleton Instance ของ HitStopManager และคืนค่า Time.timeScale = 1.0f เสมอเมื่อถูกทำลาย
-
-2. Trigger(float duration, float hitTimeScale) / TriggerHitStop(float duration, float hitTimeScale)
-   - สั่งชะลอหรือหยุดเวลาชั่วขณะ (Hit-stop) เมื่อการโจมตีปะทะเป้าหมาย เพื่อเพิ่มน้ำหนักและความสะใจในการต่อสู้
-
-3. HitStopRoutine(float duration, float hitTimeScale)
-   - Coroutine นับเวลาจริงแบบไม่ขึ้นกับ TimeScale (WaitForSecondsRealtime) แล้วคืนค่าความเร็วเวลาของเกมกลับเป็น 1.0f เมื่อครบกำหนด
-===============================================================================
-*/

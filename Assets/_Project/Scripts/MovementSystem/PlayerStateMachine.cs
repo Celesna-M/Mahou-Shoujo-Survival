@@ -49,6 +49,7 @@ public class PlayerStateMachine : MonoBehaviour
     private PlayerMovement playerMovement;
     private PlayerCombat playerCombat;
     private PlayerHealth playerHealth;
+    private PlayerLockOn playerLockOn;
     private Camera mainCam;
 
     private float hitStaggerTimer = 0f;
@@ -65,11 +66,8 @@ public class PlayerStateMachine : MonoBehaviour
     public PlayerMovement Movement => playerMovement;
     public PlayerCombat Combat => playerCombat;
     public PlayerHealth Health => playerHealth;
-    public Camera MainCamera => mainCam != null
-        ? mainCam
-        : (mainCam = (PersistentPlayerCameraRig.Instance != null && PersistentPlayerCameraRig.Instance.MainCamera != null)
-            ? PersistentPlayerCameraRig.Instance.MainCamera
-            : Camera.main);
+    public PlayerLockOn LockOn => playerLockOn;
+    public Camera MainCamera => mainCam;
 
     /// <summary>
     /// Updates the cached MainCamera reference when the persistent camera rig binds to a newly spawned player.
@@ -86,6 +84,7 @@ public class PlayerStateMachine : MonoBehaviour
         playerMovement = GetComponent<PlayerMovement>();
         playerCombat = GetComponent<PlayerCombat>();
         playerHealth = GetComponent<PlayerHealth>();
+        playerLockOn = GetComponent<PlayerLockOn>();
         mainCam = (PersistentPlayerCameraRig.Instance != null && PersistentPlayerCameraRig.Instance.MainCamera != null)
             ? PersistentPlayerCameraRig.Instance.MainCamera
             : Camera.main;
@@ -97,6 +96,8 @@ public class PlayerStateMachine : MonoBehaviour
 
     private void Update()
     {
+        if (Time.timeScale <= 0.01f) return;
+        if (BattleHUD.Instance != null && BattleHUD.Instance.IsSettingsOpen) return;
         if (VNManager.Instance != null && VNManager.Instance.IsPlayingVN) return;
         currentState?.OnTick(this, Time.deltaTime);
     }
@@ -125,10 +126,9 @@ public class PlayerStateMachine : MonoBehaviour
                 return currentStateType == PlayerStateType.Locomotion || currentStateType == PlayerStateType.Attack;
 
             case PlayerStateType.Dash:
-                // พุ่งหลบตัดจังหวะจาก Locomotion, Attack หรือ Skill ได้ทันที (Animation Cancel!) แต่ห้ามตัดตอนติด Hit/Dead
+                // Dodge cancels Locomotion or Basic Attack ONLY; Active Skill commits with Super Armor/Invulnerability.
                 return currentStateType == PlayerStateType.Locomotion
-                    || currentStateType == PlayerStateType.Attack
-                    || currentStateType == PlayerStateType.Skill;
+                    || currentStateType == PlayerStateType.Attack;
 
             case PlayerStateType.HitOrDead:
                 // พุ่งหลบ (Dash I-Frame) และ Skill (Super Armor) จะไม่ถูกตัดเข้า Hit Stagger
@@ -236,7 +236,9 @@ public class PlayerStateMachine : MonoBehaviour
 
         public void OnTick(PlayerStateMachine fsm, float deltaTime)
         {
-            // GDD Section 3.3: ล็อกการเดินชั่วขณะ แต่หมุนตัวตามทิศเมาส์/กล้องได้เล็กน้อยระหว่างออกท่าคอมโบ
+            // Yield rotation to PlayerLockOn while locked onto a target so camera-forward never fights lock-on facing.
+            if (fsm.LockOn != null && fsm.LockOn.IsLockedOn) return;
+
             if (fsm.MainCamera != null)
             {
                 Vector3 camForward = fsm.MainCamera.transform.forward;

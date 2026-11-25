@@ -15,7 +15,9 @@ public class PlayerCombat : MonoBehaviour
 {
     [Header("Base")]
     [SerializeField] private bool forceRangedCasterMode = false;
-    [SerializeField] private float damage = 25f;
+    [Tooltip("Base ATK before Hub Raw Power upgrades (auto-populated from CharacterData_SO).")]
+    [SerializeField] private float damage = 24f;
+    [Tooltip("Melee 3rd-hit finisher damage multiplier (auto-populated from CharacterData_SO).")]
     [SerializeField] private float heavyFinisherDamageMultiplier = 1.4f;
     [SerializeField] private float attackCooldown = 0.25f;
     [SerializeField] private float combatExitDelay = 4.0f;
@@ -29,14 +31,18 @@ public class PlayerCombat : MonoBehaviour
     [SerializeField] private float meleeStrikerLungeDistance = 0.55f;
     [SerializeField] private float heavyBreakerAnimSpeed = 0.92f;
     [SerializeField] private float heavyBreakerRadiusMultiplier = 1.65f;
-    [SerializeField] private float heavyBreakerStaggerMultiplier = 2.2f;
+    [Tooltip("Stagger damage multiplier for HeavyBreaker / character stagger bonus (auto-populated from CharacterData_SO).")]
+    [SerializeField] private float heavyBreakerStaggerMultiplier = 1.6f;
 
     [Header("Ranged")]
     [SerializeField] private Transform rangedFirePoint;
     [SerializeField] private MagicProjectile magicProjectilePrefab;
     [SerializeField] private float rangedCasterAnimSpeed = 1.12f;
     [SerializeField] private float rangedProjectileSpeed = 30f;
+    [Tooltip("Number of projectiles fired on Ranged 3rd-hit finisher.")]
     [SerializeField] private int rangedFinisherProjectileCount = 3;
+    [Tooltip("TOTAL damage multiplier of Ranged 3rd-hit finisher (split evenly across finisher projectiles).")]
+    [SerializeField] private float rangedFinisherTotalDamageMultiplier = 1.65f;
     [SerializeField] private float rangedSpreadAngle = 16f;
     [SerializeField] private float rangedShotCooldown = 0.16f;
     [SerializeField] private bool useWhiteBlueLightningVFX = false;
@@ -46,11 +52,25 @@ public class PlayerCombat : MonoBehaviour
 
     [Header("Skill")]
     [SerializeField] private bool enableActiveSkill = true;
-    [SerializeField] private float activeSkillBaseCooldown = 5.0f;
-    [SerializeField] private float activeSkillDamageMultiplier = 1.9f;
-    [SerializeField] private float activeSkillDuration = 0.55f;
+    [Tooltip("Active Skill cooldown in seconds (auto-populated from CharacterData_SO).")]
+    [SerializeField] private float activeSkillBaseCooldown = 5.5f;
+    [Tooltip("TOTAL Active Skill burst damage multiplier (e.g. 2.2x Melee AoE / 2.4x Ranged Multi-Tick Beam).")]
+    [SerializeField] private float activeSkillDamageMultiplier = 2.4f;
+    [Tooltip("Fallback delay before skill impact fires if no Animation Event 'skill'/'OnSkillImpact' triggers earlier.")]
+    [SerializeField] private float activeSkillImpactDelay = 0.18f;
+    [Tooltip("Active Skill animation lockout duration in seconds.")]
+    [SerializeField] private float activeSkillDuration = 0.9f;
     [SerializeField] private float meleeSkillAoERadius = 4.6f;
-    [SerializeField] private int rangedSkillBarrageCount = 5;
+    [Tooltip("Stagger multiplier for Melee Active Skill AoE.")]
+    [SerializeField] private float meleeSkillStaggerMultiplier = 1.8f;
+    [Tooltip("Ranged Beam Active Skill active duration (seconds) when no CombatSkillPattern_SO is assigned.")]
+    [SerializeField] private float rangedSkillBeamDuration = 1.0f;
+    [Tooltip("Ranged Beam Active Skill tick interval (seconds). Total burst stays equal to activeSkillDamageMultiplier.")]
+    [SerializeField] private float rangedSkillBeamTickInterval = 0.2f;
+    [Tooltip("Ranged Beam Active Skill reach (meters).")]
+    [SerializeField] private float rangedSkillBeamRange = 18f;
+    [Tooltip("Ranged Beam Active Skill width (meters).")]
+    [SerializeField] private float rangedSkillBeamWidth = 0.85f;
     [SerializeField] private GameObject activeSkillVFXPrefab;
 
     [Header("Patterns")]
@@ -78,6 +98,7 @@ public class PlayerCombat : MonoBehaviour
 
     // Cached Runtime Components (Zero GetComponent in Hot Paths)
     private PlayerMovement playerMovement;
+    private PlayerHealth playerHealth;
     private PlayerStateMachine stateMachine;
     private PlayerLockOn cachedLockOn;
     private AnimVFXController animVfxController;
@@ -105,6 +126,52 @@ public class PlayerCombat : MonoBehaviour
     private readonly HashSet<IDamageable> damagedTargets = new HashSet<IDamageable>();
     private readonly Collider[] hitBuffer = new Collider[24];
     private Coroutine activeSkillCoroutine;
+    private CombatSkillPattern_SO runtimeRangedBeamPattern;
+
+    /// <summary>
+    /// Applies all Inspector/ScriptableObject stats from CharacterData_SO cleanly with zero hardcoded overrides.
+    /// </summary>
+    public void ApplyCharacterData(CharacterData_SO data)
+    {
+        if (data == null) return;
+
+        damage = Mathf.Max(1f, data.baseATK);
+        attackCooldown = Mathf.Max(0.05f, data.attackCooldown);
+        heavyFinisherDamageMultiplier = Mathf.Max(0.5f, data.heavyFinisherDamageMultiplier);
+        rangedFinisherProjectileCount = Mathf.Max(1, data.rangedFinisherProjectileCount);
+        rangedFinisherTotalDamageMultiplier = Mathf.Max(0.5f, data.rangedFinisherTotalDamageMultiplier);
+        heavyBreakerStaggerMultiplier = Mathf.Max(0.5f, data.staggerBonusMultiplier);
+
+        activeSkillBaseCooldown = Mathf.Max(0.5f, data.skillCooldown);
+        activeSkillDamageMultiplier = Mathf.Max(0.5f, data.skillDamageMultiplier);
+        activeSkillDuration = Mathf.Max(0.2f, data.skillDuration);
+        meleeSkillAoERadius = Mathf.Max(0.5f, data.meleeSkillAoERadius);
+        rangedSkillBeamDuration = Mathf.Max(0.2f, data.rangedBeamDuration);
+        rangedSkillBeamTickInterval = Mathf.Max(0.05f, data.rangedBeamTickInterval);
+        rangedSkillBeamRange = Mathf.Max(2f, data.rangedBeamRange);
+        rangedSkillBeamWidth = Mathf.Max(0.2f, data.rangedBeamWidth);
+
+        useWhiteBlueLightningVFX = data.useWhiteBlueLightningVFX;
+        if (data.comboSkillPatterns != null && data.comboSkillPatterns.Length > 0)
+            comboPatterns = data.comboSkillPatterns;
+        if (data.activeSkillPattern != null)
+            activeSkillPattern = data.activeSkillPattern;
+
+        if (data.customMuzzleVFXPrefab != null) rangedMuzzleCastVFXPrefab = data.customMuzzleVFXPrefab;
+        if (data.customImpactVFXPrefab != null) rangedImpactVFXPrefab = data.customImpactVFXPrefab;
+        if (data.customActiveSkillVFXPrefab != null) activeSkillVFXPrefab = data.customActiveSkillVFXPrefab;
+
+        SyncBaseAnimatorArchetype();
+    }
+
+    private void OnDestroy()
+    {
+        if (runtimeRangedBeamPattern != null)
+        {
+            Destroy(runtimeRangedBeamPattern);
+            runtimeRangedBeamPattern = null;
+        }
+    }
 
     // Public Properties
     public bool InCombat => inCombat;
@@ -137,11 +204,13 @@ public class PlayerCombat : MonoBehaviour
     private void Awake()
     {
         playerMovement = GetComponent<PlayerMovement>() ?? GetComponentInParent<PlayerMovement>() ?? GetComponentInChildren<PlayerMovement>();
+        playerHealth = GetComponent<PlayerHealth>() ?? GetComponentInParent<PlayerHealth>();
         stateMachine = GetComponent<PlayerStateMachine>() ?? gameObject.AddComponent<PlayerStateMachine>();
         cachedLockOn = GetComponent<PlayerLockOn>() ?? GetComponentInParent<PlayerLockOn>();
         animVfxController = GetComponent<AnimVFXController>() ?? gameObject.AddComponent<AnimVFXController>();
         controller = GetComponent<CharacterController>() ?? GetComponentInParent<CharacterController>();
 
+        if (combatAudioSource == null) combatAudioSource = GetComponent<AudioSource>();
         if (impulseSource == null) impulseSource = GetComponent<CinemachineImpulseSource>();
         if (animator == null)
             animator = GetComponentInChildren<Animator>(true) ?? (playerMovement != null ? playerMovement.Animator : null) ?? GetComponentInParent<Animator>();
@@ -232,7 +301,6 @@ public class PlayerCombat : MonoBehaviour
         if (playerMovement != null && playerMovement.InputActions != null)
         {
             playerMovement.InputActions.Player.Attack.performed += OnAttackPerformed;
-            playerMovement.InputActions.Player.Dodge.performed += OnDodgePerformed;
         }
     }
 
@@ -241,15 +309,21 @@ public class PlayerCombat : MonoBehaviour
         if (playerMovement != null && playerMovement.InputActions != null)
         {
             playerMovement.InputActions.Player.Attack.performed -= OnAttackPerformed;
-            playerMovement.InputActions.Player.Dodge.performed -= OnDodgePerformed;
+        }
+
+        if (isAttacking || isUsingSkill)
+        {
+            CancelCombat();
         }
     }
 
     private void Update()
     {
+        if (Time.timeScale <= 0.01f) return;
+        if (BattleHUD.Instance != null && BattleHUD.Instance.IsSettingsOpen) return;
         if (VNManager.Instance != null && VNManager.Instance.IsPlayingVN) return;
+        if (playerHealth != null && playerHealth.IsDead) return;
 
-        SyncBaseAnimatorArchetype();
         HandleCombatStanceTimer();
         CheckDirectCombatInputs();
         UpdateAttackWatchdog();
@@ -335,17 +409,16 @@ public class PlayerCombat : MonoBehaviour
 
     private void OnAttackPerformed(InputAction.CallbackContext context)
     {
+        if (Time.timeScale <= 0.01f) return;
+        if (BattleHUD.Instance != null && BattleHUD.Instance.IsSettingsOpen) return;
+        if (VNManager.Instance != null && VNManager.Instance.IsPlayingVN) return;
+        if (playerHealth != null && playerHealth.IsDead) return;
+
         if (context.control != null && (context.control.device is Mouse || context.control.device is Touchscreen || context.control.device is Pointer))
             return;
         if (context.control != null && (context.control.name == "f" || context.control.name == "e"))
             return;
         PerformBasicAttack();
-    }
-
-    private void OnDodgePerformed(InputAction.CallbackContext context)
-    {
-        animVfxController?.CancelInterruptibleVFX();
-        if (isAttacking || isUsingSkill) CancelCombat();
     }
 
     // =========================================================================
@@ -356,6 +429,7 @@ public class PlayerCombat : MonoBehaviour
 
     public void PerformBasicAttack()
     {
+        if (playerHealth != null && playerHealth.IsDead) return;
         if (isUsingSkill) return;
         if (playerMovement != null && playerMovement.IsDodging) return;
         if (Time.time < lastAttackTime + attackCooldown) return;
@@ -395,20 +469,8 @@ public class PlayerCombat : MonoBehaviour
             animator.speed = (arch == CharacterCombatArchetype.HeavyBreaker) ? heavyBreakerAnimSpeed : meleeStrikerAnimSpeed;
             PlayerAnimID.SafeSetInt(animator, PlayerAnimID.ComboStep, comboStepCounter);
             PlayerAnimID.SafeSetInt(animator, PlayerAnimID.ArchetypeID, (int)arch);
-
-            var state = animator.GetCurrentAnimatorStateInfo(0);
-            bool isAlreadyInCombo = state.IsName("Cross Punch") || state.IsName("Hook Punch") || state.IsName("Surprise Uppercut");
-            if (!isAlreadyInCombo)
-            {
-                comboStepCounter = 1;
-                PlayerAnimID.SafeSetInt(animator, PlayerAnimID.ComboStep, 1);
-                PlayerAnimID.SafeResetTrigger(animator, PlayerAnimID.Attack);
-                PlayerAnimID.SafeSetTrigger(animator, PlayerAnimID.Attack);
-            }
-            else
-            {
-                PlayerAnimID.SafeSetTrigger(animator, PlayerAnimID.Attack);
-            }
+            PlayerAnimID.SafeResetTrigger(animator, PlayerAnimID.Attack);
+            PlayerAnimID.SafeSetTrigger(animator, PlayerAnimID.Attack);
         }
 
         if (arch == CharacterCombatArchetype.MeleeStriker && controller != null && controller.enabled && meleeStrikerLungeDistance > 0.05f)
@@ -509,13 +571,15 @@ public class PlayerCombat : MonoBehaviour
             bool isHeavyFinisher = IsHeavyComboFinisher();
             float baseAtk = GetEffectiveBaseAttack();
             float finalDamage = isHeavyFinisher ? baseAtk * heavyFinisherDamageMultiplier : baseAtk;
-
-            EnemyController.NextAttackStaggerBonusMultiplier = (GetActiveArchetype() == CharacterCombatArchetype.HeavyBreaker)
+            float staggerMult = (GetActiveArchetype() == CharacterCombatArchetype.HeavyBreaker)
                 ? heavyBreakerStaggerMultiplier
                 : 1.0f;
 
             Vector3 hitPoint = VFXAnchorRig.ResolvePosition(other.transform.root, VFXSpawnAnchor.CenterBody);
-            damageable.TakeDamage(finalDamage, hitPoint);
+            if (damageable is EnemyController enemyCtrl)
+                enemyCtrl.TakeDamage(finalDamage, hitPoint, staggerMult);
+            else
+                damageable.TakeDamage(finalDamage, hitPoint);
             Color meleeColor = (GameProgressionManager.Instance != null && GameProgressionManager.Instance.ActiveCharacterData != null)
                 ? GameProgressionManager.Instance.ActiveCharacterData.themeColor
                 : new Color(0.95f, 0.35f, 0.80f, 1f);
@@ -573,8 +637,11 @@ public class PlayerCombat : MonoBehaviour
         Quaternion baseRot = GetAimRotation(spawnPos, lockTarget);
 
         float baseAtk = GetEffectiveBaseAttack();
-        float directDmg = baseAtk * damageMultiplier;
-        float splashDmg = baseAtk * (damageMultiplier * 0.55f);
+        int count = Mathf.Max(1, customCount);
+        // Split total damageMultiplier cleanly across multi-shot volleys so multi-bolt finishers never multiply total DPS unfairly
+        float perShotMult = (count > 1) ? (damageMultiplier / count) : damageMultiplier;
+        float directDmg = baseAtk * perShotMult;
+        float splashDmg = directDmg * 0.5f;
 
         bool useLightning = useWhiteBlueLightningVFX
             || (GameProgressionManager.Instance != null && GameProgressionManager.Instance.ActiveCharacterData != null && GameProgressionManager.Instance.ActiveCharacterData.useWhiteBlueLightningVFX);
@@ -583,7 +650,6 @@ public class PlayerCombat : MonoBehaviour
             ? new Color(0.35f, 0.85f, 1.0f, 1.0f)
             : new Color(0.55f, 0.78f, 1.0f, 1.0f);
 
-        int count = Mathf.Max(1, customCount);
         for (int i = 0; i < count; i++)
         {
             float yawOffset = 0f;
@@ -620,6 +686,7 @@ public class PlayerCombat : MonoBehaviour
 
     public bool TryPerformActiveSkill()
     {
+        if (playerHealth != null && playerHealth.IsDead) return false;
         if (!enableActiveSkill || isUsingSkill) return false;
         if (playerMovement != null && playerMovement.IsDodging) return false;
         if (Time.time < nextSkillReadyTime) return false;
@@ -652,10 +719,18 @@ public class PlayerCombat : MonoBehaviour
 
     private IEnumerator ActiveSkillRoutine()
     {
-        yield return new WaitForSeconds(0.18f);
+        float impactWait = Mathf.Max(0.05f, activeSkillImpactDelay);
+        yield return new WaitForSeconds(impactWait);
         if (!hasTriggeredSkillImpact) ExecuteActiveSkillImpact();
 
-        float remaining = Mathf.Max(0.1f, activeSkillDuration - 0.18f);
+        CombatSkillPattern_SO skillPat = ResolveActiveSkillPattern();
+        float totalLockout = activeSkillDuration;
+        if (skillPat != null && skillPat.ResolveEffectiveCategory() == SkillDeliveryCategory.Beam)
+        {
+            totalLockout = Mathf.Max(activeSkillDuration, skillPat.windupOrDelayDuration + (skillPat.activeDuration * 0.75f));
+        }
+
+        float remaining = Mathf.Max(0.1f, totalLockout - impactWait);
         yield return new WaitForSeconds(remaining);
 
         EndActiveSkillState();
@@ -693,8 +768,8 @@ public class PlayerCombat : MonoBehaviour
 
         if (IsRangedArchetype)
         {
-            lastRangedShotTime = -999f;
-            FireRangedAttack(Mathf.Max(3, rangedSkillBarrageCount), skillMult, 3.8f);
+            // Ranged Active Skill: Multi-Tick Pooled Beam Attack keeping total burst equal to skillMult (~2.4x total)
+            LaunchFallbackRangedBeamSkill(baseAtk, skillMult);
             if (impulseSource != null) impulseSource.GenerateImpulse(heavyComboShakeForce);
         }
         else
@@ -719,14 +794,53 @@ public class PlayerCombat : MonoBehaviour
                 var dmgTarget = col.GetComponentInParent<IDamageable>() ?? col.GetComponent<IDamageable>();
                 if (dmgTarget != null && !dmgTarget.IsDead && damagedTargets.Add(dmgTarget))
                 {
-                    EnemyController.NextAttackStaggerBonusMultiplier = 2.5f;
-                    dmgTarget.TakeDamage(finalSkillDmg, col.ClosestPoint(burstCenter));
+                    float skillStaggerMult = Mathf.Max(1.0f, meleeSkillStaggerMultiplier);
+                    Vector3 hitPt = col.ClosestPoint(burstCenter);
+                    if (dmgTarget is EnemyController enemyCtrl)
+                        enemyCtrl.TakeDamage(finalSkillDmg, hitPt, skillStaggerMult);
+                    else
+                        dmgTarget.TakeDamage(finalSkillDmg, hitPt);
                 }
             }
 
             HitStopManager.Trigger(hitStopDuration * 1.4f, hitStopTimeScale);
             if (impulseSource != null) impulseSource.GenerateImpulse(heavyComboShakeForce * 1.3f);
         }
+    }
+
+    private void LaunchFallbackRangedBeamSkill(float baseAtk, float totalSkillMult)
+    {
+        if (runtimeRangedBeamPattern == null)
+        {
+            runtimeRangedBeamPattern = ScriptableObject.CreateInstance<CombatSkillPattern_SO>();
+            runtimeRangedBeamPattern.name = "Runtime_RangedBeamSkillFallback";
+        }
+
+        bool useLightning = useWhiteBlueLightningVFX
+            || (GameProgressionManager.Instance != null && GameProgressionManager.Instance.ActiveCharacterData != null && GameProgressionManager.Instance.ActiveCharacterData.useWhiteBlueLightningVFX);
+
+        Color themeCol = (GameProgressionManager.Instance != null && GameProgressionManager.Instance.ActiveCharacterData != null)
+            ? GameProgressionManager.Instance.ActiveCharacterData.themeColor
+            : new Color(0.35f, 0.85f, 1.0f, 1.0f);
+
+        runtimeRangedBeamPattern.deliveryCategory = SkillDeliveryCategory.Beam;
+        runtimeRangedBeamPattern.patternPreset = CombatPatternPreset.ContinuousChannelBeam;
+        runtimeRangedBeamPattern.allowedArchetypes = SkillArchetypeMask.RangedCaster;
+        runtimeRangedBeamPattern.windupOrDelayDuration = 0f;
+        runtimeRangedBeamPattern.activeDuration = Mathf.Max(0.2f, rangedSkillBeamDuration);
+        runtimeRangedBeamPattern.damageTickInterval = Mathf.Max(0.05f, rangedSkillBeamTickInterval);
+        runtimeRangedBeamPattern.beamRange = Mathf.Max(2f, rangedSkillBeamRange);
+        runtimeRangedBeamPattern.beamWidth = Mathf.Max(0.2f, rangedSkillBeamWidth);
+        runtimeRangedBeamPattern.directDamageMultiplier = Mathf.Max(0.5f, totalSkillMult);
+        runtimeRangedBeamPattern.splitDamageAcrossDuration = true;
+        runtimeRangedBeamPattern.muzzleCastVFXPrefab = rangedMuzzleCastVFXPrefab;
+        runtimeRangedBeamPattern.mainBodyVFXPrefab = activeSkillVFXPrefab;
+        runtimeRangedBeamPattern.impactVFXPrefab = rangedImpactVFXPrefab;
+        runtimeRangedBeamPattern.useWhiteBlueLightningVFX = useLightning;
+        runtimeRangedBeamPattern.themeColor = themeCol;
+        runtimeRangedBeamPattern.visualScale = 1.0f;
+
+        ExecuteResolvedPattern(runtimeRangedBeamPattern, baseAtk);
     }
 
     private void EndActiveSkillState()
@@ -827,8 +941,10 @@ public class PlayerCombat : MonoBehaviour
     {
         if (IsRangedArchetype)
         {
-            int shots = IsHeavyComboFinisher() ? rangedFinisherProjectileCount : 1;
-            FireRangedAttack(shots, IsHeavyComboFinisher() ? 1.15f : 1.0f, 3.0f);
+            bool isFinisher = IsHeavyComboFinisher();
+            int shots = isFinisher ? rangedFinisherProjectileCount : 1;
+            float totalMult = isFinisher ? rangedFinisherTotalDamageMultiplier : 1.0f;
+            FireRangedAttack(shots, totalMult, 3.0f);
         }
         else
         {
@@ -838,8 +954,10 @@ public class PlayerCombat : MonoBehaviour
 
     public void shoot(int volleyMode = 0)
     {
-        int shots = (volleyMode >= 3 || IsHeavyComboFinisher()) ? rangedFinisherProjectileCount : 1;
-        FireRangedAttack(shots, 1.05f, 3.0f);
+        bool isFinisher = (volleyMode >= 3 || IsHeavyComboFinisher());
+        int shots = isFinisher ? rangedFinisherProjectileCount : 1;
+        float totalMult = isFinisher ? rangedFinisherTotalDamageMultiplier : 1.0f;
+        FireRangedAttack(shots, totalMult, 3.0f);
     }
 
     public void end()
@@ -918,26 +1036,25 @@ public class PlayerCombat : MonoBehaviour
     private void HandleCombatStanceTimer()
     {
         if (!inCombat) return;
-        bool isMoving = (playerMovement != null && playerMovement.IsMoving);
-        if (!isAttacking && !isUsingSkill && isMoving)
-        {
-            ExitCombatState();
-            return;
-        }
         combatTimer -= Time.deltaTime;
-        if (combatTimer <= 0f) ExitCombatState();
+        if (combatTimer <= 0f && !isAttacking && !isUsingSkill)
+            ExitCombatState();
     }
 
     private void UpdateAttackWatchdog()
     {
-        if (!isAttacking && !isUsingSkill && playerMovement != null && !playerMovement.CanMove)
+        if (playerMovement == null) return;
+        if (playerHealth != null && playerHealth.IsDead) return;
+        if (playerMovement.IsDodging) return;
+        if (stateMachine != null && !stateMachine.IsInLocomotion) return;
+
+        if (!isAttacking && !isUsingSkill && !playerMovement.CanMove)
             playerMovement.CanMove = true;
     }
 
     private void PlayCombatSfx(AudioClip clip, float volume = 0.85f)
     {
         if (clip == null) return;
-        if (combatAudioSource == null) combatAudioSource = GetComponent<AudioSource>();
         if (combatAudioSource != null)
             combatAudioSource.PlayOneShot(clip, volume);
         else

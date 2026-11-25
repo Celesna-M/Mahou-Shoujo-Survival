@@ -1,0 +1,65 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6c055efe8e9df48499bc161528766bda, type: 3}
+  m_Name: NewCombatSkillPattern
+  m_EditorClassIdentifier: Assembly-CSharp::CombatSkillPattern_SO
+  patternID: PAT_01
+  displayName: Lighting Beam
+  deliveryCategory: 1
+  patternPreset: 20
+  allowedArchetypes: 4
+  animatorTriggerName: 
+  animatorSpeedMultiplier: 1
+  windupOrDelayDuration: 0.15
+  activeDuration: 1
+  damageTickInterval: 0.2
+  count: 1
+  spreadAngle: 28
+  sequenceInterval: 0.08
+  formationRadius: 2.2
+  crossBeamArms: 4
+  speed: 34
+  acceleration: 0
+  lifeTime: 3
+  homingAngularSpeed: 240
+  waveAmplitude: 1.1
+  waveFrequency: 8
+  beamRange: 18
+  beamWidth: 0.75
+  beamSweepDegrees: 90
+  areaMaxRadius: 6.5
+  ringThickness: 1.1
+  dashDistance: 7.5
+  directDamageMultiplier: 2.4
+  splitDamageAcrossDuration: 1
+  splashDamageMultiplier: 0.55
+  splashRadius: 2.6
+  collisionRadius: 0.32
+  impactBehavior: 0
+  maxPierceOrBounceCount: 3
+  chainSearchRadius: 6.5
+  stickyDetonateDelay: 0.65
+  subPatternOnHit: {fileID: 0}
+  customProjectilePrefab: {fileID: 0}
+  telegraphWarningVFXPrefab: {fileID: 0}
+  muzzleCastVFXPrefab: {fileID: 3000487611303679844, guid: c1e9b4c0960b6b14fa338caee268642a, type: 3}
+  mainBodyVFXPrefab: {fileID: 3708239971918037817, guid: e05e77a08fbc1524dbab0c7c1b72929c, type: 3}
+  impactVFXPrefab: {fileID: 2861291742944651824, guid: a6368ee4e335b094cab22c2f313fb91a, type: 3}
+  splashWaveVFXPrefab: {fileID: 0}
+  useWhiteBlueLightningVFX: 1
+  themeColor: {r: 0.35, g: 0.85, b: 1, a: 1}
+  visualScale: 1
+  trailDetachDelay: 0.45
+  castSfx: {fileID: 0}
+  impactSfx: {fileID: 0}
+  hitStopDuration: 0.04
+  shakeIntensity: 0.3

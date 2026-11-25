@@ -2482,7 +2482,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8f4c19a2d5e647b19c03a4b82e17d901, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MainMenuManager
-  lobbySceneName: The lobby
+  lobbySceneName: The Lobby
   startButton: {fileID: 358612541}
   openSettingsButton: {fileID: 628823711}
   quitButton: {fileID: 1809496163}

@@ -2,7 +2,7 @@ using System.Collections;
 using UnityEngine;
 
 // =========================================================================
-// STATE PATTERN CLASSES
+// STATE PATTERN CLASSES (PRE-ALLOCATED PER ENEMY — ZERO-GC TRANSITIONS)
 // =========================================================================
 
 public abstract class EnemyState
@@ -32,7 +32,7 @@ public class IdleState : EnemyState
     {
         if (enemy.IsPlayerInVision())
         {
-            enemy.TransitionTo(new ChaseState(enemy));
+            enemy.TransitionTo(enemy.ChaseStateInstance);
         }
     }
 }
@@ -55,7 +55,7 @@ public class ChaseState : EnemyState
 
         if (enemy.IsPlayerInAttackRange())
         {
-            enemy.TransitionTo(new AttackState(enemy));
+            enemy.TransitionTo(enemy.AttackStateInstance);
             return;
         }
 
@@ -92,7 +92,7 @@ public class AttackState : EnemyState
 
         if (enemy.GetHorizontalDistanceToPlayer() > enemy.AttackRange * 1.15f)
         {
-            enemy.TransitionTo(new ChaseState(enemy));
+            enemy.TransitionTo(enemy.ChaseStateInstance);
             return;
         }
 
@@ -128,8 +128,10 @@ public class AttackState : EnemyState
         if (enemy.EnableBossThreeAttackPatterns)
         {
             yield return enemy.StartCoroutine(enemy.ExecuteNextBossSpecialPatternRoutine());
+            enemy.HideBossAoEWarningRing();
             enemy.SetRangedAimLineVisible(false);
-        enemy.SetAttackingState(false);
+            enemy.SetAttackingState(false);
+            attackRoutine = null;
             yield break;
         }
 
@@ -153,8 +155,8 @@ public class AttackState : EnemyState
             {
                 if (enemy.Animator != null)
                 {
-                    enemy.Animator.ResetTrigger("Hurt");
-                    enemy.Animator.SetTrigger("Attack");
+                    enemy.Animator.ResetTrigger(EnemyController.AnimHurtHash);
+                    enemy.Animator.SetTrigger(EnemyController.AnimAttackHash);
                 }
                 else
                 {
@@ -164,7 +166,8 @@ public class AttackState : EnemyState
 
             yield return new WaitForSeconds(Mathf.Max(0.75f, enemy.AttackCooldown * 0.80f));
             enemy.SetRangedAimLineVisible(false);
-        enemy.SetAttackingState(false);
+            enemy.SetAttackingState(false);
+            attackRoutine = null;
             yield break;
         }
 
@@ -177,13 +180,14 @@ public class AttackState : EnemyState
 
         if (!enemy.IsDead && !enemy.IsStunned && enemy.Animator != null)
         {
-            enemy.Animator.ResetTrigger("Hurt");
-            enemy.Animator.SetTrigger("Attack");
+            enemy.Animator.ResetTrigger(EnemyController.AnimHurtHash);
+            enemy.Animator.SetTrigger(EnemyController.AnimAttackHash);
         }
 
         yield return new WaitForSeconds(Mathf.Max(0.75f, enemy.AttackCooldown * 0.80f));
         enemy.SetRangedAimLineVisible(false);
         enemy.SetAttackingState(false);
+        attackRoutine = null;
     }
 
     public override void Exit()
@@ -193,6 +197,8 @@ public class AttackState : EnemyState
             enemy.StopCoroutine(attackRoutine);
             attackRoutine = null;
         }
+        enemy.FlashTelegraphColor(false);
+        enemy.HideBossAoEWarningRing();
         enemy.SetRangedAimLineVisible(false);
         enemy.SetAttackingState(false);
     }
@@ -211,13 +217,13 @@ public class ReturnState : EnemyState
     {
         if (enemy.IsPlayerInVision())
         {
-            enemy.TransitionTo(new ChaseState(enemy));
+            enemy.TransitionTo(enemy.ChaseStateInstance);
             return;
         }
 
         if (enemy.HasReachedDestination())
         {
-            enemy.TransitionTo(new IdleState(enemy));
+            enemy.TransitionTo(enemy.IdleStateInstance);
         }
     }
 }
@@ -237,7 +243,7 @@ public class PatrolState : EnemyState
     {
         if (enemy.IsPlayerInVision())
         {
-            enemy.TransitionTo(new ChaseState(enemy));
+            enemy.TransitionTo(enemy.ChaseStateInstance);
             return;
         }
 
@@ -251,26 +257,11 @@ public class PatrolState : EnemyState
     {
         if (enemy.PatrolPoints == null || enemy.PatrolPoints.Length == 0) return;
 
-        enemy.MoveTo(enemy.PatrolPoints[currentPointIndex].position);
+        Transform pt = enemy.PatrolPoints[currentPointIndex];
+        if (pt != null)
+        {
+            enemy.MoveTo(pt.position);
+        }
         currentPointIndex = (currentPointIndex + 1) % enemy.PatrolPoints.Length;
     }
 }
-
-/* ============================================================================
- * คำอธิบายการทำงานของโค้ดและฟังก์ชันทั้งหมดใน EnemyStateMachine.cs (EnemyAISystem)
- * (ส่วนนี้เป็น Comment ล้วน 100% — คอมไพเลอร์และระบบเกมจะไม่นำไปรันเด็ดขาด)
- * ============================================================================
- *
- * 1. EnemyState (Abstract Base Class)
- *    - คลาสแม่ของสถานะ AI มอนสเตอร์ทั้งหมด (Enter, Tick, Exit)
- *
- * 2. IdleState / PatrolState / ReturnState
- *    - จัดการพฤติกรรมมอนสเตอร์ตอนยืนเฝ้า เดินลาดตระเวนตามจุด หรือเดินกลับจุดเกิดเมื่อผู้เล่นออกนอกระยะสายตา
- *
- * 3. ChaseState
- *    - สั่งให้มอนสเตอร์เดินไล่ตามผู้เล่นในแนวราบ และสลับเข้าสู่ AttackState ทันทีเมื่อเข้าสู่ระยะโจมตี
- *
- * 4. AttackState & ComboDurationRoutine()
- *    - หันหน้ามอนสเตอร์เข้าหาผู้เล่น แสดงไฟกะพริบสีส้มทองเตือนล่วงหน้า (Attack Telegraph 0.22 วินาที)
- *      แล้วสั่งเล่นแอนิเมชันโจมตี ("Attack") พร้อมนับคูลดาวน์ก่อนออกหมัดรอบถัดไป
- * ============================================================================ */

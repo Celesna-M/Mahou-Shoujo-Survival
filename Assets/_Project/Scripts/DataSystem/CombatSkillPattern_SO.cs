@@ -112,7 +112,10 @@ public class CombatSkillPattern_SO : ScriptableObject
     public float dashDistance = 7.5f;
 
     [Header("5. Damage, Impact & Sub-Pattern")]
+    [Tooltip("Total damage multiplier (for Beams/Zones when splitDamageAcrossDuration=true, or per-hit multiplier for Projectiles).")]
     public float directDamageMultiplier = 1.0f;
+    [Tooltip("For multi-tick Beams & Zones: if true, directDamageMultiplier is the TOTAL burst over activeDuration (automatically split evenly across ticks).")]
+    public bool splitDamageAcrossDuration = true;
     public float splashDamageMultiplier = 0.55f;
     public float splashRadius = 2.6f;
     public float collisionRadius = 0.32f;

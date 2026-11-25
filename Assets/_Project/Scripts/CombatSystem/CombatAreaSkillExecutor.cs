@@ -24,7 +24,7 @@ public class CombatAreaSkillExecutor : MonoBehaviour
     private int eruptionIndex;
     private Vector3 startPos;
     private Vector3 forwardDir;
-    private GameObject activeZoneVfx;
+    private PooledVFXInstance activeZoneVfx;
     private Action<CombatAreaSkillExecutor> returnToPoolCallback;
 
     public void Launch(
@@ -70,8 +70,20 @@ public class CombatAreaSkillExecutor : MonoBehaviour
 
             if (pattern.mainBodyVFXPrefab != null)
             {
-                activeZoneVfx = Instantiate(pattern.mainBodyVFXPrefab, poolPos, Quaternion.identity, transform);
-                activeZoneVfx.transform.localScale *= Mathf.Max(0.2f, pattern.visualScale);
+                activeZoneVfx = UniversalVFXManager.SpawnPooledVFX(
+                    pattern.mainBodyVFXPrefab,
+                    poolPos,
+                    Quaternion.identity,
+                    Mathf.Max(0.2f, pattern.visualScale),
+                    VFXFollowMode.FollowPositionOnly,
+                    transform,
+                    transform,
+                    Vector3.zero,
+                    Quaternion.identity,
+                    false,
+                    Mathf.Max(0.5f, pattern.activeDuration + 0.15f),
+                    "ZoneAoEPool",
+                    true);
             }
             else
             {
@@ -300,7 +312,7 @@ public class CombatAreaSkillExecutor : MonoBehaviour
         isRunning = false;
         if (activeZoneVfx != null)
         {
-            Destroy(activeZoneVfx);
+            activeZoneVfx.ForceStopAndReturn();
             activeZoneVfx = null;
         }
 
@@ -311,6 +323,15 @@ public class CombatAreaSkillExecutor : MonoBehaviour
         else
         {
             Destroy(gameObject);
+        }
+    }
+
+    private void OnDisable()
+    {
+        if (activeZoneVfx != null)
+        {
+            activeZoneVfx.ForceStopAndReturn();
+            activeZoneVfx = null;
         }
     }
 }

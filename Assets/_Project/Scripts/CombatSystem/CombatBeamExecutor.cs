@@ -15,6 +15,7 @@ public class CombatBeamExecutor : MonoBehaviour
     private CombatSkillPattern_SO activePattern;
     private GameObject casterObj;
     private Transform casterTransform;
+    private IDamageable casterDamageable;
     private bool isEnemyBeam;
     private LayerMask targetLayers;
     private LayerMask obstacleLayers;
@@ -28,7 +29,7 @@ public class CombatBeamExecutor : MonoBehaviour
     private float baseYaw;
     private int activeArms;
     private Vector3 orbitalTargetPos;
-    private GameObject spawnedBodyVfx;
+    private PooledVFXInstance spawnedBodyVfx;
     private Action<CombatBeamExecutor> returnToPoolCallback;
 
     private void Awake()
@@ -69,9 +70,21 @@ public class CombatBeamExecutor : MonoBehaviour
         activePattern = pattern;
         casterObj = caster;
         casterTransform = caster != null ? caster.transform : null;
+        casterDamageable = caster != null ? (caster.GetComponentInParent<IDamageable>() ?? caster.GetComponent<IDamageable>()) : null;
         isEnemyBeam = firedByEnemy;
         returnToPoolCallback = onReturnToPool;
-        damagePerTick = Mathf.Max(1f, baseAtk * pattern.directDamageMultiplier * Mathf.Clamp(pattern.damageTickInterval, 0.1f, 1.0f));
+
+        float safeDuration = Mathf.Max(0.15f, pattern.activeDuration);
+        float safeTickInterval = Mathf.Max(0.05f, pattern.damageTickInterval);
+        if (pattern.splitDamageAcrossDuration)
+        {
+            int expectedTicks = Mathf.Max(1, Mathf.FloorToInt(safeDuration / safeTickInterval) + 1);
+            damagePerTick = Mathf.Max(1f, (baseAtk * pattern.directDamageMultiplier) / expectedTicks);
+        }
+        else
+        {
+            damagePerTick = Mathf.Max(1f, baseAtk * pattern.directDamageMultiplier * Mathf.Clamp(safeTickInterval, 0.05f, 1.0f));
+        }
 
         ResolveLayers();
 
@@ -139,14 +152,33 @@ public class CombatBeamExecutor : MonoBehaviour
 
         if (activePattern.mainBodyVFXPrefab != null)
         {
-            spawnedBodyVfx = Instantiate(activePattern.mainBodyVFXPrefab, fxPos, transform.rotation, transform);
-            spawnedBodyVfx.transform.localScale *= Mathf.Max(0.1f, activePattern.visualScale);
+            spawnedBodyVfx = UniversalVFXManager.SpawnPooledVFX(
+                activePattern.mainBodyVFXPrefab,
+                fxPos,
+                transform.rotation,
+                Mathf.Max(0.1f, activePattern.visualScale),
+                VFXFollowMode.FollowActorRoot,
+                transform,
+                transform,
+                Vector3.zero,
+                Quaternion.identity,
+                false,
+                Mathf.Max(0.25f, activePattern.activeDuration + 0.15f),
+                "BeamBody",
+                true);
         }
     }
 
     private void Update()
     {
         if (!isRunning || activePattern == null) return;
+
+        if (activePattern.patternPreset != CombatPatternPreset.OrbitalSkyBeam &&
+            (casterObj == null || !casterObj.activeInHierarchy || (casterDamageable != null && casterDamageable.IsDead)))
+        {
+            FinishAndReturnToPool();
+            return;
+        }
 
         float dt = Time.deltaTime;
         phaseTimer -= dt;
@@ -335,9 +367,11 @@ public class CombatBeamExecutor : MonoBehaviour
 
         if (spawnedBodyVfx != null)
         {
-            Destroy(spawnedBodyVfx);
+            spawnedBodyVfx.ForceStopAndReturn();
             spawnedBodyVfx = null;
         }
+
+        casterDamageable = null;
 
         if (returnToPoolCallback != null)
         {
@@ -346,6 +380,15 @@ public class CombatBeamExecutor : MonoBehaviour
         else
         {
             Destroy(gameObject);
+        }
+    }
+
+    private void OnDisable()
+    {
+        if (spawnedBodyVfx != null)
+        {
+            spawnedBodyVfx.ForceStopAndReturn();
+            spawnedBodyVfx = null;
         }
     }
 }

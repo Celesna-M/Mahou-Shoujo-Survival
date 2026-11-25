@@ -67,7 +67,7 @@ public class MagicProjectile : MonoBehaviour
     private float shutdownTimer;
     private float lifeTimer;
     private Action<MagicProjectile> returnToPoolCallback;
-    private GameObject dynamicTrailChild;
+    private PooledVFXInstance dynamicTrailVfx;
 
     private SphereCollider cachedCollider;
     private LightningProjectileVisuals cachedVisuals;
@@ -621,10 +621,10 @@ public class MagicProjectile : MonoBehaviour
     private void CompleteReturnToPool()
     {
         isShuttingDown = false;
-        if (dynamicTrailChild != null)
+        if (dynamicTrailVfx != null)
         {
-            Destroy(dynamicTrailChild);
-            dynamicTrailChild = null;
+            dynamicTrailVfx.ForceStopAndReturn();
+            dynamicTrailVfx = null;
         }
 
         if (returnToPoolCallback != null)
@@ -634,6 +634,15 @@ public class MagicProjectile : MonoBehaviour
         else
         {
             Destroy(gameObject);
+        }
+    }
+
+    private void OnDisable()
+    {
+        if (dynamicTrailVfx != null)
+        {
+            dynamicTrailVfx.ForceStopAndReturn();
+            dynamicTrailVfx = null;
         }
     }
 
@@ -696,10 +705,25 @@ public class MagicProjectile : MonoBehaviour
 
         if (flightTrailVFXPrefab != null)
         {
-            if (dynamicTrailChild != null) Destroy(dynamicTrailChild);
-            dynamicTrailChild = Instantiate(flightTrailVFXPrefab, transform.position, transform.rotation, transform);
-            var psList = dynamicTrailChild.GetComponentsInChildren<ParticleSystem>(true);
-            for (int i = 0; i < psList.Length; i++) psList[i].Play(true);
+            if (dynamicTrailVfx != null)
+            {
+                dynamicTrailVfx.ForceStopAndReturn();
+                dynamicTrailVfx = null;
+            }
+            dynamicTrailVfx = UniversalVFXManager.SpawnPooledVFX(
+                flightTrailVFXPrefab,
+                transform.position,
+                transform.rotation,
+                1.0f,
+                VFXFollowMode.FollowActorRoot,
+                transform,
+                transform,
+                Vector3.zero,
+                Quaternion.identity,
+                false,
+                Mathf.Max(0.5f, lifeTime + trailDetachDelay + 0.5f),
+                "ProjectileTrail",
+                true);
             return;
         }
 

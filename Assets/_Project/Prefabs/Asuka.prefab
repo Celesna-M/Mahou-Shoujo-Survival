@@ -1601,19 +1601,22 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::EnemyController
   isEliteOrBoss: 1
   enemyDisplayName: THE ENTITY (BOSS)
-  maxHealth: 300
+  maxHealth: 650
   moveSpeed: 4
   rotationSpeed: 10
   destroyDelayOnDeath: 0
   useDirectMoveTowards: 1
-  attackRange: 1
-  attackDamage: 20
+  attackRange: 1.8
+  attackDamage: 24
   attackCooldown: 1.8
   hitboxes:
   - {fileID: 2500970429667270508}
-  maxStagger: 100
-  staggerDamageMultiplier: 1.15
-  stunDuration: 5
+  maxStagger: 240
+  staggerDamageMultiplier: 1
+  stunDuration: 4.5
+  enableStageRankScaling: 1
+  hpMultiplierPerRank: 0.28
+  damageMultiplierPerRank: 0.16
   starDustReward: 50
   shatteredCoreDropChance: 100
   shatteredCoreDropAmount: 1

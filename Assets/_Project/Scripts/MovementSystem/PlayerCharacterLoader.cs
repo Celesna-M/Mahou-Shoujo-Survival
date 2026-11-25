@@ -11,8 +11,10 @@ using UnityEngine;
 [DefaultExecutionOrder(-150)]
 public class PlayerCharacterLoader : MonoBehaviour
 {
-    [Header("1. Fallback Character Data (ใช้เมื่อกด Play จากฉาก The Action โดยตรง)")]
-    [Tooltip("ลาก CharacterData_SO เริ่มต้นมาใส่ (หากเข้าเกมมาจากหน้า Lobby ระบบจะใช้ตัวที่ผู้เล่นเลือกจาก Lobby อัตโนมัติ)")]
+    [Header("1. Character Data Resolution (Lobby Selection -> Roster Lookup -> Editor Fallback)")]
+    [Tooltip("Optional list of CharacterData_SO ordered by Lobby slot index (0=Hikari, 1=Akane, 2=Shiro/Haru) for automatic model & skill matching when Lobby slots don't assign an SO directly.")]
+    [SerializeField] private CharacterData_SO[] characterRosterLookup;
+    [Tooltip("Fallback CharacterData_SO used ONLY when pressing Play directly inside a combat scene without coming from The Lobby (or as visual model fallback).")]
     [SerializeField] private CharacterData_SO fallbackCharacterData;
 
     [Header("2. Visual Model Mount Point")]
@@ -28,30 +30,55 @@ public class PlayerCharacterLoader : MonoBehaviour
 
     private void Awake()
     {
-        CharacterData_SO dataToLoad = ResolveActiveCharacterData();
+        CharacterData_SO dataToLoad = ResolveActiveCharacterData(out bool preserveLobbyStats);
         if (dataToLoad == null) return;
 
-        ApplyCharacterDataToShell(dataToLoad);
+        ApplyCharacterDataToShell(dataToLoad, preserveLobbyStats);
     }
 
-    private CharacterData_SO ResolveActiveCharacterData()
+    private CharacterData_SO ResolveActiveCharacterData(out bool preserveLobbyStats)
     {
-        if (GameProgressionManager.Instance != null && GameProgressionManager.Instance.ActiveCharacterData != null)
+        preserveLobbyStats = false;
+        GameProgressionManager prog = GameProgressionManager.Instance;
+
+        if (prog != null)
         {
-            return GameProgressionManager.Instance.ActiveCharacterData;
+            // 1. Exact CharacterData_SO chosen in The Lobby
+            if (prog.ActiveCharacterData != null)
+            {
+                return prog.ActiveCharacterData;
+            }
+
+            // 2. Player selected a character slot in The Lobby without an SO assigned
+            if (prog.HasSelectedCharacter)
+            {
+                int idx = prog.SelectedCharacterIndex;
+                if (characterRosterLookup != null && idx >= 0 && idx < characterRosterLookup.Length && characterRosterLookup[idx] != null)
+                {
+                    prog.SetActiveCharacterData(characterRosterLookup[idx], idx);
+                    return characterRosterLookup[idx];
+                }
+
+                // Borrow fallback 3D visual model ONLY — strictly preserve Lobby HP/ATK/Speed/Archetype!
+                preserveLobbyStats = true;
+                return fallbackCharacterData;
+            }
         }
+
+        // 3. Direct Play inside combat scene in Editor (no Lobby selection yet)
         if (fallbackCharacterData != null)
         {
-            if (GameProgressionManager.Instance != null)
+            if (prog != null)
             {
-                GameProgressionManager.Instance.SetActiveCharacterData(fallbackCharacterData);
+                prog.SetActiveCharacterData(fallbackCharacterData);
             }
             return fallbackCharacterData;
         }
+
         return null;
     }
 
-    public void ApplyCharacterDataToShell(CharacterData_SO data)
+    public void ApplyCharacterDataToShell(CharacterData_SO data, bool preserveLobbyStats = false)
     {
         if (data == null) return;
 
@@ -131,11 +158,15 @@ public class PlayerCharacterLoader : MonoBehaviour
         }
 
         // 3. Wire Animator, Renderer, Stats & VFX into all shared shell components on Player_Root
+        GameProgressionManager prog = GameProgressionManager.Instance;
+        float resolvedMoveSpeed = (preserveLobbyStats && prog != null) ? prog.SelectedCharacterMoveSpeed : data.moveSpeed;
+        float resolvedBaseHp = (preserveLobbyStats && prog != null) ? prog.SelectedCharacterBaseHp : data.baseMaxHP;
+
         var movement = GetComponent<PlayerMovement>();
         if (movement != null)
         {
             if (activeAnimator != null) SetField(movement, "animator", activeAnimator);
-            SetField(movement, "moveSpeed", data.moveSpeed);
+            SetField(movement, "moveSpeed", resolvedMoveSpeed);
         }
 
         var health = GetComponent<PlayerHealth>();
@@ -143,21 +174,21 @@ public class PlayerCharacterLoader : MonoBehaviour
         {
             if (activeAnimator != null) SetField(health, "animator", activeAnimator);
             if (activeRenderer != null) SetField(health, "playerRenderer", activeRenderer);
-            SetField(health, "baseMaxHealth", data.baseMaxHP);
+            SetField(health, "baseMaxHealth", resolvedBaseHp);
         }
 
         var combat = GetComponent<PlayerCombat>();
         if (combat != null)
         {
             if (activeAnimator != null) SetField(combat, "animator", activeAnimator);
-            SetField(combat, "damage", data.baseATK);
-            SetField(combat, "activeSkillBaseCooldown", data.skillCooldown);
-            SetField(combat, "activeSkillDamageMultiplier", data.skillDamageMultiplier);
-            SetField(combat, "useWhiteBlueLightningVFX", data.useWhiteBlueLightningVFX);
-
-            if (data.customMuzzleVFXPrefab != null) SetField(combat, "rangedMuzzleCastVFXPrefab", data.customMuzzleVFXPrefab);
-            if (data.customImpactVFXPrefab != null) SetField(combat, "rangedImpactVFXPrefab", data.customImpactVFXPrefab);
-            if (data.customActiveSkillVFXPrefab != null) SetField(combat, "activeSkillVFXPrefab", data.customActiveSkillVFXPrefab);
+            if (!preserveLobbyStats)
+            {
+                combat.ApplyCharacterData(data);
+            }
+            else if (prog != null)
+            {
+                SetField(combat, "damage", prog.SelectedCharacterBaseAtk);
+            }
 
             // Auto-wire a fire point on the right hand bone if available
             if (activeAnimator != null && activeAnimator.isHuman)

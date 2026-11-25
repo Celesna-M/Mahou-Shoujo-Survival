@@ -24,12 +24,41 @@ public class CharacterData_SO : ScriptableObject
     public Sprite vnPortraitAngry;
     public Color themeColor = new Color(0.92f, 0.28f, 0.58f, 1f);
 
-    [Header("4. Base Combat Stats")]
-    public float baseMaxHP = 100f;
-    public float baseATK = 25f;
+    [Header("4. Base Combat & Skill Stats (Single Source of Truth — Zero Hardcoded Overrides)")]
+    [Tooltip("Base Max HP before Hub Vitality upgrades.")]
+    public float baseMaxHP = 110f;
+    [Tooltip("Base ATK before Hub Raw Power upgrades.")]
+    public float baseATK = 24f;
+    [Tooltip("Base locomotion move speed.")]
     public float moveSpeed = 5.2f;
-    public float skillCooldown = 5.0f;
-    public float skillDamageMultiplier = 1.85f;
+    [Tooltip("Minimum delay between basic attack inputs (seconds).")]
+    [Min(0.05f)] public float attackCooldown = 0.25f;
+    [Tooltip("Melee 3rd-hit finisher damage multiplier.")]
+    [Min(0.5f)] public float heavyFinisherDamageMultiplier = 1.4f;
+    [Tooltip("Ranged 3rd-hit finisher projectile count.")]
+    [Min(1)] public int rangedFinisherProjectileCount = 3;
+    [Tooltip("Ranged 3rd-hit finisher TOTAL damage multiplier (split evenly across finisher shots).")]
+    [Min(0.5f)] public float rangedFinisherTotalDamageMultiplier = 1.65f;
+    [Tooltip("Boss stagger damage bonus multiplier (e.g. 1.0 for Striker/Caster, 1.6 for HeavyBreaker).")]
+    [Min(0.5f)] public float staggerBonusMultiplier = 1.0f;
+
+    [Header("4B. Active Skill Stats (Editable per Character)")]
+    [Tooltip("Active Skill cooldown in seconds.")]
+    [Min(0.5f)] public float skillCooldown = 5.5f;
+    [Tooltip("Active Skill TOTAL damage burst multiplier (e.g. 2.2x Melee AoE, 2.4x Ranged Multi-Tick Beam).")]
+    [Min(0.5f)] public float skillDamageMultiplier = 2.4f;
+    [Tooltip("Lockout/cast duration of Active Skill animation (seconds).")]
+    [Min(0.2f)] public float skillDuration = 0.9f;
+    [Tooltip("Melee Active Skill AoE radius (meters).")]
+    [Min(0.5f)] public float meleeSkillAoERadius = 4.6f;
+    [Tooltip("Ranged Beam Active Skill active duration (seconds) when no custom CombatSkillPattern_SO is assigned.")]
+    [Min(0.2f)] public float rangedBeamDuration = 1.0f;
+    [Tooltip("Ranged Beam Active Skill damage tick interval (seconds). Total burst stays equal to skillDamageMultiplier.")]
+    [Min(0.05f)] public float rangedBeamTickInterval = 0.2f;
+    [Tooltip("Ranged Beam Active Skill reach (meters).")]
+    [Min(2f)] public float rangedBeamRange = 18f;
+    [Tooltip("Ranged Beam Active Skill hit width (meters).")]
+    [Min(0.2f)] public float rangedBeamWidth = 0.85f;
 
     [Header("5. Combat Skill Patterns (Data-Driven — เสียบแพตเทิร์นได้ทั้งใกล้และไกล)")]
     [Tooltip("แพตเทิร์นสำหรับคอมโบแต่ละจังหวะ (Index 0 = ฮิต 1, 1 = ฮิต 2, 2 = ฮิต 3 — เว้นว่างได้เพื่อใช้โหมดปกติ)")]

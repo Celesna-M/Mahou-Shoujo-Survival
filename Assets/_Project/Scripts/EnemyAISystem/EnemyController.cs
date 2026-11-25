@@ -168,6 +168,25 @@ public class EnemyController : MonoBehaviour, IDamageable
     private bool hasDealtDamageThisSwing = false;
     private float hitWindowTimer = 0f;
 
+    // Cached Animator & Shader Property Hashes (Zero-GC Hot Paths)
+    public static readonly int AnimSpeedHash = Animator.StringToHash("Speed");
+    public static readonly int AnimInCombatHash = Animator.StringToHash("InCombat");
+    public static readonly int AnimAttackHash = Animator.StringToHash("Attack");
+    public static readonly int AnimHurtHash = Animator.StringToHash("Hurt");
+    public static readonly int AnimTauntHash = Animator.StringToHash("Taunt");
+
+    private static readonly int BaseColorPropId = Shader.PropertyToID("_BaseColor");
+    private static readonly int ColorPropId = Shader.PropertyToID("_Color");
+    private static readonly WaitForSeconds HurtFlashWait = new WaitForSeconds(0.18f);
+    private static readonly Color StunTintColor = new Color(1f, 0.85f, 0.2f, 1f);
+
+    // Pre-allocated FSM States (Zero-GC State Transitions)
+    public IdleState IdleStateInstance { get; private set; }
+    public ChaseState ChaseStateInstance { get; private set; }
+    public AttackState AttackStateInstance { get; private set; }
+    public ReturnState ReturnStateInstance { get; private set; }
+    public PatrolState PatrolStateInstance { get; private set; }
+
     // Runtime Fields
     private NavMeshAgent agent;
     private AnimVFXController animVfxController;
@@ -176,6 +195,11 @@ public class EnemyController : MonoBehaviour, IDamageable
     private PlayerHealth playerHealth;
     private CharacterController playerCharacterController;
     private EnemyState currentState;
+    private MaterialPropertyBlock propBlock;
+    private Coroutine hurtFlashCoroutine;
+    private GameObject bossAoEWarningRingObj;
+    private bool hasBaseColorProp;
+    private bool hasColorProp;
     private Vector3 spawnPosition;
     private float currentHealth;
     private float currentStagger;
@@ -228,7 +252,15 @@ public class EnemyController : MonoBehaviour, IDamageable
     {
         EnsureDefaultEventLists();
 
+        IdleStateInstance = new IdleState(this);
+        ChaseStateInstance = new ChaseState(this);
+        AttackStateInstance = new AttackState(this);
+        ReturnStateInstance = new ReturnState(this);
+        PatrolStateInstance = new PatrolState(this);
+
+        propBlock = new MaterialPropertyBlock();
         agent = GetComponent<NavMeshAgent>();
+        if (audioSource == null) audioSource = GetComponent<AudioSource>();
         bodyColliders = GetComponentsInChildren<Collider>(true);
 
         if (animator == null)
@@ -240,10 +272,7 @@ public class EnemyController : MonoBehaviour, IDamageable
         if (enemyRenderer == null)
             enemyRenderer = GetComponentInChildren<Renderer>();
 
-        if (enemyRenderer != null && enemyRenderer.material.HasProperty("_Color"))
-        {
-            defaultColor = enemyRenderer.material.color;
-        }
+        CacheRendererColorProperties();
 
         string lowerName = gameObject.name.ToLower();
         if (!isEliteOrBoss && (lowerName.Contains("elite") || lowerName.Contains("boss") || maxHealth >= 200f))
@@ -263,6 +292,89 @@ public class EnemyController : MonoBehaviour, IDamageable
         SetupAnimationEventForwarder();
         SetupWeaponHitboxAndPreventSolidBonePush();
         BindCustomAnimationClipEvents();
+    }
+
+    private void CacheRendererColorProperties()
+    {
+        hasBaseColorProp = false;
+        hasColorProp = false;
+        defaultColor = Color.white;
+
+        if (enemyRenderer == null) return;
+        Material shared = enemyRenderer.sharedMaterial;
+        if (shared == null) return;
+
+        hasBaseColorProp = shared.HasProperty(BaseColorPropId);
+        hasColorProp = shared.HasProperty(ColorPropId);
+
+        if (hasBaseColorProp)
+            defaultColor = shared.GetColor(BaseColorPropId);
+        else if (hasColorProp)
+            defaultColor = shared.GetColor(ColorPropId);
+    }
+
+    private void ApplyTintColor(Color tint)
+    {
+        if (enemyRenderer == null || (!hasBaseColorProp && !hasColorProp)) return;
+        enemyRenderer.GetPropertyBlock(propBlock);
+        if (hasBaseColorProp) propBlock.SetColor(BaseColorPropId, tint);
+        if (hasColorProp) propBlock.SetColor(ColorPropId, tint);
+        enemyRenderer.SetPropertyBlock(propBlock);
+    }
+
+    private void ApplyNavMeshSafeDisplacement(Vector3 delta)
+    {
+        delta.y = 0f;
+        if (delta.sqrMagnitude < 0.00001f) return;
+
+        if (agent != null && agent.isActiveAndEnabled && agent.isOnNavMesh)
+        {
+            agent.Move(delta);
+            return;
+        }
+
+        Vector3 targetPos = transform.position + delta;
+        if (NavMesh.SamplePosition(targetPos, out NavMeshHit navHit, 1.25f, NavMesh.AllAreas))
+        {
+            transform.position = new Vector3(navHit.position.x, transform.position.y, navHit.position.z);
+        }
+    }
+
+    private void ShowBossAoEWarningRing(Vector3 worldPos, float radius)
+    {
+        if (bossAoEWarningRingObj == null)
+        {
+            bossAoEWarningRingObj = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            bossAoEWarningRingObj.name = "BossAoEWarningRing";
+            if (bossAoEWarningRingObj.TryGetComponent<Collider>(out var col)) Destroy(col);
+            if (bossAoEWarningRingObj.TryGetComponent<Renderer>(out var rend))
+            {
+                rend.sharedMaterial = GetSharedBossWarningRingMaterial();
+                rend.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                rend.receiveShadows = false;
+            }
+        }
+
+        bossAoEWarningRingObj.transform.position = worldPos;
+        bossAoEWarningRingObj.transform.localScale = new Vector3(radius * 2f, 0.02f, radius * 2f);
+        bossAoEWarningRingObj.SetActive(true);
+    }
+
+    public void HideBossAoEWarningRing()
+    {
+        if (bossAoEWarningRingObj != null)
+        {
+            bossAoEWarningRingObj.SetActive(false);
+        }
+    }
+
+    private void OnDestroy()
+    {
+        if (bossAoEWarningRingObj != null)
+        {
+            Destroy(bossAoEWarningRingObj);
+            bossAoEWarningRingObj = null;
+        }
     }
 
     private void EnsureDefaultEventLists()
@@ -335,10 +447,6 @@ public class EnemyController : MonoBehaviour, IDamageable
     public void PlayOptionalSfx(AudioClip clip, float volumeScale = 0.85f)
     {
         if (clip == null) return;
-        if (audioSource == null)
-        {
-            audioSource = GetComponent<AudioSource>();
-        }
         if (audioSource != null)
         {
             audioSource.PlayOneShot(clip, volumeScale);
@@ -375,8 +483,8 @@ public class EnemyController : MonoBehaviour, IDamageable
 
     public void FlashTelegraphColor(bool active)
     {
-        if (isDead || isStunned || enemyRenderer == null || !enemyRenderer.material.HasProperty("_Color")) return;
-        enemyRenderer.material.color = active ? attackTelegraphColor : defaultColor;
+        if (isDead || isStunned) return;
+        ApplyTintColor(active ? attackTelegraphColor : defaultColor);
     }
 
 
@@ -451,10 +559,11 @@ public class EnemyController : MonoBehaviour, IDamageable
             while (elapsed < dashTime && !isDead && !isStunned)
             {
                 elapsed += Time.deltaTime;
-                Vector3 nextPos = transform.position + dashDir * (bossDashSpeed * Time.deltaTime);
-                if (playerTransform != null && Vector3.Distance(nextPos, playerTransform.position) > minBodySeparationDistance)
+                Vector3 step = dashDir * (bossDashSpeed * Time.deltaTime);
+                Vector3 nextPos = transform.position + step;
+                if (playerTransform == null || Vector3.Distance(nextPos, playerTransform.position) > minBodySeparationDistance)
                 {
-                    transform.position = nextPos;
+                    ApplyNavMeshSafeDisplacement(step);
                 }
                 yield return null;
             }
@@ -462,22 +571,15 @@ public class EnemyController : MonoBehaviour, IDamageable
         }
         else if (pattern == 2)
         {
-            // Pattern 3: Ground Red Ring Warning + Radial AoE Explosion (ระเบิดพลังรอบตัวมีวงสีแดงเตือนที่พื้น)
-            GameObject warningRing = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
-            warningRing.name = "BossAoEWarningRing";
-            warningRing.transform.position = VFXAnchorRig.ResolvePosition(transform, VFXSpawnAnchor.GroundFeet);
-            warningRing.transform.localScale = new Vector3(bossAoERadius * 2f, 0.02f, bossAoERadius * 2f);
-            if (warningRing.TryGetComponent<Collider>(out var col)) Destroy(col);
-            if (warningRing.TryGetComponent<Renderer>(out var rend))
-            {
-                rend.sharedMaterial = GetSharedBossWarningRingMaterial();
-            }
+            // Pattern 3: Ground Red Ring Warning + Radial AoE Explosion (reusable tracked ring, auto-cleaned on stun/death)
+            Vector3 ringPos = VFXAnchorRig.ResolvePosition(transform, VFXSpawnAnchor.GroundFeet);
+            ShowBossAoEWarningRing(ringPos, bossAoERadius);
 
             FlashTelegraphColor(true);
             float warnTime = Mathf.Max(0.5f, bossAoEWarningDuration / (hasEnteredBossPhase2 ? bossPhase2SpeedMultiplier : 1f));
             yield return new WaitForSeconds(warnTime);
             FlashTelegraphColor(false);
-            if (warningRing != null) Destroy(warningRing);
+            HideBossAoEWarningRing();
 
             if (!isDead && !isStunned)
             {
@@ -500,8 +602,8 @@ public class EnemyController : MonoBehaviour, IDamageable
             }
             if (!isDead && !isStunned && animator != null)
             {
-                animator.ResetTrigger("Hurt");
-                animator.SetTrigger("Attack");
+                animator.ResetTrigger(AnimHurtHash);
+                animator.SetTrigger(AnimAttackHash);
             }
             yield return new WaitForSeconds(Mathf.Max(0.75f, attackCooldown * 0.80f));
         }
@@ -542,21 +644,22 @@ public class EnemyController : MonoBehaviour, IDamageable
     private void Update()
     {
         if (isDead) return;
+        if (Time.timeScale <= 0.01f) return;
 
         if (animator != null && animator.applyRootMotion)
             animator.applyRootMotion = false;
 
-        if (GlobalFreezeAI)
+        if (GlobalFreezeAI || (VNManager.Instance != null && VNManager.Instance.IsPlayingVN))
         {
             StopMovement();
-            if (animator != null) animator.SetFloat("Speed", 0f);
+            if (animator != null) animator.SetFloat(AnimSpeedHash, 0f);
             return;
         }
 
         if (isStunned)
         {
             StopMovement();
-            if (animator != null) animator.SetFloat("Speed", 0f);
+            if (animator != null) animator.SetFloat(AnimSpeedHash, 0f);
 
             stunTimer -= Time.deltaTime;
             if (stunTimer <= 0f)
@@ -572,7 +675,7 @@ public class EnemyController : MonoBehaviour, IDamageable
             IgnorePhysicalPushAgainstPlayer();
             if (playerTransform == null)
             {
-                if (animator != null) animator.SetFloat("Speed", 0f);
+                if (animator != null) animator.SetFloat(AnimSpeedHash, 0f);
                 return;
             }
         }
@@ -580,9 +683,10 @@ public class EnemyController : MonoBehaviour, IDamageable
         if (playerHealth != null && playerHealth.IsDead)
         {
             ExecuteCloseHitbox();
+            HideBossAoEWarningRing();
             StopMovement();
             SetInCombat(false);
-            if (animator != null) animator.SetFloat("Speed", 0f);
+            if (animator != null) animator.SetFloat(AnimSpeedHash, 0f);
             return;
         }
 
@@ -622,7 +726,7 @@ public class EnemyController : MonoBehaviour, IDamageable
             }
         }
 
-        animator.SetFloat("Speed", currentSpeed);
+        animator.SetFloat(AnimSpeedHash, currentSpeed);
     }
 
     private void FindPlayerTarget()
@@ -668,7 +772,7 @@ public class EnemyController : MonoBehaviour, IDamageable
     {
         if (animator != null)
         {
-            animator.SetBool("InCombat", inCombat);
+            animator.SetBool(AnimInCombatHash, inCombat);
         }
     }
 
@@ -676,29 +780,29 @@ public class EnemyController : MonoBehaviour, IDamageable
     {
         if (alwaysChasePlayer)
         {
-            return new ChaseState(this);
+            return ChaseStateInstance;
         }
 
         if (lostSightBehavior == LostSightBehavior.Patrol && patrolPoints != null && patrolPoints.Length > 0)
         {
-            return new PatrolState(this);
+            return PatrolStateInstance;
         }
 
-        return new IdleState(this);
+        return IdleStateInstance;
     }
 
     public EnemyState CreateLostSightState()
     {
         if (alwaysChasePlayer)
         {
-            return new ChaseState(this);
+            return ChaseStateInstance;
         }
 
         if (lostSightBehavior == LostSightBehavior.Patrol && patrolPoints != null && patrolPoints.Length > 0)
         {
-            return new PatrolState(this);
+            return PatrolStateInstance;
         }
-        return new ReturnState(this);
+        return ReturnStateInstance;
     }
 
     public void MoveTo(Vector3 destination)
@@ -726,7 +830,7 @@ public class EnemyController : MonoBehaviour, IDamageable
             {
                 transform.position = Vector3.MoveTowards(transform.position, targetFlat, moveSpeed * Time.deltaTime);
                 RotateTowards(destination);
-                if (animator != null) animator.SetFloat("Speed", moveSpeed);
+                if (animator != null) animator.SetFloat(AnimSpeedHash, moveSpeed);
             }
         }
     }
@@ -813,7 +917,7 @@ public class EnemyController : MonoBehaviour, IDamageable
 
         if (animator != null)
         {
-            animator.SetTrigger("Taunt");
+            animator.SetTrigger(AnimTauntHash);
         }
 
         yield return new WaitForSeconds(tauntDuration);
@@ -1212,7 +1316,14 @@ public class EnemyController : MonoBehaviour, IDamageable
 
     public void TakeDamage(float amount, Vector3 hitPoint)
     {
-        if (isDead) return;
+        float legacyStaggerBonus = NextAttackStaggerBonusMultiplier;
+        NextAttackStaggerBonusMultiplier = 1.0f;
+        TakeDamage(amount, hitPoint, legacyStaggerBonus);
+    }
+
+    public void TakeDamage(float amount, Vector3 hitPoint, float staggerBonusMultiplier)
+    {
+        if (isDead || amount <= 0f) return;
 
         currentHealth -= amount;
 
@@ -1221,13 +1332,13 @@ public class EnemyController : MonoBehaviour, IDamageable
             BattleHUD.Instance.SpawnFloatingDamageNumber(amount, transform.position + Vector3.up * 1.7f, amount >= 40f);
         }
 
-        if (enableKnockbackOnHit && !isEliteOrBoss && playerTransform != null && !isDead)
+        if (enableKnockbackOnHit && !isEliteOrBoss && playerTransform != null && currentHealth > 0f)
         {
             Vector3 pushDir = (transform.position - playerTransform.position);
             pushDir.y = 0f;
             if (pushDir.sqrMagnitude > 0.001f)
             {
-                transform.position += pushDir.normalized * knockbackDistance;
+                ApplyNavMeshSafeDisplacement(pushDir.normalized * knockbackDistance);
             }
         }
 
@@ -1236,20 +1347,25 @@ public class EnemyController : MonoBehaviour, IDamageable
             EnterBossPhase2Enrage();
         }
 
+        if (currentHealth <= 0f)
+        {
+            if (isEliteOrBoss && BattleHUD.Instance != null)
+            {
+                BattleHUD.Instance.ShowBossBar(enemyDisplayName, 0f, maxHealth, currentStagger, maxStagger);
+            }
+            Die();
+            return;
+        }
+
         if (isEliteOrBoss)
         {
             if (!isStunned)
             {
-                float staggerReduction = amount * staggerDamageMultiplier * Mathf.Max(1.0f, NextAttackStaggerBonusMultiplier);
-                NextAttackStaggerBonusMultiplier = 1.0f;
+                float staggerReduction = amount * staggerDamageMultiplier * Mathf.Max(1.0f, staggerBonusMultiplier);
                 currentStagger = Mathf.Max(0f, currentStagger - staggerReduction);
 
                 if (currentStagger <= 0f)
                 {
-                    if (currentHealth <= 0f)
-                    {
-                        currentHealth = 1f;
-                    }
                     TriggerStun();
                 }
             }
@@ -1262,16 +1378,6 @@ public class EnemyController : MonoBehaviour, IDamageable
 
         if (isStunned)
         {
-            if (currentHealth <= 0f)
-            {
-                Die();
-            }
-            return;
-        }
-
-        if (currentHealth <= 0f)
-        {
-            Die();
             return;
         }
 
@@ -1281,13 +1387,18 @@ public class EnemyController : MonoBehaviour, IDamageable
         {
             if (animator != null)
             {
-                animator.SetTrigger("Hurt");
+                animator.SetTrigger(AnimHurtHash);
             }
-            TransitionTo(new ChaseState(this));
+            if (currentState != ChaseStateInstance)
+            {
+                TransitionTo(ChaseStateInstance);
+            }
         }
 
         PlayOptionalSfx(hurtSfx, 0.75f);
-        StartCoroutine(HurtFlashOnlyRoutine());
+        if (hurtFlashCoroutine != null)
+            StopCoroutine(hurtFlashCoroutine);
+        hurtFlashCoroutine = StartCoroutine(HurtFlashOnlyRoutine());
     }
 
     
@@ -1322,20 +1433,18 @@ public class EnemyController : MonoBehaviour, IDamageable
         stunTimer = stunDuration;
 
         SetRangedAimLineVisible(false);
+        HideBossAoEWarningRing();
         ExecuteCloseHitbox();
         animVfxController?.CancelInterruptibleVFX();
         StopMovement();
 
         if (animator != null)
         {
-            animator.SetFloat("Speed", 0f);
-            animator.SetTrigger("Hurt");
+            animator.SetFloat(AnimSpeedHash, 0f);
+            animator.SetTrigger(AnimHurtHash);
         }
 
-        if (enemyRenderer != null && enemyRenderer.material.HasProperty("_Color"))
-        {
-            enemyRenderer.material.color = new Color(1f, 0.85f, 0.2f);
-        }
+        ApplyTintColor(StunTintColor);
 
         if (BattleHUD.Instance != null)
         {
@@ -1350,32 +1459,27 @@ public class EnemyController : MonoBehaviour, IDamageable
         isStunned = false;
         currentStagger = maxStagger;
 
-        if (enemyRenderer != null && enemyRenderer.material.HasProperty("_Color"))
-        {
-            enemyRenderer.material.color = defaultColor;
-        }
+        ApplyTintColor(defaultColor);
 
         if (BattleHUD.Instance != null && isEliteOrBoss)
         {
             BattleHUD.Instance.UpdateBossStagger(currentStagger, maxStagger);
         }
 
-        TransitionTo(new ChaseState(this));
+        TransitionTo(ChaseStateInstance);
     }
 
     private IEnumerator HurtFlashOnlyRoutine()
     {
-        if (enemyRenderer != null && enemyRenderer.material.HasProperty("_Color"))
-        {
-            enemyRenderer.material.color = Color.red;
-        }
+        ApplyTintColor(Color.red);
 
-        yield return new WaitForSeconds(0.18f);
+        yield return HurtFlashWait;
 
-        if (!isDead && enemyRenderer != null && enemyRenderer.material.HasProperty("_Color"))
+        if (!isDead)
         {
-            enemyRenderer.material.color = isStunned ? new Color(1f, 0.85f, 0.2f) : defaultColor;
+            ApplyTintColor(isStunned ? StunTintColor : defaultColor);
         }
+        hurtFlashCoroutine = null;
     }
 
     private void Die()
@@ -1388,9 +1492,11 @@ public class EnemyController : MonoBehaviour, IDamageable
         isHurt = false;
 
         StopAllCoroutines();
+        hurtFlashCoroutine = null;
         currentState?.Exit();
         currentState = null;
         SetRangedAimLineVisible(false);
+        HideBossAoEWarningRing();
         ExecuteCloseHitbox();
         animVfxController?.StopAllActiveVFX();
 
@@ -1419,16 +1525,13 @@ public class EnemyController : MonoBehaviour, IDamageable
 
         if (bodyColliders != null)
         {
-            foreach (var col in bodyColliders)
+            for (int i = 0; i < bodyColliders.Length; i++)
             {
-                if (col != null) col.enabled = false;
+                if (bodyColliders[i] != null) bodyColliders[i].enabled = false;
             }
         }
 
-        if (enemyRenderer != null && enemyRenderer.material.HasProperty("_Color"))
-        {
-            enemyRenderer.material.color = defaultColor;
-        }
+        ApplyTintColor(defaultColor);
 
         Vector3 dropOrigin = transform.position + Vector3.up * 0.9f;
         if (starDustReward > 0)

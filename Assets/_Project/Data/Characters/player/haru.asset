@@ -15,7 +15,7 @@ MonoBehaviour:
   characterID: CHAR_02
   characterDisplayName: HARU
   combatArchetype: 2
-  roleDescription: Balanced Striker | Fast melee combos & responsive dodge cancel.
+  roleDescription: 
   characterPrefab: {fileID: 6583370036175810675, guid: 581511342c46ee04492bd0d9a7f73063, type: 3}
   animatorControllerOverride: {fileID: 0}
   modelLocalOffset: {x: 0, y: 0, z: 0}
@@ -23,13 +23,24 @@ MonoBehaviour:
   vnPortraitNormal: {fileID: 0}
   vnPortraitAngry: {fileID: 0}
   themeColor: {r: 0.9333334, g: 0.8666667, b: 0.509804, a: 1}
-  baseMaxHP: 100
-  baseATK: 10
-  moveSpeed: 5.2
-  skillCooldown: 6
-  skillDamageMultiplier: 1.85
+  baseMaxHP: 95
+  baseATK: 20
+  moveSpeed: 5.1
+  attackCooldown: 0.25
+  heavyFinisherDamageMultiplier: 1.4
+  rangedFinisherProjectileCount: 3
+  rangedFinisherTotalDamageMultiplier: 1.65
+  staggerBonusMultiplier: 1
+  skillCooldown: 5.5
+  skillDamageMultiplier: 2.4
+  skillDuration: 0.9
+  meleeSkillAoERadius: 4.6
+  rangedBeamDuration: 1
+  rangedBeamTickInterval: 0.2
+  rangedBeamRange: 18
+  rangedBeamWidth: 0.85
   comboSkillPatterns: []
-  activeSkillPattern: {fileID: 0}
+  activeSkillPattern: {fileID: 11400000, guid: a61b3cf39dd225743b4bcf64e657e413, type: 2}
   animVFXLibrary: {fileID: 11400000, guid: 0831a165fd836924ea7a879081e2eb2b, type: 2}
   useWhiteBlueLightningVFX: 0
   customMuzzleVFXPrefab: {fileID: 0}

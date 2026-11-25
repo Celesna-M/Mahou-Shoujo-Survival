@@ -757,23 +757,7 @@ public class GameTextMasterConfig : MonoBehaviour
             lobby.RefreshHubUI();
         }
 
-        // 3. Push Stage texts into StageMapManager if in StageMap scene
-        var stageMap = FindAnyObjectByType<StageMapManager>();
-        if (stageMap != null)
-        {
-            var nodes = GetField<List<StageNodeData>>(stageMap, "stageNodes");
-            if (nodes != null)
-            {
-                for (int i = 0; i < nodes.Count && i < StageNodeTitles.Length; i++)
-                {
-                    nodes[i].nodeCode = StageNodeCodes[i];
-                    nodes[i].stageTitle = StageNodeTitles[i];
-                    nodes[i].stageDescription = StageNodeDescriptions[i];
-                }
-            }
-            int idx = GameProgressionManager.Instance != null ? GameProgressionManager.Instance.SelectedStageIndex : 0;
-            stageMap.SelectStageNode(idx);
-        }
+        // 3. StageMapManager Inspector is the Single Source of Truth for stage nodes & node labels (no silent overwrite).
 
         // 4. Apply static button/header labels by GameObject name if enabled
         if (AutoApplyStaticSceneUiLabels)
@@ -784,13 +768,20 @@ public class GameTextMasterConfig : MonoBehaviour
                 TextMeshProUGUI tmp = allTexts[i];
                 if (tmp == null) continue;
 
-                if (StaticSceneObjectTexts.TryGetValue(tmp.gameObject.name, out string directText))
+                string objName = tmp.gameObject.name;
+                string parentName = tmp.transform.parent != null ? tmp.transform.parent.name : string.Empty;
+
+                // Never overwrite StageNode button labels; StageMapManager owns them.
+                if (objName.StartsWith("StageNode_") || parentName.StartsWith("StageNode_"))
+                    continue;
+
+                if (StaticSceneObjectTexts.TryGetValue(objName, out string directText))
                 {
                     tmp.text = directText;
                     continue;
                 }
 
-                if (tmp.transform.parent != null && StaticSceneObjectTexts.TryGetValue(tmp.transform.parent.name, out string parentButtonText))
+                if (!string.IsNullOrEmpty(parentName) && StaticSceneObjectTexts.TryGetValue(parentName, out string parentButtonText))
                 {
                     tmp.text = parentButtonText;
                 }

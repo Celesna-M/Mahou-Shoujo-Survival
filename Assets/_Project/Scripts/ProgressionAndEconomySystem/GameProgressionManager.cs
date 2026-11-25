@@ -89,12 +89,20 @@ public class GameProgressionManager : MonoBehaviour
     public CharacterData_SO ActiveCharacterData { get; private set; }
     public StageData_SO ActiveStageData { get; private set; }
 
-    public void SetActiveCharacterData(CharacterData_SO data)
+    public void SetActiveCharacterData(CharacterData_SO data, int slotIndex = -1)
     {
         ActiveCharacterData = data;
         if (data != null)
         {
-            SelectCharacter((int)data.combatArchetype, data.characterDisplayName, data.baseMaxHP, data.baseATK, data.moveSpeed);
+            int resolvedIndex = slotIndex >= 0 ? slotIndex : (int)data.combatArchetype;
+            SelectCharacterInternal(
+                resolvedIndex,
+                data.characterDisplayName,
+                data.baseMaxHP,
+                data.baseATK,
+                data.moveSpeed,
+                data.combatArchetype,
+                clearActiveData: false);
         }
     }
 
@@ -106,13 +114,14 @@ public class GameProgressionManager : MonoBehaviour
             int totalMelee = 0, totalBoss = 0;
             if (stageData.waves != null)
             {
-                foreach (var w in stageData.waves)
+                for (int i = 0; i < stageData.waves.Count; i++)
                 {
+                    var w = stageData.waves[i];
                     totalMelee += w.meleeMinionCount + w.rangedMinionCount;
                     totalBoss += w.bossCount;
                 }
             }
-            SelectStage(stageIndex, stageData.stageTitle, totalMelee, totalBoss, 0);
+            SelectStageInternal(stageIndex, stageData.stageTitle, totalMelee, totalBoss, 0, clearActiveData: false);
         }
     }
 
@@ -154,7 +163,10 @@ public class GameProgressionManager : MonoBehaviour
     // 5. Selected Character Data
     public bool HasSelectedCharacter { get; private set; } = false;
     public int SelectedCharacterIndex { get; private set; } = 0;
-    public CharacterCombatArchetype SelectedCharacterArchetype => (CharacterCombatArchetype)Mathf.Clamp(SelectedCharacterIndex, 0, 2);
+    private CharacterCombatArchetype selectedCharacterArchetype = CharacterCombatArchetype.MeleeStriker;
+    public CharacterCombatArchetype SelectedCharacterArchetype => ActiveCharacterData != null
+        ? ActiveCharacterData.combatArchetype
+        : selectedCharacterArchetype;
     [Header("2-Stage Scope Settings (ตั้งค่าจำนวนด่านหลักที่เปิดใช้งาน)")]
     [Tooltip("จำนวนด่านที่เปิดให้เล่นใน Scope ปัจจุบัน (ค่าเริ่มต้น = 2 ด่าน: ด่าน 1 ห้องเรียนร้าง และ ด่าน 2 ถนนเมืองรกร้าง)")]
     [SerializeField] private int activeStageCount = 2;
@@ -316,6 +328,12 @@ public class GameProgressionManager : MonoBehaviour
         ClearedStageBitmask = 0;
         TotalEnemiesKilled = 0;
         SelectedCharacterIndex = 0;
+        selectedCharacterArchetype = CharacterCombatArchetype.MeleeStriker;
+        HasSelectedCharacter = false;
+        ActiveCharacterData = null;
+        HasSelectedStageFromMap = false;
+        SelectedStageIndex = 0;
+        ActiveStageData = null;
         CurrentEnergy = maxEnergy;
         energyRechargeTimer = 0f;
         LastClearWasFirstTime = false;
@@ -326,8 +344,30 @@ public class GameProgressionManager : MonoBehaviour
 
     public void SelectCharacter(int index, string charName, float baseHp, float baseAtk, float moveSpeed)
     {
+        CharacterCombatArchetype inferredArchetype = (CharacterCombatArchetype)Mathf.Clamp(index, 0, 2);
+        SelectCharacter(index, charName, baseHp, baseAtk, moveSpeed, inferredArchetype);
+    }
+
+    public void SelectCharacter(int index, string charName, float baseHp, float baseAtk, float moveSpeed, CharacterCombatArchetype archetype)
+    {
+        SelectCharacterInternal(index, charName, baseHp, baseAtk, moveSpeed, archetype, clearActiveData: true);
+    }
+
+    private void SelectCharacterInternal(
+        int index,
+        string charName,
+        float baseHp,
+        float baseAtk,
+        float moveSpeed,
+        CharacterCombatArchetype archetype,
+        bool clearActiveData)
+    {
+        if (clearActiveData)
+            ActiveCharacterData = null;
+
         HasSelectedCharacter = true;
         SelectedCharacterIndex = Mathf.Max(0, index);
+        selectedCharacterArchetype = archetype;
         int clampedIdx = Mathf.Clamp(index, 0, GameTextMasterConfig.CharacterNames.Length - 1);
         SelectedCharacterName = string.IsNullOrEmpty(charName) ? GameTextMasterConfig.CharacterNames[clampedIdx] : charName;
         SelectedCharacterBaseHp = Mathf.Max(10f, baseHp);
@@ -414,6 +454,14 @@ public class GameProgressionManager : MonoBehaviour
 
     public void SelectStage(int stageIndex, string stageTitle, int normalEnemies, int eliteBosses, int energyCost = 1)
     {
+        SelectStageInternal(stageIndex, stageTitle, normalEnemies, eliteBosses, energyCost, clearActiveData: true);
+    }
+
+    private void SelectStageInternal(int stageIndex, string stageTitle, int normalEnemies, int eliteBosses, int energyCost, bool clearActiveData)
+    {
+        if (clearActiveData)
+            ActiveStageData = null;
+
         HasSelectedStageFromMap = true;
         SelectedStageIndex = Mathf.Max(0, stageIndex);
         int clampedIdx = Mathf.Clamp(stageIndex, 0, GameTextMasterConfig.StageNodeTitles.Length - 1);

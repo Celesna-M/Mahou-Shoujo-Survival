@@ -10,9 +10,16 @@ public class PlayerHealth : MonoBehaviour, IDamageable
     public const string StarDustPrefKey = GameProgressionManager.StarDustPrefKey;
     public const string ShatteredCorePrefKey = GameProgressionManager.ShatteredCorePrefKey;
 
+    private static readonly int BaseColorPropId = Shader.PropertyToID("_BaseColor");
+    private static readonly int ColorPropId = Shader.PropertyToID("_Color");
+    private static readonly WaitForSeconds FlashIntervalWait = new WaitForSeconds(0.1f);
+
     [Header("Health Settings (Synced with Vitality Boost Upgrade)")]
+    [Tooltip("Base Max HP before Hub Vitality Boost upgrades (overridden by CharacterData_SO / Lobby).")]
     [SerializeField] private float baseMaxHealth = 100f;
+    [Tooltip("Invulnerability duration after taking damage (seconds).")]
     [SerializeField] private float hurtInvincibleDuration = 0.6f;
+    [Tooltip("Camera impulse shake intensity on player hurt.")]
     [SerializeField] private float hurtShakeForce = 0.6f;
 
     [Header("Economy Variables (Phase 6 - No Inventory)")]
@@ -43,15 +50,27 @@ public class PlayerHealth : MonoBehaviour, IDamageable
 
     private CinemachineImpulseSource impulseSource;
     private PlayerCombat playerCombat;
+    private PlayerMovement cachedMovement;
+    private PlayerLockOn cachedLockOn;
+    private AnimVFXController cachedAnimVfx;
     private PlayerStateMachine stateMachine;
+    private MaterialPropertyBlock propBlock;
+    private Coroutine hurtInvincibleCoroutine;
+
     private bool isHurtInvincible = false;
-    private Color defaultColor;
+    private Color defaultColor = Color.white;
+    private bool hasBaseColorProp;
+    private bool hasColorProp;
 
     private void Awake()
     {
         impulseSource = GetComponent<CinemachineImpulseSource>();
         playerCombat = GetComponent<PlayerCombat>();
+        cachedMovement = GetComponent<PlayerMovement>();
+        cachedLockOn = GetComponent<PlayerLockOn>();
+        cachedAnimVfx = GetComponent<AnimVFXController>();
         stateMachine = GetComponent<PlayerStateMachine>() ?? gameObject.AddComponent<PlayerStateMachine>();
+        propBlock = new MaterialPropertyBlock();
 
         if (playerRenderer == null)
             playerRenderer = GetComponentInChildren<Renderer>();
@@ -59,8 +78,7 @@ public class PlayerHealth : MonoBehaviour, IDamageable
         if (animator == null)
             animator = GetComponentInChildren<Animator>();
 
-        if (playerRenderer != null && playerRenderer.material.HasProperty("_Color"))
-            defaultColor = playerRenderer.material.color;
+        CacheRendererColorProperties();
 
         var prog = GameProgressionManager.Instance;
         float charBaseHp = prog.HasSelectedCharacter ? prog.SelectedCharacterBaseHp : baseMaxHealth;
@@ -73,11 +91,39 @@ public class PlayerHealth : MonoBehaviour, IDamageable
         StageShatteredCoreEarned = 0;
     }
 
+    private void CacheRendererColorProperties()
+    {
+        hasBaseColorProp = false;
+        hasColorProp = false;
+        defaultColor = Color.white;
+
+        if (playerRenderer == null) return;
+        Material shared = playerRenderer.sharedMaterial;
+        if (shared == null) return;
+
+        hasBaseColorProp = shared.HasProperty(BaseColorPropId);
+        hasColorProp = shared.HasProperty(ColorPropId);
+
+        if (hasBaseColorProp)
+            defaultColor = shared.GetColor(BaseColorPropId);
+        else if (hasColorProp)
+            defaultColor = shared.GetColor(ColorPropId);
+    }
+
+    private void ApplyTintColor(Color tint)
+    {
+        if (playerRenderer == null || (!hasBaseColorProp && !hasColorProp)) return;
+        playerRenderer.GetPropertyBlock(propBlock);
+        if (hasBaseColorProp) propBlock.SetColor(BaseColorPropId, tint);
+        if (hasColorProp) propBlock.SetColor(ColorPropId, tint);
+        playerRenderer.SetPropertyBlock(propBlock);
+    }
+
     public void TakeDamage(float amount, Vector3 hitPoint)
     {
-        if (IsDead || isHurtInvincible) return;
+        if (IsDead || isHurtInvincible || amount <= 0f) return;
 
-        if (TryGetComponent<PlayerMovement>(out var movement) && movement.IsInvincible)
+        if (cachedMovement != null && cachedMovement.IsInvincible)
             return;
 
         if (playerCombat != null && playerCombat.IsUsingSkill)
@@ -103,7 +149,9 @@ public class PlayerHealth : MonoBehaviour, IDamageable
             if (animator != null)
                 PlayerAnimID.SafeSetTrigger(animator, PlayerAnimID.Hurt);
 
-            StartCoroutine(HurtInvincibleRoutine());
+            if (hurtInvincibleCoroutine != null)
+                StopCoroutine(hurtInvincibleCoroutine);
+            hurtInvincibleCoroutine = StartCoroutine(HurtInvincibleRoutine());
         }
     }
 
@@ -112,25 +160,29 @@ public class PlayerHealth : MonoBehaviour, IDamageable
         isHurtInvincible = true;
         float elapsed = 0f;
 
-        while (elapsed < hurtInvincibleDuration)
+        while (elapsed < hurtInvincibleDuration && !IsDead)
         {
-            if (playerRenderer != null && playerRenderer.material.HasProperty("_Color"))
-                playerRenderer.material.color = Color.red;
-            yield return new WaitForSeconds(0.1f);
-            if (playerRenderer != null && playerRenderer.material.HasProperty("_Color"))
-                playerRenderer.material.color = Color.white;
-            yield return new WaitForSeconds(0.1f);
+            ApplyTintColor(Color.red);
+            yield return FlashIntervalWait;
+            if (IsDead) break;
+
+            ApplyTintColor(Color.white);
+            yield return FlashIntervalWait;
             elapsed += 0.2f;
         }
 
-        if (playerRenderer != null && playerRenderer.material.HasProperty("_Color"))
-            playerRenderer.material.color = defaultColor;
+        if (!IsDead)
+        {
+            ApplyTintColor(defaultColor);
+        }
+
         isHurtInvincible = false;
+        hurtInvincibleCoroutine = null;
     }
 
     public void HealPercentage(float percent)
     {
-        if (IsDead) return;
+        if (IsDead || percent <= 0f) return;
         float healAmount = effectiveMaxHealth * (percent / 100f);
         CurrentHealth = Mathf.Min(effectiveMaxHealth, CurrentHealth + healAmount);
         OnHealthChanged?.Invoke(CurrentHealth, effectiveMaxHealth);
@@ -160,14 +212,25 @@ public class PlayerHealth : MonoBehaviour, IDamageable
     {
         if (IsDead) return;
         IsDead = true;
+        isHurtInvincible = false;
+
+        if (hurtInvincibleCoroutine != null)
+        {
+            StopCoroutine(hurtInvincibleCoroutine);
+            hurtInvincibleCoroutine = null;
+        }
+
+        playerCombat?.CancelCombat();
+        cachedAnimVfx?.StopAllActiveVFX();
+
         stateMachine?.TriggerDeathState();
-        if (animator != null) PlayerAnimID.SafeSetTrigger(animator, PlayerAnimID.Dead);
+        if (animator != null)
+            PlayerAnimID.SafeSetTrigger(animator, PlayerAnimID.Dead);
 
-        if (TryGetComponent<PlayerMovement>(out var movement)) movement.CanMove = false;
-        if (TryGetComponent<PlayerLockOn>(out var lockOn)) lockOn.UnlockTarget();
+        if (cachedMovement != null) cachedMovement.CanMove = false;
+        if (cachedLockOn != null) cachedLockOn.UnlockTarget();
 
-        if (playerRenderer != null && playerRenderer.material.HasProperty("_Color"))
-            playerRenderer.material.color = Color.gray;
+        ApplyTintColor(Color.gray);
 
         OnDeath?.Invoke();
         OnPlayerDeath?.Invoke();
@@ -175,31 +238,7 @@ public class PlayerHealth : MonoBehaviour, IDamageable
 
     public void RestartStage()
     {
-        // GDD Core Pillar #3 (Zero Energy Limit): รีสตาร์ตด่านได้อิสระทันทีโดยไม่หักพลังงาน
         Time.timeScale = 1.0f;
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
 }
-
-/* ============================================================================
- * คำอธิบายการทำงานของโค้ดและฟังก์ชันทั้งหมดใน PlayerHealth.cs (CombatSystem)
- * (ส่วนนี้เป็น Comment ล้วน 100% — คอมไพเลอร์และระบบเกมจะไม่นำไปรันเด็ดขาด)
- * ============================================================================
- *
- * 1. Awake()
- *    - ดึงค่าเลือดพื้นฐานของตัวละครที่เลือก (SelectedCharacterBaseHp) บวกกับโบนัสอัปเกรด Vitality Boost (BonusMaxHealth)
- *      จาก GameProgressionManager มาตั้งเป็นเลือดสูงสุดของผู้เล่นในด่าน
- *
- * 2. TakeDamage(float amount, Vector3 hitPoint) & HurtInvincibleRoutine()
- *    - ลดเลือดผู้เล่นเมื่อถูกมอนสเตอร์โจมตี (ยกเว้นขณะติดสถานะอมตะ I-Frame จากการกลิ้งหลบหรือระหว่างออกท่าสกิล)
- *    - สั่งสั่นกล้องด้วย CinemachineImpulseSource และเปิดอมตะชั่วคราวหลังโดนตีพร้อมกะพริบตัวสีแดง-ขาว
- *
- * 3. HealPercentage(float percent)
- *    - ฟื้นฟูเลือดตามเปอร์เซ็นต์ที่กำหนดทันทีเมื่อใช้เอฟเฟกต์ฟื้นฟูเลือด
- *
- * 4. AddStarDust(int amount) & AddShatteredCore(int amount)
- *    - บวกแร่เข้าสู่ GameProgressionManager เมื่อลูกแก้วพลังงานจากมอนสเตอร์ลอยเข้าตัวผู้เล่น และแจ้งอัปเดตตัวเลขบน BattleHUD
- *
- * 5. Die() & RestartStage()
- *    - เมื่อ HP เหลือ 0 จะล็อกการเดิน ปลดล็อกเป้า และส่งอีเวนต์ OnPlayerDeath ไปให้ BattleHUD แสดงหน้าจอดำพร้อมข้อความสิ้นหวัง
- * ============================================================================ */
