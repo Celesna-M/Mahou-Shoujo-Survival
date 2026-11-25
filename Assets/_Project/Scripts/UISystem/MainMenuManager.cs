@@ -24,6 +24,14 @@ public class MainMenuManager : MonoBehaviour
     [SerializeField] private Slider volumeSlider;
     [Tooltip("ข้อความตัวเลขเปอร์เซ็นต์เสียงฝั่งขวา (เช่น 80%)")]
     [SerializeField] private TextMeshProUGUI volumeValueText;
+    [Tooltip("Optional BGM volume slider (0-1).")]
+    [SerializeField] private Slider bgmVolumeSlider;
+    [Tooltip("Optional BGM volume percentage label.")]
+    [SerializeField] private TextMeshProUGUI bgmVolumeValueText;
+    [Tooltip("Optional SFX volume slider (0-1).")]
+    [SerializeField] private Slider sfxVolumeSlider;
+    [Tooltip("Optional SFX volume percentage label.")]
+    [SerializeField] private TextMeshProUGUI sfxVolumeValueText;
 
     [Tooltip("ลาก Slider ปรับความไวเมาส์ฝั่งขวามาใส่ (ใช้เมาส์ลากเลื่อนซ้าย-ขวา)")]
     [SerializeField] private Slider sensitivitySlider;
@@ -101,6 +109,26 @@ public class MainMenuManager : MonoBehaviour
             volumeSlider.onValueChanged.AddListener(OnVolumeSliderChanged);
         }
 
+        if (bgmVolumeSlider != null)
+        {
+            bgmVolumeSlider.onValueChanged.RemoveAllListeners();
+            bgmVolumeSlider.minValue = 0f;
+            bgmVolumeSlider.maxValue = 1f;
+            bgmVolumeSlider.wholeNumbers = false;
+            bgmVolumeSlider.SetValueWithoutNotify(GameProgressionManager.Instance.BgmVolume);
+            bgmVolumeSlider.onValueChanged.AddListener(OnBgmVolumeSliderChanged);
+        }
+
+        if (sfxVolumeSlider != null)
+        {
+            sfxVolumeSlider.onValueChanged.RemoveAllListeners();
+            sfxVolumeSlider.minValue = 0f;
+            sfxVolumeSlider.maxValue = 1f;
+            sfxVolumeSlider.wholeNumbers = false;
+            sfxVolumeSlider.SetValueWithoutNotify(GameProgressionManager.Instance.SfxVolume);
+            sfxVolumeSlider.onValueChanged.AddListener(OnSfxVolumeSliderChanged);
+        }
+
         if (sensitivitySlider != null)
         {
             sensitivitySlider.onValueChanged.RemoveAllListeners();
@@ -114,6 +142,7 @@ public class MainMenuManager : MonoBehaviour
 
     public void OnStartGameClicked()
     {
+        AudioManager.PlayUI(AudioKeys.UI_Confirm);
         Time.timeScale = 1.0f;
         string target = string.IsNullOrWhiteSpace(lobbySceneName) ? "The Lobby" : lobbySceneName.Trim();
         if (Application.CanStreamedLevelBeLoaded(target))
@@ -132,6 +161,7 @@ public class MainMenuManager : MonoBehaviour
 
     public void OpenSettingsPanel()
     {
+        AudioManager.PlayUI(AudioKeys.UI_Click);
         if (settingsPanel != null)
         {
             settingsPanel.SetActive(true);
@@ -141,6 +171,7 @@ public class MainMenuManager : MonoBehaviour
 
     public void CloseSettingsPanel()
     {
+        AudioManager.PlayUI(AudioKeys.UI_Back);
         if (settingsPanel != null)
         {
             settingsPanel.SetActive(false);
@@ -153,6 +184,18 @@ public class MainMenuManager : MonoBehaviour
         RefreshSettingsUI();
     }
 
+    public void OnBgmVolumeSliderChanged(float val)
+    {
+        GameProgressionManager.Instance.SetBgmVolume(val);
+        RefreshSettingsUI();
+    }
+
+    public void OnSfxVolumeSliderChanged(float val)
+    {
+        GameProgressionManager.Instance.SetSfxVolume(val);
+        RefreshSettingsUI();
+    }
+
     public void OnSensitivitySliderChanged(float val)
     {
         GameProgressionManager.Instance.SetMouseSensitivity(val);
@@ -161,14 +204,18 @@ public class MainMenuManager : MonoBehaviour
 
     public void OnToggleFullscreenClicked()
     {
+        AudioManager.PlayUI(AudioKeys.UI_Click);
         Screen.fullScreen = !Screen.fullScreen;
         RefreshSettingsUI();
     }
 
     public void OnResetSaveDataClicked()
     {
+        AudioManager.PlayUI(AudioKeys.UI_Click);
         GameProgressionManager.Instance.ResetAllSaveData();
         if (volumeSlider != null) volumeSlider.SetValueWithoutNotify(GameProgressionManager.Instance.MasterVolume);
+        if (bgmVolumeSlider != null) bgmVolumeSlider.SetValueWithoutNotify(GameProgressionManager.Instance.BgmVolume);
+        if (sfxVolumeSlider != null) sfxVolumeSlider.SetValueWithoutNotify(GameProgressionManager.Instance.SfxVolume);
         if (sensitivitySlider != null) sensitivitySlider.SetValueWithoutNotify(GameProgressionManager.Instance.MouseSensitivity);
         RefreshSettingsUI();
         Debug.Log("<color=yellow>[MainMenu] ล้างข้อมูลเซฟเรียบร้อยแล้ว!</color>");
@@ -180,6 +227,10 @@ public class MainMenuManager : MonoBehaviour
 
         if (volumeValueText != null)
             volumeValueText.text = $"{Mathf.RoundToInt(prog.MasterVolume * 100f)}%";
+        if (bgmVolumeValueText != null)
+            bgmVolumeValueText.text = $"{Mathf.RoundToInt(prog.BgmVolume * 100f)}%";
+        if (sfxVolumeValueText != null)
+            sfxVolumeValueText.text = $"{Mathf.RoundToInt(prog.SfxVolume * 100f)}%";
 
         if (sensitivityValueText != null)
             sensitivityValueText.text = $"{prog.MouseSensitivity:F1}x";

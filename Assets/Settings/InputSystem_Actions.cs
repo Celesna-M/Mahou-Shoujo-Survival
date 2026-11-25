@@ -699,6 +699,17 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
                 },
                 {
                     ""name"": """",
+                    ""id"": ""9f8c4d12-7b3e-4a21-b41c-5e2a91c0d844"",
+                    ""path"": ""<Keyboard>/tab"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";Keyboard&Mouse"",
+                    ""action"": ""LockOn"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
                     ""id"": ""2db2a542-0b91-418a-9101-f2144d6e1474"",
                     ""path"": ""<Gamepad>/rightStickPress"",
                     ""interactions"": """",

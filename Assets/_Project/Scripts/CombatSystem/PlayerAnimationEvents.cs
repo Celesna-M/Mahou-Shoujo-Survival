@@ -193,6 +193,22 @@ public class PlayerAnimationEvents : MonoBehaviour
         if (animVfxController == null) FindCombatComponents();
         animVfxController?.CancelInterruptibleVFX();
     }
+
+    // =========================================================================
+    // POOLED SFX ANIMATION EVENTS
+    // =========================================================================
+
+    /// <summary>Plays a pooled SFX cue by key from DefaultAudioLibrary at the player's position.</summary>
+    public void PlaySFX(string key)
+    {
+        AudioManager.PlaySFX(key, transform.position);
+    }
+
+    /// <summary>Plays a randomized pooled footstep SFX at the player's position.</summary>
+    public void PlayFootstep()
+    {
+        AudioManager.PlaySFX(AudioKeys.Combat_Footstep, transform.position);
+    }
 }
 
 /* ============================================================================

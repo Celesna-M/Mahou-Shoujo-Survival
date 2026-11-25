@@ -476,6 +476,8 @@ public class PlayerMovement : MonoBehaviour
         isDodging = true;
         dodgeTimer = dodgeDuration;
 
+        AudioManager.PlaySFX(AudioKeys.Combat_Dodge, transform.position);
+
         if (animator != null)
             animator.SetTrigger(PlayerAnimID.Dodge);
     }

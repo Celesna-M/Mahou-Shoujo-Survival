@@ -414,6 +414,11 @@ public class EnemyController : MonoBehaviour, IDamageable
             BattleHUD.Instance.ShowBossBar(enemyDisplayName, currentHealth, maxHealth, currentStagger, maxStagger);
         }
 
+        if (isEliteOrBoss)
+        {
+            AudioManager.EnterBossMusic();
+        }
+
         nextTauntCheckTime = Time.time + Random.Range(minTauntInterval, maxTauntInterval);
         TransitionTo(CreateInitialState());
     }
@@ -444,16 +449,25 @@ public class EnemyController : MonoBehaviour, IDamageable
     public bool EnableAttackTelegraph => enableAttackTelegraph;
     public float AttackTelegraphDuration => attackTelegraphDuration;
 
-    public void PlayOptionalSfx(AudioClip clip, float volumeScale = 0.85f)
+    public void PlayOptionalSfx(AudioClip clip, float volumeScale = 0.85f, string fallbackLibraryKey = null)
     {
-        if (clip == null) return;
-        if (audioSource != null)
+        if (clip != null)
         {
-            audioSource.PlayOneShot(clip, volumeScale);
+            if (audioSource != null)
+            {
+                float sfxGain = GameProgressionManager.Instance != null ? GameProgressionManager.Instance.SfxVolume : 1f;
+                audioSource.PlayOneShot(clip, volumeScale * sfxGain);
+            }
+            else
+            {
+                AudioManager.PlayClip(clip, transform.position, volumeScale);
+            }
+            return;
         }
-        else
+
+        if (!string.IsNullOrEmpty(fallbackLibraryKey))
         {
-            AudioSource.PlayClipAtPoint(clip, transform.position, volumeScale * (GameProgressionManager.Instance != null ? GameProgressionManager.Instance.MasterVolume : 0.8f));
+            AudioManager.PlaySFX(fallbackLibraryKey, transform.position, volumeScale);
         }
     }
 
@@ -478,6 +492,8 @@ public class EnemyController : MonoBehaviour, IDamageable
             {
                 BattleHUD.Instance.ShowBossBar(enemyDisplayName, currentHealth, maxHealth, currentStagger, maxStagger);
             }
+
+            AudioManager.EnterBossMusic();
         }
     }
 
@@ -625,6 +641,8 @@ public class EnemyController : MonoBehaviour, IDamageable
             {
                 BattleHUD.Instance.ShowBossBar(enemyDisplayName, currentHealth, maxHealth, currentStagger, maxStagger);
             }
+
+            AudioManager.EnterBossMusic();
         }
     }
 
@@ -1105,6 +1123,8 @@ public class EnemyController : MonoBehaviour, IDamageable
     public void PlayVFXEvent(AnimationEvent evt) => animVfxController?.PlayFromAnimationEvent(evt);
     public void StopVFX(string key) => animVfxController?.StopByKey(key);
     public void StopAllVFX() => animVfxController?.CancelInterruptibleVFX();
+    public void PlaySFX(string key) => AudioManager.PlaySFX(key, transform.position);
+    public void PlayFootstep() => AudioManager.PlaySFX(AudioKeys.Combat_Footstep, transform.position);
 
     
     /// <summary>
@@ -1160,10 +1180,12 @@ public class EnemyController : MonoBehaviour, IDamageable
         if (isRangedEnemy)
         {
             hasDealtDamageThisSwing = true;
-            PlayOptionalSfx(attackWindupSfx, 0.9f);
+            PlayOptionalSfx(attackWindupSfx, 0.9f, AudioKeys.Combat_EnemyAttack);
             FireEnemyRangedProjectileWithVFX();
             return;
         }
+
+        PlayOptionalSfx(attackWindupSfx, 0.75f, AudioKeys.Combat_EnemyAttack);
 
         hitPlayers.Clear();
         hasDealtDamageThisSwing = false;
@@ -1395,7 +1417,7 @@ public class EnemyController : MonoBehaviour, IDamageable
             }
         }
 
-        PlayOptionalSfx(hurtSfx, 0.75f);
+        PlayOptionalSfx(hurtSfx, 0.75f, AudioKeys.Combat_EnemyHurt);
         if (hurtFlashCoroutine != null)
             StopCoroutine(hurtFlashCoroutine);
         hurtFlashCoroutine = StartCoroutine(HurtFlashOnlyRoutine());
@@ -1413,6 +1435,7 @@ public class EnemyController : MonoBehaviour, IDamageable
             animator.speed = bossPhase2SpeedMultiplier;
 
         UniversalVFXManager.SpawnOnOwner(VFXEventType.StatusBurst, transform, VFXSpawnAnchor.CenterBody, null, new Color(1f, 0.15f, 0.25f, 1f), 1.4f);
+        AudioManager.PlayUI(AudioKeys.Combat_BossEnrage);
 
         if (BattleHUD.Instance != null)
         {
@@ -1427,7 +1450,7 @@ public class EnemyController : MonoBehaviour, IDamageable
         isEliteOrBoss = true;
         currentStagger = 0f;
         isStunned = true;
-        PlayOptionalSfx(stunBreakSfx, 1.0f);
+        PlayOptionalSfx(stunBreakSfx, 1.0f, AudioKeys.Combat_BossStun);
         isAttacking = false;
         isTaunting = false;
         stunTimer = stunDuration;

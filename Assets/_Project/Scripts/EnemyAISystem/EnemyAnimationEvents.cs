@@ -71,6 +71,16 @@ public class EnemyAnimationEvents : MonoBehaviour
 
     /// <summary>Stops all active interruptible VFX on this enemy and returns them to the pool.</summary>
     public void StopAllVFX() => ResolveVfxController()?.CancelInterruptibleVFX();
+
+    // =========================================================================
+    // POOLED SFX ANIMATION EVENTS
+    // =========================================================================
+
+    /// <summary>Plays a pooled SFX cue by key from DefaultAudioLibrary at this enemy's position.</summary>
+    public void PlaySFX(string key) => AudioManager.PlaySFX(key, transform.position);
+
+    /// <summary>Plays a randomized pooled footstep SFX at this enemy's position.</summary>
+    public void PlayFootstep() => AudioManager.PlaySFX(AudioKeys.Combat_Footstep, transform.position);
 }
 
 /* ============================================================================

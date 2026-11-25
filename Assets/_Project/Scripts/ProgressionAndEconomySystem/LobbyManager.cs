@@ -506,19 +506,40 @@ public class LobbyManager : MonoBehaviour
     public void OnUpgradeMaxHpClicked()
     {
         if (GameProgressionManager.Instance.TryUpgradeMaxHealth(GetCurrentHpUpgradeCost(), bonusMaxHpPerUpgrade))
+        {
+            AudioManager.PlayUI(AudioKeys.UI_Upgrade);
             RefreshHubUI();
+        }
+        else
+        {
+            AudioManager.PlayUI(AudioKeys.UI_Error);
+        }
     }
 
     public void OnUpgradeStaminaClicked()
     {
         if (GameProgressionManager.Instance.TryUpgradeStaminaEfficiency(GetCurrentStaminaUpgradeCost(), bonusStaminaRegenPerUpgrade, bonusDodgeReductionPerUpgrade))
+        {
+            AudioManager.PlayUI(AudioKeys.UI_Upgrade);
             RefreshHubUI();
+        }
+        else
+        {
+            AudioManager.PlayUI(AudioKeys.UI_Error);
+        }
     }
 
     public void OnUpgradeAttackClicked()
     {
         if (GameProgressionManager.Instance.TryUpgradeAttack(baseAttackCoreCost, bonusAttackPerUpgrade))
+        {
+            AudioManager.PlayUI(AudioKeys.UI_Upgrade);
             RefreshHubUI();
+        }
+        else
+        {
+            AudioManager.PlayUI(AudioKeys.UI_Error);
+        }
     }
 
     public void RefreshHubUI()
@@ -708,6 +729,7 @@ public class LobbyManager : MonoBehaviour
 
     public void OnStartBattleClicked()
     {
+        AudioManager.PlayUI(AudioKeys.UI_Confirm);
         if (Application.CanStreamedLevelBeLoaded(stageMapSceneName))
             SceneManager.LoadScene(stageMapSceneName);
         else
@@ -716,6 +738,7 @@ public class LobbyManager : MonoBehaviour
 
     public void OnBackToMainMenuClicked()
     {
+        AudioManager.PlayUI(AudioKeys.UI_Back);
         if (Application.CanStreamedLevelBeLoaded(mainMenuSceneName))
             SceneManager.LoadScene(mainMenuSceneName);
     }

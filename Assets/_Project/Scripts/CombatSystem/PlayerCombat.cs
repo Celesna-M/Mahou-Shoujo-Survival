@@ -497,7 +497,7 @@ public class PlayerCombat : MonoBehaviour
         currentHitIndex = hitIndex;
         isMeleeHitboxActive = true;
         damagedTargets.Clear();
-        PlayCombatSfx(swingSfx, 0.75f);
+        PlayCombatSfx(swingSfx, 0.75f, AudioKeys.Combat_Swing);
 
         if (hitboxes != null && hitboxes.Length > 0)
         {
@@ -584,7 +584,10 @@ public class PlayerCombat : MonoBehaviour
                 ? GameProgressionManager.Instance.ActiveCharacterData.themeColor
                 : new Color(0.95f, 0.35f, 0.80f, 1f);
             UniversalVFXManager.SpawnAtPoint(VFXEventType.MeleeHit, hitPoint, transform.rotation, null, meleeColor, isHeavyFinisher ? 1.35f : 0.95f);
-            PlayCombatSfx(isHeavyFinisher && heavyFinisherSfx != null ? heavyFinisherSfx : hitEnemySfx, isHeavyFinisher ? 1.0f : 0.85f);
+            PlayCombatSfx(
+                isHeavyFinisher && heavyFinisherSfx != null ? heavyFinisherSfx : hitEnemySfx,
+                isHeavyFinisher ? 1.0f : 0.85f,
+                isHeavyFinisher ? AudioKeys.Combat_HeavyHit : AudioKeys.Combat_HitImpact);
 
             HitStopManager.Trigger(hitStopDuration, hitStopTimeScale);
             if (impulseSource != null)
@@ -630,7 +633,7 @@ public class PlayerCombat : MonoBehaviour
         }
 
         // 2. Fallback to Pooled UniversalVFXManager Projectile (Zero Material Leak!)
-        PlayCombatSfx(swingSfx, 0.8f);
+        PlayCombatSfx(swingSfx, 0.8f, AudioKeys.Combat_RangedCast);
 
         Vector3 spawnPos = GetFireOrigin();
         Transform lockTarget = ResolveRangedTarget();
@@ -764,7 +767,7 @@ public class PlayerCombat : MonoBehaviour
             ? GameProgressionManager.Instance.ActiveCharacterData.skillDamageMultiplier
             : activeSkillDamageMultiplier;
 
-        PlayCombatSfx(heavyFinisherSfx != null ? heavyFinisherSfx : swingSfx, 1.0f);
+        PlayCombatSfx(heavyFinisherSfx != null ? heavyFinisherSfx : swingSfx, 1.0f, AudioKeys.Combat_SkillCast);
 
         if (IsRangedArchetype)
         {
@@ -878,7 +881,8 @@ public class PlayerCombat : MonoBehaviour
 
     private void ExecuteResolvedPattern(CombatSkillPattern_SO pattern, float baseAtk)
     {
-        PlayCombatSfx(pattern.castSfx != null ? pattern.castSfx : swingSfx, 0.9f);
+        string fallbackKey = isUsingSkill ? AudioKeys.Combat_SkillCast : (IsRangedArchetype ? AudioKeys.Combat_RangedCast : AudioKeys.Combat_Swing);
+        PlayCombatSfx(pattern.castSfx != null ? pattern.castSfx : swingSfx, 0.9f, fallbackKey);
         Vector3 origin = GetFireOrigin();
         Transform target = ResolveRangedTarget();
         Quaternion aimRot = GetAimRotation(origin, target);
@@ -1052,13 +1056,26 @@ public class PlayerCombat : MonoBehaviour
             playerMovement.CanMove = true;
     }
 
-    private void PlayCombatSfx(AudioClip clip, float volume = 0.85f)
+    private void PlayCombatSfx(AudioClip clip, float volume = 0.85f, string fallbackLibraryKey = null)
     {
-        if (clip == null) return;
-        if (combatAudioSource != null)
-            combatAudioSource.PlayOneShot(clip, volume);
-        else
-            AudioSource.PlayClipAtPoint(clip, transform.position, volume * (GameProgressionManager.Instance != null ? GameProgressionManager.Instance.MasterVolume : 0.8f));
+        if (clip != null)
+        {
+            if (combatAudioSource != null)
+            {
+                float sfxGain = GameProgressionManager.Instance != null ? GameProgressionManager.Instance.SfxVolume : 1f;
+                combatAudioSource.PlayOneShot(clip, volume * sfxGain);
+            }
+            else
+            {
+                AudioManager.PlayClip(clip, transform.position, volume);
+            }
+            return;
+        }
+
+        if (!string.IsNullOrEmpty(fallbackLibraryKey))
+        {
+            AudioManager.PlaySFX(fallbackLibraryKey, transform.position, volume);
+        }
     }
 }
 

@@ -51,10 +51,14 @@ public class GameProgressionManager : MonoBehaviour
     public const string SelectedCharIndexPrefKey = "PLAYER_SELECTED_CHAR_INDEX";
     public const string CurrentEnergyPrefKey = "PLAYER_CURRENT_ENERGY";
     public const string MasterVolumePrefKey = "SETTINGS_MASTER_VOLUME";
+    public const string BgmVolumePrefKey = "SETTINGS_BGM_VOLUME";
+    public const string SfxVolumePrefKey = "SETTINGS_SFX_VOLUME";
     public const string MouseSensPrefKey = "SETTINGS_MOUSE_SENSITIVITY";
 
-    // 1. Settings Data (Available across all 4 scenes)
+    // 1. Settings Data (Available across all 5 scenes)
     public float MasterVolume { get; private set; } = 0.8f;
+    public float BgmVolume { get; private set; } = 0.75f;
+    public float SfxVolume { get; private set; } = 1.0f;
     public float MouseSensitivity { get; private set; } = 1.0f;
 
     // 2. Play Energy Limit System
@@ -242,6 +246,8 @@ public class GameProgressionManager : MonoBehaviour
         CurrentEnergy = Mathf.Clamp(PlayerPrefs.GetInt(CurrentEnergyPrefKey, maxEnergy), 0, maxEnergy);
 
         MasterVolume = PlayerPrefs.GetFloat(MasterVolumePrefKey, 0.8f);
+        BgmVolume = PlayerPrefs.GetFloat(BgmVolumePrefKey, 0.75f);
+        SfxVolume = PlayerPrefs.GetFloat(SfxVolumePrefKey, 1.0f);
         MouseSensitivity = PlayerPrefs.GetFloat(MouseSensPrefKey, 1.0f);
         AudioListener.volume = MasterVolume;
     }
@@ -267,6 +273,8 @@ public class GameProgressionManager : MonoBehaviour
         PlayerPrefs.SetInt(SelectedCharIndexPrefKey, SelectedCharacterIndex);
         PlayerPrefs.SetInt(CurrentEnergyPrefKey, CurrentEnergy);
         PlayerPrefs.SetFloat(MasterVolumePrefKey, MasterVolume);
+        PlayerPrefs.SetFloat(BgmVolumePrefKey, BgmVolume);
+        PlayerPrefs.SetFloat(SfxVolumePrefKey, SfxVolume);
         PlayerPrefs.SetFloat(MouseSensPrefKey, MouseSensitivity);
         PlayerPrefs.Save();
         OnProgressionChanged?.Invoke();
@@ -276,6 +284,18 @@ public class GameProgressionManager : MonoBehaviour
     {
         MasterVolume = Mathf.Clamp01(volume);
         AudioListener.volume = MasterVolume;
+        SaveToPrefs();
+    }
+
+    public void SetBgmVolume(float volume)
+    {
+        BgmVolume = Mathf.Clamp01(volume);
+        SaveToPrefs();
+    }
+
+    public void SetSfxVolume(float volume)
+    {
+        SfxVolume = Mathf.Clamp01(volume);
         SaveToPrefs();
     }
 

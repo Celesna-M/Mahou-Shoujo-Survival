@@ -702,6 +702,7 @@ public class BattleHUD : MonoBehaviour
     public void ShowVictoryScreen()
     {
         SaveCurrency();
+        AudioManager.PlayEndScreenStinger(true);
 
         if (victoryPanel != null)
         {

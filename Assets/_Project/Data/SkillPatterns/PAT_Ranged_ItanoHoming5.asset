@@ -1,0 +1,65 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6c055efe8e9df48499bc161528766bda, type: 3}
+  m_Name: PAT_Ranged_ItanoHoming5
+  m_EditorClassIdentifier: Assembly-CSharp::CombatSkillPattern_SO
+  patternID: PAT_RANGED_ITANO_02
+  displayName: Delayed Homing Lightning Barrage (5)
+  deliveryCategory: 0
+  patternPreset: 6
+  allowedArchetypes: 4
+  animatorTriggerName: 
+  animatorSpeedMultiplier: 1
+  windupOrDelayDuration: 0.28
+  activeDuration: 1.6
+  damageTickInterval: 0.2
+  count: 5
+  spreadAngle: 28
+  sequenceInterval: 0.08
+  formationRadius: 1.9
+  crossBeamArms: 4
+  speed: 34
+  acceleration: 0
+  lifeTime: 3
+  homingAngularSpeed: 300
+  waveAmplitude: 1.1
+  waveFrequency: 8
+  beamRange: 18
+  beamWidth: 0.75
+  beamSweepDegrees: 90
+  areaMaxRadius: 6.5
+  ringThickness: 1.1
+  dashDistance: 7.5
+  directDamageMultiplier: 0.75
+  splitDamageAcrossDuration: 1
+  splashDamageMultiplier: 0.55
+  splashRadius: 2.6
+  collisionRadius: 0.32
+  impactBehavior: 0
+  maxPierceOrBounceCount: 3
+  chainSearchRadius: 6.5
+  stickyDetonateDelay: 0.65
+  subPatternOnHit: {fileID: 0}
+  customProjectilePrefab: {fileID: 7081166020855221722, guid: f6d5f0afb5b527e4b9904bdc2ea1bf54, type: 3}
+  telegraphWarningVFXPrefab: {fileID: 0}
+  muzzleCastVFXPrefab: {fileID: 8905603497275390351, guid: 28312f0dcea02bc4081d032ed9a16c0c, type: 3}
+  mainBodyVFXPrefab: {fileID: 0}
+  impactVFXPrefab: {fileID: 6777177059352860285, guid: a395d6dba7e4cff4da0db23df088b871, type: 3}
+  splashWaveVFXPrefab: {fileID: 0}
+  useWhiteBlueLightningVFX: 1
+  themeColor: {r: 0.35, g: 0.85, b: 1, a: 1}
+  visualScale: 1
+  trailDetachDelay: 0.45
+  castSfx: {fileID: 0}
+  impactSfx: {fileID: 0}
+  hitStopDuration: 0.04
+  shakeIntensity: 0.3

@@ -516,7 +516,20 @@ MonoBehaviour:
   targetHeightOffset: 1.2
   playerRotateSmoothing: 12
   cameraFacingSmoothing: 8
+  followAnchorHeight: 1.45
+  followOrbitSmoothSpeed: 5.5
+  lookAtEnemyWeight: 0.62
+  maxLookAtPullDistance: 6.5
+  lookAtSmoothSpeed: 10
+  overrideLockOnCameraDistance: 0
+  lockOnCameraDistance: 7.5
   lockOnUIMarker: {fileID: 0}
+  lockOnReticleSprite: {fileID: 191927606, guid: 132358e9bf26b60458b731bf001e31db, type: 3}
+  reticleSize: {x: 68, y: 68}
+  reticleTintColor: {r: 1, g: 1, b: 1, a: 1}
+  reticleMinScale: 0.85
+  reticleMaxScale: 1.18
+  reticlePulseSpeed: 5
   freeLookCamera: {fileID: 0}
   lockOnCamera: {fileID: 0}
   targetGroup: {fileID: 0}

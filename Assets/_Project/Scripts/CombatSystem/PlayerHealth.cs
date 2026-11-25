@@ -145,6 +145,7 @@ public class PlayerHealth : MonoBehaviour, IDamageable
         }
         else
         {
+            AudioManager.PlayUI(AudioKeys.Combat_PlayerHurt);
             stateMachine?.TriggerHitStagger();
             if (animator != null)
                 PlayerAnimID.SafeSetTrigger(animator, PlayerAnimID.Hurt);
@@ -195,6 +196,7 @@ public class PlayerHealth : MonoBehaviour, IDamageable
         GameProgressionManager.Instance.AddStarDust(amount);
         starDust = GameProgressionManager.Instance.StarDust;
         shatteredCore = GameProgressionManager.Instance.ShatteredCore;
+        AudioManager.PlayUI(AudioKeys.Reward_StarDust);
         OnCurrencyChanged?.Invoke(starDust, shatteredCore);
     }
 
@@ -205,6 +207,7 @@ public class PlayerHealth : MonoBehaviour, IDamageable
         GameProgressionManager.Instance.AddShatteredCore(amount);
         starDust = GameProgressionManager.Instance.StarDust;
         shatteredCore = GameProgressionManager.Instance.ShatteredCore;
+        AudioManager.PlayUI(AudioKeys.Reward_Core);
         OnCurrencyChanged?.Invoke(starDust, shatteredCore);
     }
 
@@ -219,6 +222,9 @@ public class PlayerHealth : MonoBehaviour, IDamageable
             StopCoroutine(hurtInvincibleCoroutine);
             hurtInvincibleCoroutine = null;
         }
+
+        AudioManager.PlayUI(AudioKeys.Combat_PlayerDeath);
+        AudioManager.PlayEndScreenStinger(false);
 
         playerCombat?.CancelCombat();
         cachedAnimVfx?.StopAllActiveVFX();

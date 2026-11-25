@@ -2730,8 +2730,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ada512b7a27b1dc48bf1e35577ea33d9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ShibuyaArenaColliderSetup
-  hideBoundaryWallsInGame: 1
-  useSmoothCenterFloorCollider: 1
 --- !u!1 &983043070
 GameObject:
   m_ObjectHideFlags: 0
@@ -6983,6 +6981,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents:
     - {fileID: 7594498855197309741, guid: 581511342c46ee04492bd0d9a7f73063, type: 3}
+    - {fileID: 0}
     - {fileID: 4124205943233107159, guid: 581511342c46ee04492bd0d9a7f73063, type: 3}
     - {fileID: 3141698378734330954, guid: 581511342c46ee04492bd0d9a7f73063, type: 3}
     m_RemovedGameObjects: []

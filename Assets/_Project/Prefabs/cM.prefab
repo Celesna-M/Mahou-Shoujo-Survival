@@ -432,11 +432,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 625c14eee3ad46c99df7c7c891ef668a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Unity.Cinemachine::Unity.Cinemachine.CinemachineThirdPersonFollow
-  Damping: {x: 0.2, y: 0.2, z: 0.2}
-  ShoulderOffset: {x: 0.5, y: 1.2, z: 0}
+  Damping: {x: 0.35, y: 0.3, z: 0.35}
+  ShoulderOffset: {x: 0.35, y: 1.05, z: 0}
   VerticalArmLength: 0.4
   CameraSide: 1
-  CameraDistance: 5
+  CameraDistance: 7.5
   AvoidObstacles:
     Enabled: 0
     CollisionFilter:
@@ -461,15 +461,15 @@ MonoBehaviour:
   Composition:
     ScreenPosition: {x: 0, y: 0}
     DeadZone:
-      Enabled: 0
-      Size: {x: 0.2, y: 0.2}
+      Enabled: 1
+      Size: {x: 0.14, y: 0.12}
     HardLimits:
       Enabled: 0
       Size: {x: 0.8, y: 0.8}
       Offset: {x: 0, y: 0}
   CenterOnActivate: 1
-  TargetOffset: {x: 0, y: 1.2, z: 0}
-  Damping: {x: 0.3, y: 0.3}
+  TargetOffset: {x: 0, y: 0, z: 0}
+  Damping: {x: 0.45, y: 0.45}
   Lookahead:
     Enabled: 0
     Time: 0
@@ -793,7 +793,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4f322285aa59ccd44adebeaf02d62a2d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PersistentPlayerCameraRig
-  rigContent: {fileID: 8169018605315059888}
+  rigContent: {fileID: 3808737659604499411}
   mainCamera: {fileID: 3677684540151659370}
   freeLookCamera: {fileID: 5655346968636497053}
   lockOnCamera: {fileID: 5729269270757325141}

@@ -634,6 +634,7 @@ public class StageMapManager : MonoBehaviour
     public void OnStageNodeClicked(int index, bool isDoubleClick)
     {
         bool wasAlreadySelected = (index == currentSelectedNodeIndex);
+        AudioManager.PlayUI(AudioKeys.UI_Click);
         SelectStageNode(index);
 
         if ((isDoubleClick && doubleClickNodeToEnterStage) || (wasAlreadySelected && clickSelectedNodeAgainToEnter))
@@ -641,6 +642,10 @@ public class StageMapManager : MonoBehaviour
             if (IsStageNodePlayable(index))
             {
                 DeploySelectedStage();
+            }
+            else
+            {
+                AudioManager.PlayUI(AudioKeys.UI_Error);
             }
         }
     }
@@ -1045,6 +1050,7 @@ public class StageMapManager : MonoBehaviour
     {
         if (stageNodes == null || stageNodes.Count == 0)
         {
+            AudioManager.PlayUI(AudioKeys.UI_Confirm);
             LoadSceneSafe(defaultActionSceneName, lobbySceneName);
             return;
         }
@@ -1052,9 +1058,11 @@ public class StageMapManager : MonoBehaviour
         int idx = Mathf.Clamp(currentSelectedNodeIndex, 0, stageNodes.Count - 1);
         if (!IsStageNodePlayable(idx))
         {
+            AudioManager.PlayUI(AudioKeys.UI_Error);
             return;
         }
 
+        AudioManager.PlayUI(AudioKeys.UI_Confirm);
         StageNodeData selected = stageNodes[idx];
         var prog = GameProgressionManager.Instance;
 
@@ -1082,6 +1090,7 @@ public class StageMapManager : MonoBehaviour
 
     public void OnBackToLobbyClicked()
     {
+        AudioManager.PlayUI(AudioKeys.UI_Back);
         LoadSceneSafe(lobbySceneName, "The Lobby");
     }
 

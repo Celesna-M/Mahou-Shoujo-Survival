@@ -211,11 +211,11 @@ public class PersistentPlayerCameraRig : MonoBehaviour
 
     private void SetRigActive(bool active)
     {
-        if (rigContent != null)
+        if (rigContent != null && rigContent != gameObject)
         {
             rigContent.SetActive(active);
         }
-        else if (mainCamera != null)
+        else if (mainCamera != null && mainCamera.gameObject != gameObject)
         {
             mainCamera.gameObject.SetActive(active);
         }
@@ -536,9 +536,9 @@ public class PersistentPlayerCameraRig : MonoBehaviour
 
     private void ResolveInternalReferences()
     {
-        if (rigContent == null && transform.childCount > 0)
+        if ((rigContent == null || rigContent == gameObject) && transform.childCount > 0)
         {
-            Transform foundRig = transform.Find("RigContent");
+            Transform foundRig = transform.Find("RigContent") ?? transform.Find("Rig Content");
             rigContent = foundRig != null ? foundRig.gameObject : transform.GetChild(0).gameObject;
         }
 

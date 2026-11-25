@@ -1,0 +1,330 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2436b508425703842989cb23c88109c1, type: 3}
+  m_Name: DefaultAudioLibrary
+  m_EditorClassIdentifier: Assembly-CSharp::AudioLibrary_SO
+  sceneMusicConfigs:
+  - sceneName: MainMenu
+    defaultTrackId: BGM_MainMenu
+    bossTrackId: 
+  - sceneName: The Lobby
+    defaultTrackId: BGM_Lobby
+    bossTrackId: 
+  - sceneName: StageMap
+    defaultTrackId: BGM_StageMap
+    bossTrackId: 
+  - sceneName: The Action
+    defaultTrackId: BGM_Stage_Action
+    bossTrackId: BGM_Boss_01
+  - sceneName: Shibuya
+    defaultTrackId: BGM_Stage_Shibuya
+    bossTrackId: BGM_Boss_02
+  bgmTracks:
+  - trackId: BGM_MainMenu
+    introClip: {fileID: 0}
+    loopClip: {fileID: 8300000, guid: 47cee86e1eba6c647af506f8e172b0bb, type: 3}
+    volume: 0.5
+  - trackId: BGM_Lobby
+    introClip: {fileID: 0}
+    loopClip: {fileID: 8300000, guid: d9468e4c87e6ca4499efead08b8de29e, type: 3}
+    volume: 0.5
+  - trackId: BGM_StageMap
+    introClip: {fileID: 0}
+    loopClip: {fileID: 8300000, guid: 81e4161d68dbfc94a82ecbc5b458db2f, type: 3}
+    volume: 0.5
+  - trackId: BGM_Stage_Action
+    introClip: {fileID: 8300000, guid: feb18539818186a4681f7e35a8423014, type: 3}
+    loopClip: {fileID: 8300000, guid: 2f10aa69c42ac9140bdea4e17086c919, type: 3}
+    volume: 0.5
+  - trackId: BGM_Stage_Shibuya
+    introClip: {fileID: 8300000, guid: 5ca72fa53490592448d4fa388525ca84, type: 3}
+    loopClip: {fileID: 8300000, guid: e19ab8f4c75c49c44b02a11b782cc389, type: 3}
+    volume: 0.5
+  - trackId: BGM_Boss_01
+    introClip: {fileID: 8300000, guid: d89a9bfa6125e4b41a56fb17afee2072, type: 3}
+    loopClip: {fileID: 8300000, guid: e75b781f56bb9ce49b5a4960872b6c78, type: 3}
+    volume: 0.5
+  - trackId: BGM_Boss_02
+    introClip: {fileID: 8300000, guid: 1527f23eefb3ccc46aeaadaa8e947d7b, type: 3}
+    loopClip: {fileID: 8300000, guid: 561895a59d003ff4e8da7780a8e2dfd1, type: 3}
+    volume: 0.5
+  sfxCues:
+  - key: UI_Click
+    clips:
+    - {fileID: 8300000, guid: 26e27a557925f424bb2cc1957e299143, type: 3}
+    volume: 0.65
+    minPitch: 0.98
+    maxPitch: 1.03
+    is2D: 1
+    spatialBlend: 0
+    minDistance: 4
+    maxDistance: 35
+    minCooldown: 0.03
+  - key: UI_Confirm
+    clips:
+    - {fileID: 8300000, guid: a5a7ef48520177741b1eeed886372549, type: 3}
+    volume: 0.75
+    minPitch: 0.99
+    maxPitch: 1.02
+    is2D: 1
+    spatialBlend: 0
+    minDistance: 4
+    maxDistance: 35
+    minCooldown: 0.05
+  - key: UI_Back
+    clips:
+    - {fileID: 8300000, guid: f63876a7d44828543b389eb325a4f1b6, type: 3}
+    volume: 0.65
+    minPitch: 0.98
+    maxPitch: 1.02
+    is2D: 1
+    spatialBlend: 0
+    minDistance: 4
+    maxDistance: 35
+    minCooldown: 0.05
+  - key: UI_Upgrade
+    clips:
+    - {fileID: 8300000, guid: c9aa17e950355de4f82ccf205c312701, type: 3}
+    volume: 0.85
+    minPitch: 0.98
+    maxPitch: 1.04
+    is2D: 1
+    spatialBlend: 0
+    minDistance: 4
+    maxDistance: 35
+    minCooldown: 0.08
+  - key: UI_Error
+    clips:
+    - {fileID: 8300000, guid: bba8565afa45f1a4a9d3b92f7eb83c2b, type: 3}
+    volume: 0.72
+    minPitch: 0.96
+    maxPitch: 1
+    is2D: 1
+    spatialBlend: 0
+    minDistance: 4
+    maxDistance: 35
+    minCooldown: 0.08
+  - key: Combat_Swing
+    clips:
+    - {fileID: 8300000, guid: 56164972022e51d4fa1b6e23f7d51c02, type: 3}
+    - {fileID: 8300000, guid: 327718b058747704899e0e33f98d903e, type: 3}
+    volume: 0.75
+    minPitch: 0.92
+    maxPitch: 1.1
+    is2D: 0
+    spatialBlend: 0.65
+    minDistance: 4
+    maxDistance: 35
+    minCooldown: 0.05
+  - key: Combat_HitImpact
+    clips:
+    - {fileID: 8300000, guid: 5c4ca73e993aed24ab3997930f8a8f69, type: 3}
+    volume: 0.85
+    minPitch: 0.92
+    maxPitch: 1.12
+    is2D: 0
+    spatialBlend: 0.65
+    minDistance: 4
+    maxDistance: 35
+    minCooldown: 0.035
+  - key: Combat_HeavyHit
+    clips:
+    - {fileID: 8300000, guid: b92874c9b7db21445927bf2c8a34f4e1, type: 3}
+    volume: 0.95
+    minPitch: 0.94
+    maxPitch: 1.06
+    is2D: 0
+    spatialBlend: 0.65
+    minDistance: 4
+    maxDistance: 35
+    minCooldown: 0.05
+  - key: Combat_RangedCast
+    clips:
+    - {fileID: 8300000, guid: 2e91f0d0ad64e7549b7358712c7e0816, type: 3}
+    volume: 0.72
+    minPitch: 0.95
+    maxPitch: 1.12
+    is2D: 0
+    spatialBlend: 0.65
+    minDistance: 4
+    maxDistance: 35
+    minCooldown: 0.05
+  - key: Combat_SkillCast
+    clips:
+    - {fileID: 8300000, guid: 29eb6be4c8f3dfc4ab50a24095228078, type: 3}
+    - {fileID: 8300000, guid: 2e91f0d0ad64e7549b7358712c7e0816, type: 3}
+    volume: 0.88
+    minPitch: 0.96
+    maxPitch: 1.05
+    is2D: 0
+    spatialBlend: 0.65
+    minDistance: 4
+    maxDistance: 35
+    minCooldown: 0.12
+  - key: Combat_Dodge
+    clips:
+    - {fileID: 8300000, guid: d73ed5ed516e8bf469eef9f07fa94ee0, type: 3}
+    volume: 0.72
+    minPitch: 0.94
+    maxPitch: 1.08
+    is2D: 0
+    spatialBlend: 0.65
+    minDistance: 4
+    maxDistance: 35
+    minCooldown: 0.08
+  - key: Combat_Footstep
+    clips:
+    - {fileID: 8300000, guid: 93c7167ab22cecc49b97b9b998faadbc, type: 3}
+    - {fileID: 8300000, guid: 7cd0634efb242b44d85488b9b1b83448, type: 3}
+    - {fileID: 8300000, guid: 91801b946590fce4aa0a3346ff6f6cd4, type: 3}
+    - {fileID: 8300000, guid: a5413ed2471979248bfb5f52186596d0, type: 3}
+    - {fileID: 8300000, guid: 11ca60071018cc146af4d49cf48cc02d, type: 3}
+    volume: 0.42
+    minPitch: 0.9
+    maxPitch: 1.12
+    is2D: 0
+    spatialBlend: 0.65
+    minDistance: 4
+    maxDistance: 35
+    minCooldown: 0.12
+  - key: Combat_LockOn
+    clips:
+    - {fileID: 8300000, guid: 97570dc60b7e9e74d8663e0e9cbb15d7, type: 3}
+    volume: 0.65
+    minPitch: 0.98
+    maxPitch: 1.03
+    is2D: 1
+    spatialBlend: 0
+    minDistance: 4
+    maxDistance: 35
+    minCooldown: 0.05
+  - key: Combat_LockSwitch
+    clips:
+    - {fileID: 8300000, guid: 390dd0178942d2a408d27b3d41cb624c, type: 3}
+    volume: 0.55
+    minPitch: 1.02
+    maxPitch: 1.12
+    is2D: 1
+    spatialBlend: 0
+    minDistance: 4
+    maxDistance: 35
+    minCooldown: 0.05
+  - key: Combat_PlayerHurt
+    clips:
+    - {fileID: 8300000, guid: b03be28cfbb9072468383d990559af39, type: 3}
+    volume: 0.85
+    minPitch: 0.94
+    maxPitch: 1.06
+    is2D: 1
+    spatialBlend: 0
+    minDistance: 4
+    maxDistance: 35
+    minCooldown: 0.12
+  - key: Combat_PlayerDeath
+    clips:
+    - {fileID: 8300000, guid: 1a5f5856398272a4a93dd19afe57f7dc, type: 3}
+    volume: 0.92
+    minPitch: 1
+    maxPitch: 1
+    is2D: 1
+    spatialBlend: 0
+    minDistance: 4
+    maxDistance: 35
+    minCooldown: 0.5
+  - key: Combat_EnemyAttack
+    clips:
+    - {fileID: 8300000, guid: 0f438e0af182c134c815a1c71f9e14d9, type: 3}
+    volume: 0.72
+    minPitch: 0.88
+    maxPitch: 1.05
+    is2D: 0
+    spatialBlend: 0.65
+    minDistance: 4
+    maxDistance: 35
+    minCooldown: 0.08
+  - key: Combat_EnemyHurt
+    clips:
+    - {fileID: 8300000, guid: 5f85582f0216e9f4db91714262c24806, type: 3}
+    volume: 0.7
+    minPitch: 0.9
+    maxPitch: 1.12
+    is2D: 0
+    spatialBlend: 0.65
+    minDistance: 4
+    maxDistance: 35
+    minCooldown: 0.04
+  - key: Combat_BossStun
+    clips:
+    - {fileID: 8300000, guid: 23ac47723bea05b45b98f81d8ae43ea0, type: 3}
+    volume: 0.95
+    minPitch: 0.98
+    maxPitch: 1.02
+    is2D: 1
+    spatialBlend: 0
+    minDistance: 4
+    maxDistance: 35
+    minCooldown: 0.25
+  - key: Combat_BossEnrage
+    clips:
+    - {fileID: 8300000, guid: 71fc7822c951dee40a480802f0149878, type: 3}
+    volume: 0.92
+    minPitch: 0.95
+    maxPitch: 1.02
+    is2D: 1
+    spatialBlend: 0
+    minDistance: 4
+    maxDistance: 35
+    minCooldown: 0.3
+  - key: Reward_StarDust
+    clips:
+    - {fileID: 8300000, guid: d53a6b095a1b05b46830a37e8d4d923b, type: 3}
+    volume: 0.58
+    minPitch: 0.95
+    maxPitch: 1.18
+    is2D: 1
+    spatialBlend: 0
+    minDistance: 4
+    maxDistance: 35
+    minCooldown: 0.045
+  - key: Reward_Core
+    clips:
+    - {fileID: 8300000, guid: 05ed5e0282db09e499f155738ee96674, type: 3}
+    volume: 0.82
+    minPitch: 0.98
+    maxPitch: 1.05
+    is2D: 1
+    spatialBlend: 0
+    minDistance: 4
+    maxDistance: 35
+    minCooldown: 0.08
+  - key: Stage_Victory
+    clips:
+    - {fileID: 8300000, guid: c3ccfe08c0683104185d08ecc62fe0cc, type: 3}
+    volume: 0.92
+    minPitch: 1
+    maxPitch: 1
+    is2D: 1
+    spatialBlend: 0
+    minDistance: 4
+    maxDistance: 35
+    minCooldown: 0.5
+  - key: Stage_Defeat
+    clips:
+    - {fileID: 8300000, guid: 1a4227d4429c1854db41ed4a4679ccd9, type: 3}
+    volume: 0.92
+    minPitch: 1
+    maxPitch: 1
+    is2D: 1
+    spatialBlend: 0
+    minDistance: 4
+    maxDistance: 35
+    minCooldown: 0.5
